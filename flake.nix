@@ -37,7 +37,8 @@
   };
 
   outputs = inputs@{ self, nixpkgs, haskell-nix, iohk-nix, ... }:
-    let extraSources = [
+    let
+      extraSources = [
         {
           src = inputs.cardano-prelude;
           subdirs = [
@@ -109,7 +110,7 @@
             nixfmt
             nixpkgs-fmt
 
-            (pkgs.haskell-nix.tool "ghc922" "fourmolu" { })
+            haskellPackages.fourmolu
           ]);
           shellHook = "echo $name";
         };

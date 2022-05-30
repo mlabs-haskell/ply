@@ -87,9 +87,7 @@ library
   import:          common-configs
   import:          common-deps
   import:          common-ghc-opts
-  exposed-modules:
-    Ply
-
+  exposed-modules: Ply
   hs-source-dirs:  src
 
 test-suite ply-core-test
@@ -99,9 +97,6 @@ test-suite ply-core-test
   import:         common-ghc-opts
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
-
-  build-depends:
-    , ply-core
-
+  build-depends:  ply-core
   hs-source-dirs: test
   ghc-options:    -threaded -rtsopts -with-rtsopts=-N

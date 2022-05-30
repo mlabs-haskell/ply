@@ -13,15 +13,17 @@ endif
 test-core:
 	nix -L --show-trace build .#test-core.x86_64-linux
 
+EXTENSIONS := -o -XTypeApplications -o -XPatternSynonyms
+
 # Run fourmolu formatter
 format: requires_nix_shell
-	env -C ply-core fourmolu --mode inplace --check-idempotence -e $(shell env -C ply-core fd -ehs)
+	env -C ply-core fourmolu -i --check-idempotence $(EXTENSIONS) $(shell env -C ply-core fd -ehs)
 	nixpkgs-fmt $(NIX_SOURCES)
 	cabal-fmt -i $(CABAL_SOURCES)
 
 # Check formatting (without making changes)
 format_check:
-	env -C ply-core fourmolu --stdin-input-file . --mode check --check-idempotence -e $(shell env -C ply-core fd -ehs)
+	env -C ply-core fourmolu --mode check --check-idempotence $(EXTENSIONS) $(shell env -C ply-core fd -ehs)
 	nixpkgs-fmt --check $(NIX_SOURCES)
 	cabal-fmt -c $(CABAL_SOURCES)
 

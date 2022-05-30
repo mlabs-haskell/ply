@@ -3,11 +3,11 @@ module Ply () where
 import Data.Coerce
 import Data.Kind
 
-import Plutus.V1.Ledger.Scripts
-import UntypedPlutusCore
-import qualified PlutusCore as PLC
-import PlutusCore (Some (Some), ValueOf (ValueOf), Includes)
 import Data.String (IsString)
+import Plutus.V1.Ledger.Scripts
+import PlutusCore (Includes, Some (Some), ValueOf (ValueOf))
+import qualified PlutusCore as PLC
+import UntypedPlutusCore
 
 type role TypedScript nominal nominal
 type TypedScript :: ScriptRole -> [Type] -> Type
@@ -24,28 +24,33 @@ toMintingPolicy (TypedScript s) = coerce s
 applyParam :: DefaultUni `Includes` x => x -> TypedScript r (x ': xs) -> TypedScript r xs
 applyParam x (TypedScript (Program () DefaultVersion f@(LamAbs () _ body))) =
   TypedScript . Program () DefaultVersion $
-  let c = PLC.someValue x
-      arg = Constant () c
-  in if isSmallConstant c then subst 1 (const body) f else Apply () f arg
-applyParam _ (TypedScript (Program () v t)) = error
-  $ "applyParam: unsupported program; expected version: " ++ show DefaultVersion ++
-    "; expected term: LamAbs\n" ++
-    "actual version: " ++ show v ++
-    "; actual term: " ++ termIdOf t
+    let c = PLC.someValue x
+        arg = Constant () c
+     in if isSmallConstant c then subst 1 (const body) f else Apply () f arg
+applyParam _ (TypedScript (Program () v t)) =
+  error $
+    "applyParam: unsupported program; expected version: " ++ show DefaultVersion
+      ++ "; expected term: LamAbs\n"
+      ++ "actual version: "
+      ++ show v
+      ++ "; actual term: "
+      ++ termIdOf t
 
 termIdOf :: IsString p => Term name uni fun () -> p
 termIdOf (Constant () _) = "Constant"
-termIdOf (Builtin () _)  = "Builtin"
-termIdOf (Error ())      = "Error"
-termIdOf (Var () _)      = "Var"
-termIdOf (Apply () _ _)  = "Apply"
+termIdOf (Builtin () _) = "Builtin"
+termIdOf (Error ()) = "Error"
+termIdOf (Var () _) = "Var"
+termIdOf (Apply () _ _) = "Apply"
 termIdOf (LamAbs () _ _) = "LamAbs"
-termIdOf (Delay () _)    = "Delay"
-termIdOf (Force () _)    = "Force"
+termIdOf (Delay () _) = "Delay"
+termIdOf (Force () _) = "Force"
 
 pattern DefaultVersion :: Version ()
-pattern DefaultVersion <- ((==PLC.defaultVersion ()) -> True) where
-  DefaultVersion = PLC.defaultVersion ()
+pattern DefaultVersion <-
+  ((== PLC.defaultVersion ()) -> True)
+  where
+    DefaultVersion = PLC.defaultVersion ()
 
 uplcConstantOf :: DefaultUni `Includes` x => x -> Term name DefaultUni fun ()
 uplcConstantOf x = Constant () $ PLC.someValue x
