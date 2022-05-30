@@ -1,0 +1,6 @@
+packages:
+  ./ply-core
+
+tests: true
+
+test-show-details: direct
