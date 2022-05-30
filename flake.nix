@@ -90,7 +90,7 @@
 
       mkDevEnv = system:
         # Generic environment bringing generic utilities. To be used only as a
-        # shell. Include as a depedency to other shells to have the same
+        # shell. Include as a dependency to other shells to have the same
         # utilities in the shell.
         let
           pkgs = nixpkgsFor system;
@@ -98,20 +98,18 @@
         in
         pkgs.stdenv.mkDerivation {
           name = "Standard-Dev-Environment-with-Utils";
-          buildInputs = (with pkgs'; [
-            bashInteractive
-            cabal-install
-            fd
-            git
-            gnumake
-            haskellPackages.apply-refact
-            haskellPackages.cabal-fmt
-            hlint
-            nixfmt
-            nixpkgs-fmt
-
-            haskellPackages.fourmolu
-          ]);
+          buildInputs = [
+            pkgs'.bashInteractive
+            pkgs'.cabal-install
+            pkgs'.fd
+            pkgs'.git
+            pkgs'.gnumake
+            pkgs'.haskellPackages.apply-refact
+            pkgs'.haskellPackages.cabal-fmt
+            pkgs'.haskellPackages.fourmolu
+            pkgs'.hlint
+            pkgs'.nixpkgs-fmt
+          ];
           shellHook = "echo $name";
         };
 
