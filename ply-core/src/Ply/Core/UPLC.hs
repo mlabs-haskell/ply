@@ -22,6 +22,7 @@ pattern DefaultVersion <-
     DefaultVersion = PLC.defaultVersion ()
 
 -- | Apply a 'DefaultUni' constant to given UPLC program, inlining if necessary.
+-- TODO: Subst optimizations when 'Apply'ing over non 'LamAbs' stuff as well, e.g chain of 'Apply'ies.
 applyConstant ::
   Program DeBruijn DefaultUni DefaultFun () ->
   Some (ValueOf DefaultUni) ->
@@ -30,25 +31,23 @@ applyConstant (Program () DefaultVersion f@(LamAbs () _ body)) c =
   Program () DefaultVersion $
     let arg = Constant () c
      in if isSmallConstant c then subst 1 (const body) f else Apply () f arg
-applyConstant (Program () v t) _ =
+applyConstant (Program () DefaultVersion f) c = Program () DefaultVersion . Apply () f $ Constant () c
+applyConstant (Program () v _) _ =
   error $
     "applyConstant: unsupported program; expected version: " ++ show DefaultVersion
-      ++ "; expected term: LamAbs\n"
-      ++ "actual version: "
+      ++ "\nactual version: "
       ++ show v
-      ++ "; actual term: "
-      ++ termIdOf t
 
 -- | Name of UPLC terms, for usage in friendly error messages.
-termIdOf :: IsString p => Term name uni fun () -> p
-termIdOf (Constant () _) = "Constant"
-termIdOf (Builtin () _) = "Builtin"
-termIdOf (Error ()) = "Error"
-termIdOf (Var () _) = "Var"
-termIdOf (Apply () _ _) = "Apply"
-termIdOf (LamAbs () _ _) = "LamAbs"
-termIdOf (Delay () _) = "Delay"
-termIdOf (Force () _) = "Force"
+_termIdOf :: IsString p => Term name uni fun () -> p
+_termIdOf (Constant () _) = "Constant"
+_termIdOf (Builtin () _) = "Builtin"
+_termIdOf (Error ()) = "Error"
+_termIdOf (Var () _) = "Var"
+_termIdOf (Apply () _ _) = "Apply"
+_termIdOf (LamAbs () _ _) = "LamAbs"
+_termIdOf (Delay () _) = "Delay"
+_termIdOf (Force () _) = "Force"
 
 isSmallConstant :: Some (ValueOf DefaultUni) -> Bool
 isSmallConstant c = case c of
