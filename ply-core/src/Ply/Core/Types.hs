@@ -56,6 +56,7 @@ type role TypedScript nominal nominal
 
 type TypedScript :: ScriptRole -> [Type] -> Type
 newtype TypedScript r a = TypedScript (Program DeBruijn DefaultUni DefaultFun ())
+  deriving stock (Show)
 
 -- | Script role: either a validator or a minting policy.
 data ScriptRole = ValidatorScript | MintingPolicyScript
