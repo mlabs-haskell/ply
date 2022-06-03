@@ -21,6 +21,7 @@ common common-ghc-opts
 common common-deps
   build-depends:
     , aeson
+    , aeson-pretty
     , base
     , base16-bytestring
     , bytestring
@@ -95,6 +96,7 @@ library
     Ply
     Ply.Core.Class
     Ply.Core.Deserialize
+    Ply.Core.Serialize
     Ply.Core.TypedReader
 
   other-modules:
