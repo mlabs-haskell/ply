@@ -73,8 +73,8 @@ data ScriptReaderException
 
 -- | JSON schema of the envelope we'll be using to represent typed scripts in the filesystem,
 data TypedScriptEnvelope' = TypedScriptEnvelope'
-  { -- | Plutus script version, currently only V1 is supported.
-    tsVersion' :: ScriptVersion
+  { -- | Plutus script version.
+    tsVersion' :: !ScriptVersion
   , -- | Plutus script role, either a validator or a minting policy.
     tsRole' :: !ScriptRole
   , -- | List of extra parameter types to be applied before being treated as a validator/minting policy.
@@ -88,8 +88,8 @@ data TypedScriptEnvelope' = TypedScriptEnvelope'
 
 -- | This is essentially a post-processed version of 'TypedScriptEnvelope''.
 data TypedScriptEnvelope = TypedScriptEnvelope
-  { -- | Plutus script version, currently only V1 is supported.
-    tsVersion :: ScriptVersion
+  { -- | Plutus script version.
+    tsVersion :: !ScriptVersion
   , -- | Plutus script role, either a validator or a minting policy.
     tsRole :: !ScriptRole
   , -- | List of extra parameter types to be applied before being treated as a validator/minting policy.
@@ -112,17 +112,13 @@ instance FromJSON TypedScriptEnvelope' where
     where
       parseJSONBase16 v =
         either fail pure . Base16.decode . Text.encodeUtf8 =<< parseJSON v
-
-  -- We do not expect a non-Object value here.
-  -- We could use empty to fail, but typeMismatch
-  -- gives a much more informative error message.
   parseJSON invalid =
     prependFailure
-      "parsing Coord failed, "
+      "parsing TypedScriptEnvelope' failed, "
       (typeMismatch "Object" invalid)
 
 -- | Version identifier for the Plutus script.
-data ScriptVersion = ScriptV1
+data ScriptVersion = ScriptV1 | ScriptV2
   deriving stock (Bounded, Enum, Eq, Ord, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
