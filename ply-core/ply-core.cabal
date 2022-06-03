@@ -94,13 +94,13 @@ library
   import:          common-ghc-opts
   exposed-modules:
     Ply
+    Ply.Core.Apply
     Ply.Core.Class
     Ply.Core.Deserialize
     Ply.Core.Serialize
     Ply.Core.TypedReader
 
   other-modules:
-    Ply.Core.Apply
     Ply.Core.Types
     Ply.Core.UPLC
 
