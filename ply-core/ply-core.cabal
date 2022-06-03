@@ -20,11 +20,15 @@ common common-ghc-opts
 
 common common-deps
   build-depends:
+    , aeson
     , base
+    , base16-bytestring
     , bytestring
+    , cardano-binary
     , plutus-core
     , plutus-ledger-api
     , plutus-tx
+    , serialise
     , text
 
 common common-lang
@@ -87,7 +91,17 @@ library
   import:          common-configs
   import:          common-deps
   import:          common-ghc-opts
-  exposed-modules: Ply
+  exposed-modules:
+    Ply
+    Ply.Core.Class
+    Ply.Core.Deserialize
+    Ply.Core.TypedReader
+
+  other-modules:
+    Ply.Core.Apply
+    Ply.Core.Types
+    Ply.Core.UPLC
+
   hs-source-dirs:  src
 
 test-suite ply-core-test
