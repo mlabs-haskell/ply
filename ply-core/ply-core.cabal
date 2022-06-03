@@ -3,7 +3,7 @@ name:               ply-core
 version:            0.0.1
 author:             Chase <chase@mlabs.city>
 license:            MIT
-extra-source-files: README.md
+extra-source-files: ../README.md
 
 -- Common sections
 
