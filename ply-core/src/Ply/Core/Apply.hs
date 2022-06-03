@@ -1,4 +1,4 @@
-module Ply.Core.Apply (applyParam, (#)) where
+module Ply.Core.Apply (applyParam, (#), (#$)) where
 
 import Ply.Core.Class (PlyArg, someBuiltinArg)
 import Ply.Core.Types (TypedScript (TypedScript))
@@ -11,3 +11,10 @@ applyParam (TypedScript prog) x = TypedScript $ prog `applyConstant` someBuiltin
 -- | Operator version of 'applyParam'.
 (#) :: PlyArg x => TypedScript r (x ': xs) -> x -> TypedScript r xs
 (#) = applyParam
+
+infixl 8 #
+
+(#$) :: PlyArg x => TypedScript r (x ': xs) -> x -> TypedScript r xs
+(#$) = applyParam
+
+infixr 0 #$
