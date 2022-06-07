@@ -1,0 +1,7 @@
+packages:
+  ./ply-plutarch
+  ./ply-core
+
+tests: true
+
+test-show-details: direct

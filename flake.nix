@@ -9,6 +9,14 @@
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     iohk-nix.flake = false; # Bad Nix code
 
+    plutarch = {
+      url = "github:Plutonomicon/plutarch";
+      inputs = {
+        haskell-nix.follows = "haskell-nix";
+        nixpkgs.follows = "nixpkgs";
+      };
+    };
+
     plutus = {
       url =
         "github:input-output-hk/plutus/892d9b03a67e3b9f8c452784ab4e758ff3eb2781";
@@ -36,7 +44,7 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, haskell-nix, iohk-nix, ... }:
+  outputs = inputs@{ self, nixpkgs, haskell-nix, iohk-nix, plutarch, ... }:
     let
       extraSources = [
         {
@@ -180,6 +188,52 @@
           };
       };
 
+      # Ply x Plutarch
+      ply-plutarch = rec {
+        ghcVersion = "ghc921";
+
+        projectFor = system:
+          let
+            pkgs = nixpkgsFor system;
+            pkgs' = nixpkgsFor' system;
+            stdDevEnv = mkDevEnv system;
+          in
+          (nixpkgsFor system).haskell-nix.cabalProject' {
+            src = ./.;
+            compiler-nix-name = ghcVersion;
+            cabalProjectFileName = "cabal.project.plutarch";
+            inherit (plutarch) cabalProjectLocal;
+            extraSources = plutarch.extraSources ++ [
+              {
+                src = inputs.plutarch;
+                subdirs = [
+                  "."
+                ];
+              }
+            ];
+            modules = [ (plutarch.haskellModule system) ];
+            shell = {
+              withHoogle = true;
+
+              exactDeps = true;
+
+              buildInputs = stdDevEnv.buildInputs;
+
+              tools = removeAttrs plutarch.tools [ "fourmolu" ];
+
+              additional = ps: [
+                ps.plutarch
+                ps.plutus-ledger-api
+              ];
+
+              shellHook = ''
+                export NIX_SHELL_TARGET="plutarch"
+                ln -fs cabal.project.plutarch cabal.project
+              '';
+            };
+          };
+      };
+
     in
     {
       inherit nixpkgsFor;
@@ -189,9 +243,14 @@
         flake = perSystem (system: (ply-core.projectFor system).flake { });
       };
 
+      ply-plutarch = {
+        project = perSystem ply-plutarch.projectFor;
+        flake = perSystem (system: (ply-plutarch.projectFor system).flake { });
+      };
+
       build-all = perSystem (system:
         (nixpkgsFor system).runCommand "build-all"
-          (self.ply-core.flake.${system}.packages)
+          (self.ply-core.flake.${system}.packages // self.ply-plutarch.flake.${system}.packages)
           "touch $out");
 
       test-core = perSystem (system:
@@ -202,14 +261,24 @@
             [ "ply-core:test:ply-core-test" ]
             self.ply-core.flake.${system}.checks) "touch $out");
 
+      test-plutarch = perSystem (system:
+        let pkgs = nixpkgsFor system;
+        in
+        pkgs.runCommand "test-plutarch"
+          (pkgs.lib.attrsets.getAttrs
+            [ "ply-plutarch:test:ply-plutarch-test" ]
+            self.ply-plutarch.flake.${system}.checks) "touch $out");
+
       packages = perSystem
         (system:
           self.ply-core.flake.${system}.packages //
+          self.ply-plutarch.flake.${system}.packages //
           { devEnv = mkDevEnv system; }
         );
 
       checks = perSystem (system:
-        self.ply-core.flake.${system}.checks // (formatCheckFor system));
+        self.ply-core.flake.${system}.checks // self.ply-plutarch.flake.${system}.checks
+        // (formatCheckFor system));
 
       check = perSystem (system:
         (nixpkgsFor system).runCommand "combined-test"
@@ -223,10 +292,11 @@
           touch $out
         '');
 
-      apps = perSystem (system: self.ply-core.flake.${system}.apps);
+      apps = perSystem (system: self.ply-core.flake.${system}.apps // self.ply-plutarch.flake.${system}.apps);
 
       devShells = perSystem (system: {
         core = self.ply-core.flake.${system}.devShell;
+        plutarch = self.ply-plutarch.flake.${system}.devShell;
         devEnv = self.packages.${system}.devEnv;
       });
     };

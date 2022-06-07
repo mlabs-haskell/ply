@@ -1,0 +1,101 @@
+cabal-version:      3.0
+name:               ply-plutarch
+version:            0.0.1
+author:             Chase <chase@mlabs.city>
+license:            MIT
+extra-source-files: ../README.md
+
+-- Common sections
+
+common common-configs
+  default-language: Haskell2010
+
+common common-ghc-opts
+  ghc-options:
+    -Wall -Wcompat -Wincomplete-uni-patterns -Wno-unused-do-bind
+    -Wno-partial-type-signatures -Wmissing-export-lists -Werror
+    -Wincomplete-record-updates -Wmissing-deriving-strategies
+    -Wno-name-shadowing -Wunused-foralls -fprint-explicit-foralls
+    -fprint-explicit-kinds
+
+common common-deps
+  build-depends:
+    , base
+    , plutarch
+
+common common-lang
+  default-extensions:
+    NoStarIsType
+    BangPatterns
+    BinaryLiterals
+    ConstrainedClassMethods
+    ConstraintKinds
+    DataKinds
+    DeriveAnyClass
+    DeriveDataTypeable
+    DeriveFoldable
+    DeriveFunctor
+    DeriveGeneric
+    DeriveLift
+    DeriveTraversable
+    DerivingStrategies
+    DerivingVia
+    DoAndIfThenElse
+    EmptyCase
+    EmptyDataDecls
+    EmptyDataDeriving
+    ExistentialQuantification
+    ExplicitForAll
+    FlexibleContexts
+    FlexibleInstances
+    GADTSyntax
+    GeneralisedNewtypeDeriving
+    HexFloatLiterals
+    ImplicitPrelude
+    InstanceSigs
+    KindSignatures
+    LambdaCase
+    MonomorphismRestriction
+    MultiParamTypeClasses
+    NumericUnderscores
+    OverloadedStrings
+    PatternGuards
+    PatternSynonyms
+    PolyKinds
+    PostfixOperators
+    RankNTypes
+    RelaxedPolyRec
+    RoleAnnotations
+    ScopedTypeVariables
+    StandaloneDeriving
+    StandaloneKindSignatures
+    TraditionalRecordSyntax
+    TupleSections
+    TypeApplications
+    TypeFamilyDependencies
+    TypeOperators
+    ViewPatterns
+
+-- Build targets
+
+library
+  import:          common-lang
+  import:          common-configs
+  import:          common-deps
+  import:          common-ghc-opts
+  exposed-modules:
+    Ply.Plutarch
+    Ply.Plutarch.Class
+
+  hs-source-dirs:  src
+
+test-suite ply-plutarch-test
+  import:         common-lang
+  import:         common-configs
+  import:         common-deps
+  import:         common-ghc-opts
+  type:           exitcode-stdio-1.0
+  main-is:        Spec.hs
+  build-depends:  ply-plutarch
+  hs-source-dirs: test
+  ghc-options:    -threaded -rtsopts -with-rtsopts=-N
