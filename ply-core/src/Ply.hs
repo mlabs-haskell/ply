@@ -8,6 +8,7 @@ module Ply (
   typeName,
   PlyArg,
   toValidator,
+  toScript,
   toMintingPolicy,
   readTypedScript,
   (#),
@@ -42,3 +43,7 @@ toValidator (TypedScript s) = coerce s
 -- | Obtain a 'MintingPolicy' from a 'TypedScript'.
 toMintingPolicy :: TypedScript 'MintingPolicyScript '[] -> MintingPolicy
 toMintingPolicy (TypedScript s) = coerce s
+
+-- | Unconditionally obtain the raw untyped 'Script' from a 'TypedScript'.
+toScript :: TypedScript r params -> Script
+toScript (TypedScript s) = coerce s
