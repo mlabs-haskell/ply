@@ -21,8 +21,9 @@ pattern DefaultVersion <-
   where
     DefaultVersion = PLC.defaultVersion ()
 
--- | Apply a 'DefaultUni' constant to given UPLC program, inlining if necessary.
--- TODO: Subst optimizations when 'Apply'ing over non 'LamAbs' stuff as well, e.g chain of 'Apply'ies.
+{- | Apply a 'DefaultUni' constant to given UPLC program, inlining if necessary.
+ TODO: Subst optimizations when 'Apply'ing over non 'LamAbs' stuff as well, e.g chain of 'Apply'ies.
+-}
 applyConstant ::
   Program DeBruijn DefaultUni DefaultFun () ->
   Some (ValueOf DefaultUni) ->

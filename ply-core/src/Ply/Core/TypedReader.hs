@@ -1,4 +1,4 @@
-module Ply.Core.TypedReader (readTypedScript, mkTypedScript) where
+module Ply.Core.TypedReader (TypedReader, readTypedScript, mkTypedScript) where
 
 import Control.Exception (throwIO)
 import Control.Monad (unless)
@@ -18,20 +18,28 @@ import Ply.Core.Types (
   typeName,
  )
 
-class TypedReader r params where
+class TypedReader_ r params where
   mkTypedScript :: TypedScriptEnvelope -> Either ScriptReaderException (TypedScript r params)
 
+class TypedReader_ r params => TypedReader r params
+
+{- | Read and verify a 'TypedScript' from given filepath.
+
+The user is responsible for choosing the "correct" 'ScriptRole' and script parameters, probably
+with type applications. The reader will then use this information to parse the file and verify
+the serialized script has the correct role and type.
+-}
 readTypedScript :: TypedReader r params => FilePath -> IO (TypedScript r params)
 readTypedScript p = readEnvelope p >>= either throwIO pure . mkTypedScript
 
-instance MkTypenames params => TypedReader 'ValidatorScript params where
+instance MkTypenames params => TypedReader_ 'ValidatorScript params where
   mkTypedScript (TypedScriptEnvelope _ rol params _ (Script prog)) = do
     unless (rol == ValidatorScript) . Left $ ScriptRoleError ValidatorScript rol
     let expectedParams = mkTypenames $ Proxy @params
     unless (expectedParams == params) . Left $ ScriptTypeError expectedParams params
     pure $ TypedScript prog
 
-instance MkTypenames params => TypedReader 'MintingPolicyScript params where
+instance MkTypenames params => TypedReader_ 'MintingPolicyScript params where
   mkTypedScript (TypedScriptEnvelope _ rol params _ (Script prog)) = do
     unless (rol == MintingPolicyScript) . Left $ ScriptRoleError MintingPolicyScript rol
     let expectedParams = mkTypenames $ Proxy @params

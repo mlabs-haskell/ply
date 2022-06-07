@@ -8,7 +8,13 @@ import Data.Kind (Type)
 import Data.Text (Text)
 
 import qualified Data.ByteString as BS
-import Plutus.V1.Ledger.Api
+import Plutus.V1.Ledger.Api (
+  CurrencySymbol (unCurrencySymbol),
+  Data,
+  TxOutRef,
+  fromBuiltin,
+  toData,
+ )
 import PlutusCore (DefaultUni, Includes, Some, ValueOf)
 import qualified PlutusCore as PLC
 

@@ -35,8 +35,10 @@ import Ply.Core.Types (
   typeName,
  )
 
+-- | Obtain a 'Validator' from a 'TypedScript'.
 toValidator :: TypedScript 'ValidatorScript '[] -> Validator
 toValidator (TypedScript s) = coerce s
 
+-- | Obtain a 'MintingPolicy' from a 'TypedScript'.
 toMintingPolicy :: TypedScript 'MintingPolicyScript '[] -> MintingPolicy
 toMintingPolicy (TypedScript s) = coerce s
