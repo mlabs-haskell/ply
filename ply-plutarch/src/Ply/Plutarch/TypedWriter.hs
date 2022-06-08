@@ -12,7 +12,7 @@ import Plutarch (ClosedTerm, PType, compile, type (:-->))
 import Plutarch.Api.V1 (PMintingPolicy, PValidator)
 import Plutus.V1.Ledger.Scripts (Script)
 
-import Ply (ScriptRole (MintingPolicyScript, ValidatorScript), Typename, typeName)
+import Ply (ScriptRole (MintingPolicyRole, ValidatorRole), Typename, typeName)
 import Ply.Core.Serialize (writeEnvelope)
 import Ply.Plutarch.Class (PlyArgOf)
 
@@ -57,11 +57,11 @@ type ReifyTypenames :: [Type] -> Constraint
 class ReifyTypenames ts where
   reifyTypenames :: Proxy ts -> [Typename]
 
-instance ReifyRole 'ValidatorScript where
-  reifyRole _ = ValidatorScript
+instance ReifyRole 'ValidatorRole where
+  reifyRole _ = ValidatorRole
 
-instance ReifyRole 'MintingPolicyScript where
-  reifyRole _ = MintingPolicyScript
+instance ReifyRole 'MintingPolicyRole where
+  reifyRole _ = MintingPolicyRole
 
 instance ReifyTypenames '[] where
   reifyTypenames _ = []
@@ -102,13 +102,13 @@ type family ParamsOf a where
 {- | Given a Plutarch function type ending in 'PValidator' or 'PMintingPolicy', determine its 'ScriptRole'.
 
 >>> :k! RoleOf (PData :--> PData :--> PScriptContext :--> POpaque)
-ValidatorScript
+ValidatorRole
 
 >>> :k! RoleOf (PData :--> PScriptContext :--> POpaque)
-MintingPolicyScript
+MintingPolicyRole
 
 >>> :k! RoleOf (PByteString :--> PData :--> PScriptContext :--> POpaque)
-MintingPolicyScript
+MintingPolicyRole
 
 === Note ===
 Indeed, there is a possibility for ambiguity here. Is `PData :--> PData :--> PScriptContext :--> POpaque` a
@@ -119,8 +119,8 @@ Currently, the Validator choice is given precedence. If you wanted to use the al
 -}
 type RoleOf :: PType -> ScriptRole
 type family RoleOf a where
-  RoleOf PValidator = ValidatorScript
-  RoleOf PMintingPolicy = MintingPolicyScript
+  RoleOf PValidator = ValidatorRole
+  RoleOf PMintingPolicy = MintingPolicyRole
   RoleOf (_ :--> rest) = RoleOf rest
   RoleOf wrong =
     TypeError

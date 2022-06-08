@@ -28,20 +28,20 @@ import Ply.Core.Class (PlyArg)
 import Ply.Core.TypedReader (readTypedScript)
 import Ply.Core.Types (
   ScriptReaderException (..),
-  ScriptRole (..),
+  ScriptRole (MintingPolicyRole, ValidatorRole),
   ScriptVersion (..),
-  TypedScript (..),
+  TypedScript (TypedScript),
   TypedScriptEnvelope (..),
   Typename,
   typeName,
  )
 
 -- | Obtain a 'Validator' from a 'TypedScript'.
-toValidator :: TypedScript 'ValidatorScript '[] -> Validator
+toValidator :: TypedScript 'ValidatorRole '[] -> Validator
 toValidator (TypedScript s) = coerce s
 
 -- | Obtain a 'MintingPolicy' from a 'TypedScript'.
-toMintingPolicy :: TypedScript 'MintingPolicyScript '[] -> MintingPolicy
+toMintingPolicy :: TypedScript 'MintingPolicyRole '[] -> MintingPolicy
 toMintingPolicy (TypedScript s) = coerce s
 
 -- | Unconditionally obtain the raw untyped 'Script' from a 'TypedScript'.

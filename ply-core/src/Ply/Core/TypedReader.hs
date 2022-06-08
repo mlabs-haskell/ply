@@ -13,7 +13,7 @@ import Plutus.V1.Ledger.Scripts (Script (Script))
 import Ply.Core.Deserialize (readEnvelope)
 import Ply.Core.Types (
   ScriptReaderException (ScriptRoleError, ScriptTypeError),
-  ScriptRole (MintingPolicyScript, ValidatorScript),
+  ScriptRole (MintingPolicyRole, ValidatorRole),
   TypedScript (TypedScript),
   TypedScriptEnvelope (TypedScriptEnvelope),
   Typename,
@@ -35,16 +35,16 @@ the serialized script has the correct role and type.
 readTypedScript :: TypedReader r params => FilePath -> IO (TypedScript r params)
 readTypedScript p = readEnvelope p >>= either throwIO pure . mkTypedScript
 
-instance MkTypenames params => TypedReader_ 'ValidatorScript params where
+instance MkTypenames params => TypedReader_ 'ValidatorRole params where
   mkTypedScript (TypedScriptEnvelope _ rol params _ (Script prog)) = do
-    unless (rol == ValidatorScript) . Left $ ScriptRoleError ValidatorScript rol
+    unless (rol == ValidatorRole) . Left $ ScriptRoleError ValidatorRole rol
     let expectedParams = mkTypenames $ Proxy @params
     unless (expectedParams == params) . Left $ ScriptTypeError expectedParams params
     pure $ TypedScript prog
 
-instance MkTypenames params => TypedReader_ 'MintingPolicyScript params where
+instance MkTypenames params => TypedReader_ 'MintingPolicyRole params where
   mkTypedScript (TypedScriptEnvelope _ rol params _ (Script prog)) = do
-    unless (rol == MintingPolicyScript) . Left $ ScriptRoleError MintingPolicyScript rol
+    unless (rol == MintingPolicyRole) . Left $ ScriptRoleError MintingPolicyRole rol
     let expectedParams = mkTypenames $ Proxy @params
     unless (expectedParams == params) . Left $ ScriptTypeError expectedParams params
     pure $ TypedScript prog

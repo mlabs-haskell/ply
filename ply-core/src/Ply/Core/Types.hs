@@ -1,26 +1,12 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Ply.Core.Types (
-  TypedScript (TypedScript),
+  TypedScript (..),
   ScriptVersion (..),
-  ScriptRole (ValidatorScript, MintingPolicyScript),
+  ScriptRole (..),
   ScriptReaderException (..),
-  TypedScriptEnvelope' (
-    TypedScriptEnvelope',
-    tsVersion',
-    tsRole',
-    tsParamTypes',
-    tsDescription',
-    tsRawCBOR'
-  ),
-  TypedScriptEnvelope (
-    TypedScriptEnvelope,
-    tsVersion,
-    tsRole,
-    tsParamTypes,
-    tsDescription,
-    tsScript
-  ),
+  TypedScriptEnvelope' (..),
+  TypedScriptEnvelope (..),
   Typename,
   typeName,
 ) where
@@ -58,7 +44,7 @@ newtype TypedScript r a = TypedScript (Program DeBruijn DefaultUni DefaultFun ()
   deriving stock (Show)
 
 -- | Script role: either a validator or a minting policy.
-data ScriptRole = ValidatorScript | MintingPolicyScript
+data ScriptRole = ValidatorRole | MintingPolicyRole
   deriving stock (Bounded, Enum, Eq, Ord, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 

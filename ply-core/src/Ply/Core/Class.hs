@@ -4,9 +4,9 @@
 module Ply.Core.Class (PlyArg (UPLCRep, toBuiltinArg), ToData', someBuiltinArg) where
 
 import Data.ByteString (ByteString)
+import qualified Data.ByteString as BS
 import Data.Kind (Type)
 import Data.Text (Text)
-import qualified Data.ByteString as BS
 
 import Plutus.V1.Ledger.Api
 import PlutusCore (DefaultUni, Includes, Some, ValueOf)
@@ -68,9 +68,9 @@ instance PlyArg Credential where
     let credHash = case cred of
           PubKeyCredential (PubKeyHash h) -> fromBuiltin h
           ScriptCredential (ValidatorHash h) -> fromBuiltin h
-    in if BS.length credHash == 32
-      then toData cred
-      else error "toBuiltinArg(Credential): Expected 32 bytes"
+     in if BS.length credHash == 32
+          then toData cred
+          else error "toBuiltinArg(Credential): Expected 32 bytes"
 
 instance PlyArg StakingCredential where
   type UPLCRep StakingCredential = Data
@@ -88,7 +88,7 @@ instance PlyArg Address where
   toBuiltinArg (Address cred stakeCred) =
     let credData = toBuiltinArg cred
         stakeCredData = toBuiltinArg stakeCred
-    in Constr 0 [credData, stakeCredData]
+     in Constr 0 [credData, stakeCredData]
 
 instance PlyArg CurrencySymbol where
   type UPLCRep CurrencySymbol = ByteString
