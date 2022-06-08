@@ -2,14 +2,12 @@
 
 module Ply.Plutarch.Class (PlyArgOf) where
 
-import Data.Kind
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 
-import Plutarch
+import Plutarch.Api.V1 (PCurrencySymbol, PTxOutRef)
 import Plutarch.Prelude
-import Plutus.V1.Ledger.Api
-import Plutarch.Api.V1
+import Plutus.V1.Ledger.Api (CurrencySymbol, Data, TxOutRef)
 
 -- TODO: How to handle 'PAsData'?
 

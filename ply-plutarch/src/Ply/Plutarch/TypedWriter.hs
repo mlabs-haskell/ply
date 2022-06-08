@@ -6,15 +6,15 @@ import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy (Proxy))
 import Data.Text (Text)
 import Data.Typeable (Typeable)
-import GHC.TypeLits
+import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 
-import Plutarch
-import Plutarch.Api.V1
-import Plutus.V1.Ledger.Scripts
+import Plutarch (ClosedTerm, PType, compile, type (:-->))
+import Plutarch.Api.V1 (PMintingPolicy, PValidator)
+import Plutus.V1.Ledger.Scripts (Script)
 
-import Ply
-import Ply.Core.Serialize
-import Ply.Plutarch.Class
+import Ply (ScriptRole (MintingPolicyScript, ValidatorScript), Typename, typeName)
+import Ply.Core.Serialize (writeEnvelope)
+import Ply.Plutarch.Class (PlyArgOf)
 
 {- | Write a parameterized Plutarch validator or minting policy into the filesystem.
 
