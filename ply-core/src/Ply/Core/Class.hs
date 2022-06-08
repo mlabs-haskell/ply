@@ -68,9 +68,9 @@ instance PlyArg Credential where
     let credHash = case cred of
           PubKeyCredential (PubKeyHash h) -> fromBuiltin h
           ScriptCredential (ValidatorHash h) -> fromBuiltin h
-     in if BS.length credHash == 32
+     in if BS.length credHash == 28
           then toData cred
-          else error "toBuiltinArg(Credential): Expected 32 bytes"
+          else error "toBuiltinArg(Credential): Expected 28 bytes"
 
 instance PlyArg StakingCredential where
   type UPLCRep StakingCredential = Data
