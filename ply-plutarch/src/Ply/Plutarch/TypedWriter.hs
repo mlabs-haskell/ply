@@ -35,6 +35,7 @@ class
   typeWriterInfo :: ClosedTerm ptype -> (ScriptRole, [Typename], Script)
 
 class TypedWriter_ ptype => TypedWriter ptype
+instance TypedWriter_ ptype => TypedWriter ptype
 
 instance
   ( ReifyRole (RoleOf ptype)

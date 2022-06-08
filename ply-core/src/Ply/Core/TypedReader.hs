@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Ply.Core.TypedReader (TypedReader, readTypedScript, mkTypedScript) where
 
 import Control.Exception (throwIO)
@@ -22,6 +24,7 @@ class TypedReader_ r params where
   mkTypedScript :: TypedScriptEnvelope -> Either ScriptReaderException (TypedScript r params)
 
 class TypedReader_ r params => TypedReader r params
+instance TypedReader_ r params => TypedReader r params
 
 {- | Read and verify a 'TypedScript' from given filepath.
 
