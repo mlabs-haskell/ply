@@ -15,13 +15,18 @@ common common-ghc-opts
     -Wall -Wcompat -Wincomplete-uni-patterns -Wno-unused-do-bind
     -Wno-partial-type-signatures -Wmissing-export-lists -Werror
     -Wincomplete-record-updates -Wmissing-deriving-strategies
-    -Wno-name-shadowing -Wunused-foralls -fprint-explicit-foralls
+    -Wno-name-shadowing -Wunused-foralls
+    -Wno-unticked-promoted-constructors -fprint-explicit-foralls
     -fprint-explicit-kinds
 
 common common-deps
   build-depends:
     , base
+    , bytestring
     , plutarch
+    , plutus-ledger-api
+    , ply-core
+    , text
 
 common common-lang
   default-extensions:
@@ -86,6 +91,7 @@ library
   exposed-modules:
     Ply.Plutarch
     Ply.Plutarch.Class
+    Ply.Plutarch.TypedWriter
 
   hs-source-dirs:  src
 
