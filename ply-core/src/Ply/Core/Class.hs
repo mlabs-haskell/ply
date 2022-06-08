@@ -93,9 +93,9 @@ instance PlyArg Address where
 instance PlyArg CurrencySymbol where
   type UPLCRep CurrencySymbol = ByteString
   toBuiltinArg x =
-    if BS.length bs == 32
+    if BS.length bs == 28
       then bs
-      else error "toBuiltinArg(CurrencySymbol): Expected 32 bytes"
+      else error "toBuiltinArg(CurrencySymbol): Expected 28 bytes"
     where
       bs = fromBuiltin $ unCurrencySymbol x
 
