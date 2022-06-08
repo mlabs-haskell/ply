@@ -5,9 +5,9 @@ module Ply.Plutarch.Class (PlyArgOf) where
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 
-import Plutarch.Api.V1 (PCurrencySymbol, PTxOutRef)
+import Plutarch.Api.V1
 import Plutarch.Prelude
-import Plutus.V1.Ledger.Api (CurrencySymbol, Data, TxOutRef)
+import Plutus.V1.Ledger.Api
 
 -- TODO: How to handle 'PAsData'?
 
@@ -32,5 +32,11 @@ type instance PlyArgOf (PBuiltinPair a b) = (PlyArgOf a, PlyArgOf b)
 type instance PlyArgOf (PBuiltinList a) = [PlyArgOf a]
 
 type instance PlyArgOf PTxOutRef = TxOutRef
+
+type instance PlyArgOf PCredential = Credential
+
+type instance PlyArgOf PStakingCredential = StakingCredential
+
+type instance PlyArgOf PAddress = Address
 
 type instance PlyArgOf PCurrencySymbol = CurrencySymbol
