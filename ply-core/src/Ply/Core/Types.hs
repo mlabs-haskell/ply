@@ -26,10 +26,9 @@ module Ply.Core.Types (
 ) where
 
 import Control.Exception (Exception)
-import Control.Monad (unless, when)
+import Control.Monad (when)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as Base16
-import Data.Char (isAlphaNum, isUpper)
 import Data.Kind (Type)
 import Data.Text (Text)
 import qualified Data.Text as Txt
@@ -132,16 +131,9 @@ newtype Typename = Typename Text
 typeName :: forall a. Typeable a => Typename
 typeName = Typename . Txt.pack . show $ typeRep (Proxy @a)
 
--- FIXME: Must support stuff like [Integer], () etc.
+-- FIXME: Must have stricter parsing rules.
 instance FromJSON Typename where
   parseJSON (String t) = do
     when (Txt.null t) $ fail "Typename cannot be empty"
-    unless (isUpper $ Txt.head t) $ fail "Typename must begin with an upper case character"
-    unless (Txt.all isValidChar t) $
-      fail "Typename must consist of alphanumeric characters, single quotes, or underscores"
     pure $ Typename t
   parseJSON x = unexpected x
-
--- | Whether given character may appear in a Type name (not type operators).
-isValidChar :: Char -> Bool
-isValidChar x = isAlphaNum x || x `elem` ['\'', '_']
