@@ -20,8 +20,8 @@ import Ply.Plutarch.Class (PlyArgOf)
 
 The result can be read by 'readTypedScript'.
 -}
-writeTypedScript :: TypedWriter pt => FilePath -> Text -> ClosedTerm pt -> IO ()
-writeTypedScript fp descr target = writeEnvelope fp descr rl paramTypes scrpt
+writeTypedScript :: TypedWriter pt => Text -> FilePath -> ClosedTerm pt -> IO ()
+writeTypedScript descr fp target = writeEnvelope descr fp rl paramTypes scrpt
   where
     (rl, paramTypes, scrpt) = typeWriterInfo target
 

@@ -16,10 +16,10 @@ import Ply.Core.Types (ScriptRole, ScriptVersion (ScriptV1), Typename)
 
 -- | Write a typed script into a 'TypedScriptEnvelope'.
 writeEnvelope ::
-  -- | Path to write the file to.
-  FilePath ->
   -- | Description for the script (semantically irrelevant).
   Text ->
+  -- | Path to write the file to.
+  FilePath ->
   -- | Whether the script is a validator or a minting policy.
   ScriptRole ->
   -- | The extra parameter types for the script.
@@ -27,7 +27,7 @@ writeEnvelope ::
   -- | The script itself.
   Script ->
   IO ()
-writeEnvelope filepath descr scrptRole paramTypes scrpt = do
+writeEnvelope descr filepath scrptRole paramTypes scrpt = do
   let scriptSBS = SBS.toShort . LBS.toStrict . serialise $ scrpt
       scriptRawCBOR = CBOR.serialize' scriptSBS
       plutusJson =
