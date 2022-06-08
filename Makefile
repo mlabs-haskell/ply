@@ -18,12 +18,14 @@ EXTENSIONS := -o -XTypeApplications -o -XPatternSynonyms
 # Run fourmolu formatter
 format: requires_nix_shell
 	env -C ply-core fourmolu -i --check-idempotence $(EXTENSIONS) $(shell env -C ply-core fd -ehs)
+	env -C ply-plutarch fourmolu -i --check-idempotence $(EXTENSIONS) $(shell env -C ply-plutarch fd -ehs)
 	nixpkgs-fmt $(NIX_SOURCES)
 	cabal-fmt -i $(CABAL_SOURCES)
 
 # Check formatting (without making changes)
 format_check:
 	env -C ply-core fourmolu --mode check --check-idempotence $(EXTENSIONS) $(shell env -C ply-core fd -ehs)
+	env -C ply-plutarch fourmolu --mode check --check-idempotence $(EXTENSIONS) $(shell env -C ply-plutarch fd -ehs)
 	nixpkgs-fmt --check $(NIX_SOURCES)
 	cabal-fmt -c $(CABAL_SOURCES)
 
