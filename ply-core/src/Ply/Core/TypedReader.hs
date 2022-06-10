@@ -35,14 +35,14 @@ the serialized script has the correct role and type.
 readTypedScript :: TypedReader r params => FilePath -> IO (TypedScript r params)
 readTypedScript p = readEnvelope p >>= either throwIO pure . mkTypedScript
 
-instance MkTypenames params => TypedReader_ 'ValidatorRole params where
+instance MkTypenames params => TypedReader_ ValidatorRole params where
   mkTypedScript (TypedScriptEnvelope _ rol params _ (Script prog)) = do
     unless (rol == ValidatorRole) . Left $ ScriptRoleError ValidatorRole rol
     let expectedParams = mkTypenames $ Proxy @params
     unless (expectedParams == params) . Left $ ScriptTypeError expectedParams params
     pure $ TypedScript prog
 
-instance MkTypenames params => TypedReader_ 'MintingPolicyRole params where
+instance MkTypenames params => TypedReader_ MintingPolicyRole params where
   mkTypedScript (TypedScriptEnvelope _ rol params _ (Script prog)) = do
     unless (rol == MintingPolicyRole) . Left $ ScriptRoleError MintingPolicyRole rol
     let expectedParams = mkTypenames $ Proxy @params

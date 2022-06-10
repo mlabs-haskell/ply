@@ -15,7 +15,8 @@ common common-ghc-opts
     -Wall -Wcompat -Wincomplete-uni-patterns -Wno-unused-do-bind
     -Wno-partial-type-signatures -Wmissing-export-lists -Werror
     -Wincomplete-record-updates -Wmissing-deriving-strategies
-    -Wno-name-shadowing -Wunused-foralls -fprint-explicit-foralls
+    -Wno-name-shadowing -Wunused-foralls
+    -Wno-unticked-promoted-constructors -fprint-explicit-foralls
     -fprint-explicit-kinds
 
 common common-deps
@@ -26,6 +27,7 @@ common common-deps
     , base16-bytestring
     , bytestring
     , cardano-binary
+    , containers
     , plutus-core
     , plutus-ledger-api
     , plutus-tx
