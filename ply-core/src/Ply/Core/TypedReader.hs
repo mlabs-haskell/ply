@@ -32,7 +32,11 @@ The user is responsible for choosing the "correct" 'ScriptRole' and script param
 with type applications. The reader will then use this information to parse the file and verify
 the serialized script has the correct role and type.
 -}
-readTypedScript :: TypedReader r params => FilePath -> IO (TypedScript r params)
+readTypedScript ::
+  TypedReader r params =>
+  -- | File path where the typed script file is located.
+  FilePath ->
+  IO (TypedScript r params)
 readTypedScript p = readEnvelope p >>= either throwIO pure . mkTypedScript
 
 instance MkTypenames params => TypedReader_ ValidatorRole params where

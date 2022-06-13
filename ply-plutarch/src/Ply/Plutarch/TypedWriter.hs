@@ -20,7 +20,15 @@ import Ply.Plutarch.Class (PlyArgOf)
 
 The result can be read by 'readTypedScript'.
 -}
-writeTypedScript :: TypedWriter pt => Text -> FilePath -> ClosedTerm pt -> IO ()
+writeTypedScript ::
+  TypedWriter pt =>
+  -- | Description to be associated with the compiled script file, semantically irrelevant.
+  Text ->
+  -- | File path to save the file to.
+  FilePath ->
+  -- | The parameterized Plutarch validator/minting policy.
+  ClosedTerm pt ->
+  IO ()
 writeTypedScript descr fp target = writeEnvelope descr fp rl paramTypes scrpt
   where
     (rl, paramTypes, scrpt) = typeWriterInfo target
