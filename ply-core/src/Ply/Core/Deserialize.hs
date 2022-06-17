@@ -24,10 +24,10 @@ import Ply.Core.Types (
 readEnvelope :: FilePath -> IO TypedScriptEnvelope
 readEnvelope path = do
   content <- BS.readFile path
-  TypedScriptEnvelope' ver rol params desc rawCbor <-
+  TypedScriptEnvelope' ver rol params desc cborHex _ <-
     either (throwIO . AesonDecodeError) pure $
       Aeson.eitherDecodeStrict' content
-  scrpt <- either (throwIO . CBORDecodeError) pure $ cborToScript rawCbor
+  scrpt <- either (throwIO . CBORDecodeError) pure $ cborToScript cborHex
   pure $ TypedScriptEnvelope ver rol params desc scrpt
 
 cborToScript :: ByteString -> Either DecoderError PlutusScript.Script

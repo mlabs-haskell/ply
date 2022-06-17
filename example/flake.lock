@@ -2337,12 +2337,12 @@
       },
       "locked": {
         "lastModified": 0,
-        "narHash": "sha256-I7eh5cRnBT4TeRjSabVTgT7GMBB65CIItskB4GLeF8w=",
-        "path": "/nix/store/xp0mb2dv9kkrixfm6qdfkqscyrs17zxy-source",
+        "narHash": "sha256-vFopCzbqWLH3PkhTMpYDtQTG9AkLkBCzV4pjwj3tCVE=",
+        "path": "/nix/store/zrn1p47nw0hlmkk0an4r0rf5xwi30yqx-source",
         "type": "path"
       },
       "original": {
-        "path": "/nix/store/xp0mb2dv9kkrixfm6qdfkqscyrs17zxy-source",
+        "path": "/nix/store/zrn1p47nw0hlmkk0an4r0rf5xwi30yqx-source",
         "type": "path"
       }
     },

@@ -13,6 +13,7 @@ module Ply.Core.Types (
 
 import Control.Exception (Exception)
 import Control.Monad (when)
+import Data.Aeson (object, (.=))
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as Base16
 import Data.Kind (Type)
@@ -24,7 +25,7 @@ import GHC.Generics (Generic)
 
 import Data.Aeson.Types (
   FromJSON (parseJSON),
-  ToJSON,
+  ToJSON (toJSON),
   Value (Object, String),
   prependFailure,
   typeMismatch,
@@ -67,8 +68,10 @@ data TypedScriptEnvelope' = TypedScriptEnvelope'
     tsParamTypes' :: [Typename]
   , -- | Description of the script, not semantically relevant.
     tsDescription' :: !Text
-  , -- | The actual script in serialized form.
-    tsRawCBOR' :: !ByteString
+  , -- | The actual script in serialized CBOR form.
+    tsCbor' :: !ByteString
+  , -- | The actual script in raw serialized form.
+    tsRaw' :: !ByteString
   }
   deriving stock (Eq, Show)
 
@@ -95,6 +98,7 @@ instance FromJSON TypedScriptEnvelope' where
       <*> v .: "params"
       <*> v .: "description"
       <*> (parseJSONBase16 =<< v .: "cborHex")
+      <*> (parseJSONBase16 =<< v .: "rawHex")
     where
       parseJSONBase16 v =
         either fail pure . Base16.decode . Text.encodeUtf8 =<< parseJSON v
@@ -102,6 +106,18 @@ instance FromJSON TypedScriptEnvelope' where
     prependFailure
       "parsing TypedScriptEnvelope' failed, "
       (typeMismatch "Object" invalid)
+
+instance ToJSON TypedScriptEnvelope' where
+  toJSON (TypedScriptEnvelope' ver rol params desc cborHex rawHex) =
+    toJSON $
+      object
+        [ "version" .= ver
+        , "role" .= rol
+        , "params" .= params
+        , "description" .= desc
+        , "cborHex" .= Text.decodeUtf8 (Base16.encode cborHex)
+        , "rawHex" .= Text.decodeUtf8 (Base16.encode rawHex)
+        ]
 
 -- | Version identifier for the Plutus script.
 data ScriptVersion = ScriptV1 | ScriptV2
