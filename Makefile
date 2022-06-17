@@ -19,6 +19,8 @@ EXTENSIONS := -o -XTypeApplications -o -XPatternSynonyms
 format: requires_nix_shell
 	env -C ply-core fourmolu -i --check-idempotence $(EXTENSIONS) $(shell env -C ply-core fd -ehs)
 	env -C ply-plutarch fourmolu -i --check-idempotence $(EXTENSIONS) $(shell env -C ply-plutarch fd -ehs)
+	env -C example/offchain fourmolu -i --check-idempotence $(EXTENSIONS) $(shell env -C example/offchain fd -ehs)
+	env -C example/onchain fourmolu -i --check-idempotence $(EXTENSIONS) $(shell env -C example/onchain fd -ehs)
 	nixpkgs-fmt $(NIX_SOURCES)
 	cabal-fmt -i $(CABAL_SOURCES)
 

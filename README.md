@@ -126,6 +126,10 @@ main = do
 
 > Aside: Notice how I didn't use type applications, it got inferred automatically!
 
+# Examples
+
+You can find a full example demonstrating the usage of Ply on a simple nft minting contract inside [example](./example/).
+
 # Shortcomings/Pitfalls
 
 - No `PAsData` support yet. As a result, you can use, e.g `PCurrencySymbol` as an extra parameter, but not `PAsData PCurrencySymbol`.
