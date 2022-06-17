@@ -242,11 +242,12 @@ instance PlyArg DCert where
   toBuiltinArgData = toBuiltinArg
 
 instance PlyArg TxId where
-  type UPLCRep TxId = ByteString
+  -- TxId is a Constr data instead of just a bytestring, for some reason.
+  type UPLCRep TxId = Data
   toBuiltinArg (TxId x) =
-    if BS.length bs == 28
-      then bs
-      else error "toBuiltinArg(TxId): Expected 28 bytes"
+    if BS.length bs == 32
+      then Constr 0 [toBuiltinArgData bs]
+      else error "toBuiltinArg(TxId): Expected 32 bytes"
     where
       bs = fromBuiltin x
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
