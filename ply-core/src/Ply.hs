@@ -13,6 +13,8 @@ module Ply (
   readTypedScript,
   (#),
   (#$),
+  (#!),
+  (#$!),
 ) where
 
 import Data.Coerce (coerce)
@@ -23,7 +25,7 @@ import Plutus.V1.Ledger.Scripts (
   Validator (Validator),
  )
 
-import Ply.Core.Apply ((#), (#$))
+import Ply.Core.Apply ((#), (#!), (#$), (#$!))
 import Ply.Core.Class (PlyArg)
 import Ply.Core.TypedReader (readTypedScript)
 import Ply.Core.Types (

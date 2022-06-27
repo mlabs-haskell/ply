@@ -1,5 +1,5 @@
 -- | $module UPLC helpers.
-module Ply.Core.UPLC (applyConstant) where
+module Ply.Core.UPLC (applyConstant, applyConstant') where
 
 import Data.String (IsString)
 
@@ -34,6 +34,21 @@ applyConstant (Program () DefaultVersion f@(LamAbs () _ body)) c =
      in if isSmallConstant c then subst 1 (const body) f else Apply () f arg
 applyConstant (Program () DefaultVersion f) c = Program () DefaultVersion . Apply () f $ Constant () c
 applyConstant (Program () v _) _ =
+  error $
+    "applyConstant: unsupported program; expected version: " ++ show DefaultVersion
+      ++ "\nactual version: "
+      ++ show v
+
+-- | Like 'applyConstant' but does not perform any optimizations.
+applyConstant' ::
+  Program DeBruijn DefaultUni DefaultFun () ->
+  Some (ValueOf DefaultUni) ->
+  Program DeBruijn DefaultUni DefaultFun ()
+applyConstant' (Program () DefaultVersion f) c =
+  Program () DefaultVersion $
+    let arg = Constant () c
+     in Apply () f arg
+applyConstant' (Program () v _) _ =
   error $
     "applyConstant: unsupported program; expected version: " ++ show DefaultVersion
       ++ "\nactual version: "
