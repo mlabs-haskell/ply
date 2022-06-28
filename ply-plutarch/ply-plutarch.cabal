@@ -103,6 +103,10 @@ test-suite ply-plutarch-test
   import:         common-ghc-opts
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
-  build-depends:  ply-plutarch
+  build-depends:
+    , ply-plutarch
+    , tasty
+    , tasty-hunit
+
   hs-source-dirs: test
   ghc-options:    -threaded -rtsopts -with-rtsopts=-N
