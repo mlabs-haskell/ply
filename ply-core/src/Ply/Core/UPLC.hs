@@ -44,10 +44,7 @@ applyConstant' ::
   Program DeBruijn DefaultUni DefaultFun () ->
   Some (ValueOf DefaultUni) ->
   Program DeBruijn DefaultUni DefaultFun ()
-applyConstant' (Program () DefaultVersion f) c =
-  Program () DefaultVersion $
-    let arg = Constant () c
-     in Apply () f arg
+applyConstant' (Program () DefaultVersion f) c = Program () DefaultVersion . Apply () f $ Constant () c
 applyConstant' (Program () v _) _ =
   error $
     "applyConstant: unsupported program; expected version: " ++ show DefaultVersion
