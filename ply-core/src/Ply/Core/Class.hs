@@ -12,10 +12,17 @@ import qualified Data.Map.Strict as M
 import Data.Text (Text)
 import GHC.TypeLits (ErrorMessage (ShowType, Text))
 
+#ifdef PLUTUS_NEW
+import PlutusLedgerApi.V1
+import PlutusLedgerApi.V1.Scripts
+import PlutusLedgerApi.V1.Time
+import PlutusLedgerApi.V1.Value
+#else
 import Plutus.V1.Ledger.Api
 import Plutus.V1.Ledger.Scripts
 import Plutus.V1.Ledger.Time
 import Plutus.V1.Ledger.Value
+#endif
 import PlutusCore (DefaultUni, Includes, Some, ValueOf)
 import qualified PlutusCore as PLC
 import qualified PlutusTx.AssocMap as PlutusMap
