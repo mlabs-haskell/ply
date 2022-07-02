@@ -5,6 +5,11 @@ author:             Chase <chase@mlabs.city>
 license:            MIT
 extra-source-files: ../README.md
 
+flag plutus-new
+  description: Use the new plutus-ledger-api namespace (0a8b1ad)
+  manual:      True
+  default:     False
+
 -- Common sections
 
 common common-configs
@@ -41,6 +46,7 @@ common common-lang
     BinaryLiterals
     ConstrainedClassMethods
     ConstraintKinds
+    CPP
     DataKinds
     DeriveAnyClass
     DeriveDataTypeable
@@ -107,6 +113,9 @@ library
     Ply.Core.UPLC
 
   hs-source-dirs:  src
+
+  if flag(plutus-new)
+    cpp-options: -DPLUTUS_NEW
 
 test-suite ply-core-test
   import:         common-lang

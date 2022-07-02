@@ -34,7 +34,11 @@ import Data.Aeson.Types (
  )
 
 import Cardano.Binary (DecoderError)
+#if PLUTUS_NEW
 import PlutusLedgerApi.V1.Scripts (Script)
+#else
+import Plutus.V1.Ledger.Scripts (Script)
+#endif
 import UntypedPlutusCore (DeBruijn, DefaultFun, DefaultUni, Program)
 
 -- | Compiled scripts that preserve script role and parameter types.
