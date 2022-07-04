@@ -12,12 +12,12 @@ import qualified Data.Map.Strict as M
 import Data.Text (Text)
 import GHC.TypeLits (ErrorMessage (ShowType, Text))
 
-import Plutus.V1.Ledger.Api
-import Plutus.V1.Ledger.Scripts
-import Plutus.V1.Ledger.Time
-import Plutus.V1.Ledger.Value
 import PlutusCore (DefaultUni, Includes, Some, ValueOf)
 import qualified PlutusCore as PLC
+import PlutusLedgerApi.V1 as LedgerV1
+import PlutusLedgerApi.V1.Scripts (ScriptHash (ScriptHash))
+import PlutusLedgerApi.V1.Time (DiffMilliSeconds (DiffMilliSeconds))
+import PlutusLedgerApi.V1.Value (AssetClass (AssetClass))
 import qualified PlutusTx.AssocMap as PlutusMap
 
 type BottomConstraint s t = 'Text s ~ ShowType t
@@ -260,9 +260,9 @@ instance PlyArg TxOutRef where
       else error "toBuiltinArg(TxOutRef): Expected non-negative idx"
   toBuiltinArgData = toBuiltinArg
 
-instance PlyArg TxOut where
-  type UPLCRep TxOut = Data
-  toBuiltinArg (TxOut addr val dh) =
+instance PlyArg LedgerV1.TxOut where
+  type UPLCRep LedgerV1.TxOut = Data
+  toBuiltinArg (LedgerV1.TxOut addr val dh) =
     Constr
       0
       [ toBuiltinArgData addr
@@ -271,15 +271,15 @@ instance PlyArg TxOut where
       ]
   toBuiltinArgData = toBuiltinArg
 
-instance PlyArg TxInInfo where
-  type UPLCRep TxInInfo = Data
-  toBuiltinArg (TxInInfo ref out) = Constr 0 [toBuiltinArgData ref, toBuiltinArgData out]
+instance PlyArg LedgerV1.TxInInfo where
+  type UPLCRep LedgerV1.TxInInfo = Data
+  toBuiltinArg (LedgerV1.TxInInfo ref out) = Constr 0 [toBuiltinArgData ref, toBuiltinArgData out]
   toBuiltinArgData = toBuiltinArg
 
-instance PlyArg TxInfo where
-  type UPLCRep TxInfo = Data
+instance PlyArg LedgerV1.TxInfo where
+  type UPLCRep LedgerV1.TxInfo = Data
   toBuiltinArg
-    ( TxInfo
+    ( LedgerV1.TxInfo
         inps
         outs
         fee
@@ -314,9 +314,9 @@ instance PlyArg ScriptPurpose where
   toBuiltinArg (Certifying dcert) = Constr 3 [toBuiltinArgData dcert]
   toBuiltinArgData = toBuiltinArg
 
-instance PlyArg ScriptContext where
-  type UPLCRep ScriptContext = Data
-  toBuiltinArg (ScriptContext inf purp) = Constr 0 [toBuiltinArgData inf, toBuiltinArgData purp]
+instance PlyArg LedgerV1.ScriptContext where
+  type UPLCRep LedgerV1.ScriptContext = Data
+  toBuiltinArg (LedgerV1.ScriptContext inf purp) = Constr 0 [toBuiltinArgData inf, toBuiltinArgData purp]
   toBuiltinArgData = toBuiltinArg
 
 instance PlyArg Datum where

@@ -10,7 +10,7 @@
     iohk-nix.flake = false; # Bad Nix code
 
     plutarch = {
-      url = "github:Plutonomicon/plutarch";
+      url = "github:Plutonomicon/plutarch?ref=staging";
       inputs = {
         haskell-nix.follows = "haskell-nix";
         nixpkgs.follows = "nixpkgs";
@@ -19,12 +19,12 @@
 
     plutus = {
       url =
-        "github:input-output-hk/plutus/892d9b03a67e3b9f8c452784ab4e758ff3eb2781";
+        "github:input-output-hk/plutus/b39a526e983cb931d0cc49b7d073d6d43abd22b5";
       flake = false;
     };
     cardano-base = {
       url =
-        "github:input-output-hk/cardano-base/0b1b5b37e305c4bb10791f843bc8c81686a0cba4";
+        "github:input-output-hk/cardano-base/0f3a867493059e650cda69e20a5cbf1ace289a57";
       flake = false;
     };
     cardano-crypto = {

@@ -12,7 +12,7 @@ import qualified Data.Aeson as Aeson
 
 import Cardano.Binary (DecoderError, FromCBOR (fromCBOR))
 import qualified Cardano.Binary as CBOR
-import qualified Plutus.V1.Ledger.Scripts as PlutusScript
+import qualified PlutusLedgerApi.V1.Scripts as PlutusScript
 
 import Ply.Core.Types (
   ScriptReaderException (AesonDecodeError, CBORDecodeError),

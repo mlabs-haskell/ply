@@ -104,7 +104,7 @@ Here's a full example of obtaining the `Validator` from our `parameterizedLockV`
 import Data.Text (Text)
 
 import Plutus.Contract (Contract, EmptySchema)
-import Plutus.V1.Ledger.Scripts (Validator)
+import PlutusLedgerApi.V1.Scripts (Validator)
 
 import Ply (readTypedScript, (#))
 import qualified Ply

@@ -19,7 +19,7 @@ module Ply (
 
 import Data.Coerce (coerce)
 
-import Plutus.V1.Ledger.Scripts (
+import PlutusLedgerApi.V1.Scripts (
   MintingPolicy (MintingPolicy),
   Script (Script),
   Validator (Validator),
