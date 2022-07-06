@@ -7,7 +7,7 @@ import Data.Text (Text)
 
 import Plutarch.Api.V1
 import Plutarch.Prelude
-import Plutus.V1.Ledger.Api
+import PlutusLedgerApi.V1
 import qualified PlutusTx.AssocMap as PlutusMap
 
 -- TODO: How to handle 'PAsData'?
@@ -34,9 +34,9 @@ type instance PlyArgOf (PBuiltinList a) = [PlyArgOf a]
 
 type instance PlyArgOf (PMaybeData a) = Maybe (PlyArgOf a)
 
-type instance PlyArgOf (PMap a b) = PlutusMap.Map (PlyArgOf a) (PlyArgOf b)
+type instance PlyArgOf (PMap Sorted a b) = PlutusMap.Map (PlyArgOf a) (PlyArgOf b)
 
-type instance PlyArgOf PValue = Value
+type instance PlyArgOf (PValue Sorted NonZero) = Value
 
 type instance PlyArgOf PCredential = Credential
 

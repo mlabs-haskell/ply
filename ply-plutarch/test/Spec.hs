@@ -9,7 +9,7 @@ import Test.Tasty.HUnit
 
 import Plutarch.Api.V1
 import Plutarch.Prelude
-import Plutus.V1.Ledger.Api
+import PlutusLedgerApi.V1
 import qualified PlutusTx.AssocMap as PlutusMap
 
 import Ply (ScriptRole (MintingPolicyRole, ValidatorRole), Typename, typeName)
@@ -49,7 +49,12 @@ tests =
         ( "@(PBuiltinPair PValue PCredential "
             ++ ":--> PCurrencySymbol :--> PPOSIXTime :--> PInterval PInteger :--> _)"
         )
-        $ testHelper @'[PBuiltinPair PValue PCredential, PCurrencySymbol, PPOSIXTime, PInterval PInteger]
+        $ testHelper
+          @'[ PBuiltinPair (PValue Sorted NonZero) PCredential
+            , PCurrencySymbol
+            , PPOSIXTime
+            , PInterval PInteger
+            ]
           [ typeName @(Value, Credential)
           , typeName @CurrencySymbol
           , typeName @POSIXTime
@@ -66,7 +71,7 @@ tests =
             , PExtended PInteger
             , PPubKeyHash
             , PMaybeData PByteString
-            , PMap PDatumHash PDatum
+            , PMap Sorted PDatumHash PDatum
             ]
           [ typeName @[TxInInfo]
           , typeName @TxOutRef

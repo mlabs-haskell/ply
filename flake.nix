@@ -1,7 +1,7 @@
 {
   description = "Ply - A helper library for working with compiled, parameterized Plutus Scripts";
 
-  inputs = {
+  inputs = rec {
     haskell-nix.url = "github:mlabs-haskell/haskell.nix";
 
     nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
@@ -14,6 +14,7 @@
       inputs = {
         haskell-nix.follows = "haskell-nix";
         nixpkgs.follows = "nixpkgs";
+        cardano-base = cardano-base;
       };
     };
 
@@ -190,7 +191,7 @@
 
       # Ply x Plutarch
       ply-plutarch = rec {
-        ghcVersion = "ghc921";
+        ghcVersion = "ghc922";
 
         projectFor = system:
           let
@@ -198,28 +199,22 @@
             pkgs' = nixpkgsFor' system;
             stdDevEnv = mkDevEnv system;
           in
-          (nixpkgsFor system).haskell-nix.cabalProject' {
+          pkgs.haskell-nix.cabalProject' (plutarch.applyPlutarchDep pkgs {
             src = ./.;
             compiler-nix-name = ghcVersion;
             cabalProjectFileName = "cabal.project.plutarch";
-            inherit (plutarch) cabalProjectLocal;
-            extraSources = plutarch.extraSources ++ [
+            extraSources = [
               {
                 src = inputs.plutarch;
-                subdirs = [
-                  "."
-                ];
+                subdirs = [ "." ];
               }
             ];
-            modules = [ (plutarch.haskellModule system) ];
             shell = {
               withHoogle = true;
 
               exactDeps = true;
 
               buildInputs = stdDevEnv.buildInputs;
-
-              tools = removeAttrs plutarch.tools [ "fourmolu" ];
 
               additional = ps: [
                 ps.plutarch
@@ -231,7 +226,7 @@
                 ln -fs cabal.project.plutarch cabal.project
               '';
             };
-          };
+          });
       };
 
     in

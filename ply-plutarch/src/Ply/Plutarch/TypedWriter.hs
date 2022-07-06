@@ -2,15 +2,17 @@
 
 module Ply.Plutarch.TypedWriter (TypedWriter, writeTypedScript, typeWriterInfo) where
 
+import Control.Exception (throwIO)
 import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy (Proxy))
 import Data.Text (Text)
+import qualified Data.Text as Txt
 import Data.Typeable (Typeable)
 import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 
-import Plutarch (ClosedTerm, PType, compile, type (:-->))
+import Plutarch (ClosedTerm, PType, compile, defaultConfig, type (:-->))
 import Plutarch.Api.V1 (PMintingPolicy, PValidator)
-import Plutus.V1.Ledger.Scripts (Script)
+import PlutusLedgerApi.V1.Scripts (Script)
 
 import Ply (ScriptRole (MintingPolicyRole, ValidatorRole), Typename, typeName)
 import Ply.Core.Serialize (writeEnvelope)
@@ -29,7 +31,8 @@ writeTypedScript ::
   -- | The parameterized Plutarch validator/minting policy.
   ClosedTerm pt ->
   IO ()
-writeTypedScript descr fp target = writeEnvelope descr fp rl paramTypes scrpt
+writeTypedScript descr fp target =
+  either (throwIO . userError . Txt.unpack) (writeEnvelope descr fp rl paramTypes) scrpt
   where
     (rl, paramTypes, scrpt) = typeWriterInfo target
 
@@ -40,7 +43,7 @@ class
   ) =>
   TypedWriter_ ptype
   where
-  typeWriterInfo :: ClosedTerm ptype -> (ScriptRole, [Typename], Script)
+  typeWriterInfo :: ClosedTerm ptype -> (ScriptRole, [Typename], Either Text Script)
 
 class TypedWriter_ ptype => TypedWriter ptype
 instance TypedWriter_ ptype => TypedWriter ptype
@@ -53,7 +56,7 @@ instance
   where
   typeWriterInfo pterm = (rl, paramTypes, scrpt)
     where
-      scrpt = compile pterm
+      scrpt = compile defaultConfig pterm
       rl = reifyRole $ Proxy @(RoleOf ptype)
       paramTypes = reifyTypenames $ Proxy @(PlyParamsOf (ParamsOf ptype))
 
