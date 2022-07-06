@@ -148,7 +148,7 @@
             checksss =
               builtins.attrValues self.checks.${system}
               ++ builtins.attrValues self.packages.${system}
-              ++ [self.devShell.inputDerivation];
+              ++ [ self.devShell.inputDerivation ];
           } ''
           echo $checksss
           touch $out

@@ -1,16 +1,16 @@
-cabal-version:      3.0
-name:               ply-test-core
-version:            0.0.1
-synopsis:           TODO
-description:        TODO
-homepage:           https://github.com/mlabs-haskell/ply
+cabal-version: 3.0
+name:          ply-test-core
+version:       0.0.1
+synopsis:      TODO
+description:   TODO
+homepage:      https://github.com/mlabs-haskell/ply
 license:
 license-file:
-author:             MLabs
-maintainer:         TODO
-copyright:          TODO
-category:           TODO
-build-type:         Simple
+author:        MLabs
+maintainer:    TODO
+copyright:     TODO
+category:      TODO
+build-type:    Simple
 
 flag dev
   description: Enable lean development
@@ -92,8 +92,8 @@ test-suite ply-test-suite
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
   build-depends:
-    , quickcheck-plutus-instances
     , plutip
+    , quickcheck-plutus-instances
 
   hs-source-dirs: tests
   ghc-options:    -threaded -rtsopts -with-rtsopts=-N
