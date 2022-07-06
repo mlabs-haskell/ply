@@ -142,7 +142,8 @@
 
       # Ply core
       ply-core = rec {
-        ghcVersion = "ghc8107";
+        ghcVersion = "8107";
+        compiler-nix-name = "ghc${ghcVersion}";
 
         projectFor = system:
           let
@@ -151,13 +152,12 @@
             stdDevEnv = mkDevEnv system;
           in
           (nixpkgsFor system).haskell-nix.cabalProject' {
+            inherit extraSources compiler-nix-name;
             src = ./.;
-            compiler-nix-name = ghcVersion;
             cabalProjectFileName = "cabal.project.core";
             cabalProjectLocal = ''
               allow-newer: size-based:template-haskell
             '';
-            inherit extraSources;
             modules = [
               ({ pkgs, ... }:
                 {
@@ -191,17 +191,19 @@
 
       # Ply x Plutarch
       ply-plutarch = rec {
-        ghcVersion = "ghc922";
+        ghcVersion = "921";
+        compiler-nix-name = "ghc${ghcVersion}";
 
         projectFor = system:
           let
             pkgs = nixpkgsFor system;
             pkgs' = nixpkgsFor' system;
             stdDevEnv = mkDevEnv system;
+            hls = pkgs.haskell-language-server.override { supportedGhcVersions = [ ghcVersion ]; };
           in
           pkgs.haskell-nix.cabalProject' (plutarch.applyPlutarchDep pkgs {
+            inherit compiler-nix-name;
             src = ./.;
-            compiler-nix-name = ghcVersion;
             cabalProjectFileName = "cabal.project.plutarch";
             extraSources = [
               {
@@ -214,7 +216,7 @@
 
               exactDeps = true;
 
-              buildInputs = stdDevEnv.buildInputs;
+              buildInputs = stdDevEnv.buildInputs ++ [ hls ];
 
               additional = ps: [
                 ps.plutarch
@@ -289,7 +291,8 @@
 
       apps = perSystem (system: self.ply-core.flake.${system}.apps // self.ply-plutarch.flake.${system}.apps);
 
-      devShells = perSystem (system: {
+      devShells = perSystem (system: rec {
+        default = devEnv;
         core = self.ply-core.flake.${system}.devShell;
         plutarch = self.ply-plutarch.flake.${system}.devShell;
         devEnv = self.packages.${system}.devEnv;
