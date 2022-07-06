@@ -72,3 +72,6 @@ test.log
 # Plutip output
 db/
 *#
+
+# pre-commit-hooks
+.pre-commit-config.yaml
