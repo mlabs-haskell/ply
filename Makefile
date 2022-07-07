@@ -36,10 +36,8 @@ format_check:
 
 # Nix files to format
 NIX_SOURCES := $(shell fd -enix)
+# Cabal files to format
 CABAL_SOURCES := $(shell fd -ecabal)
-
-# Nix files to format
-NIX_SOURCES := $(shell git ls-tree -r HEAD --full-tree --name-only | grep -E '.*\.nix' )
 
 nixfmt: requires_nix_shell
 	nixfmt $(NIX_SOURCES)
