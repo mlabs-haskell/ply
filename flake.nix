@@ -18,6 +18,8 @@
       };
     };
 
+    pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
+
     plutus = {
       url =
         "github:input-output-hk/plutus/b39a526e983cb931d0cc49b7d073d6d43abd22b5";
@@ -45,7 +47,7 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, haskell-nix, iohk-nix, plutarch, ... }:
+  outputs = inputs@{ self, nixpkgs, haskell-nix, iohk-nix, plutarch, pre-commit-hooks, ... }:
     let
       extraSources = [
         {
@@ -97,6 +99,23 @@
         };
       nixpkgsFor' = system: import nixpkgs { inherit system; };
 
+      pre-commit-check-for = system: pre-commit-hooks.lib.${system}.run {
+        src = ./.;
+        settings = {
+          ormolu.defaultExtensions = [
+            "TypeApplications"
+            "PatternSynonyms"
+          ];
+        };
+
+        hooks = {
+          nixpkgs-fmt.enable = true;
+          cabal-fmt.enable = true;
+          fourmolu.enable = true;
+        };
+      };
+
+
       mkDevEnv = system:
         # Generic environment bringing generic utilities. To be used only as a
         # shell. Include as a dependency to other shells to have the same
@@ -119,26 +138,11 @@
             pkgs'.hlint
             pkgs'.nixpkgs-fmt
           ];
-          shellHook = "echo $name";
+          shellHook = (pre-commit-check-for system).shellHook +
+            '' 
+            echo $name
+          '';
         };
-
-      formatCheckFor = system:
-        let
-          pkgs = nixpkgsFor system;
-          pkgs' = nixpkgsFor' system;
-          stdDevEnv = mkDevEnv system;
-        in
-        pkgs.runCommand "format-check"
-          {
-            buildInputs = stdDevEnv.buildInputs;
-          } ''
-          export LC_CTYPE=C.UTF-8
-          export LC_ALL=C.UTF-8
-          export LANG=C.UTF-8
-          cd ${self}
-          make  format_check
-          mkdir $out
-        '';
 
       # Ply core
       ply-core = rec {
@@ -184,7 +188,7 @@
               shellHook = ''
                 export NIX_SHELL_TARGET="core"
                 ln -fs cabal.project.core cabal.project
-              '';
+              '' + (pre-commit-check-for system).shellHook;
             };
           };
       };
@@ -226,7 +230,7 @@
               shellHook = ''
                 export NIX_SHELL_TARGET="plutarch"
                 ln -fs cabal.project.plutarch cabal.project
-              '';
+              '' + (pre-commit-check-for system).shellHook;
             };
           });
       };
@@ -275,7 +279,7 @@
 
       checks = perSystem (system:
         self.ply-core.flake.${system}.checks // self.ply-plutarch.flake.${system}.checks
-        // (formatCheckFor system));
+        // { formatting-checks = pre-commit-check-for system; });
 
       check = perSystem (system:
         (nixpkgsFor system).runCommand "combined-test"
