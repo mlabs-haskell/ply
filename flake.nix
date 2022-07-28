@@ -12,8 +12,6 @@
     plutarch = {
       url = "github:Plutonomicon/plutarch?ref=staging";
       inputs = {
-        haskell-nix.follows = "haskell-nix";
-        nixpkgs.follows = "nixpkgs";
         cardano-base = cardano-base;
       };
     };
@@ -140,9 +138,9 @@
             pkgs'.nixpkgs-fmt
           ];
           shellHook = (pre-commit-check-for system).shellHook +
-            '' 
-            echo $name
-          '';
+            ''
+              echo $name
+            '';
         };
 
       # Ply core
@@ -196,26 +194,30 @@
 
       # Ply x Plutarch
       ply-plutarch = rec {
-        ghcVersion = "921";
+        ghcVersion = "923";
         compiler-nix-name = "ghc${ghcVersion}";
 
         projectFor = system:
           let
-            pkgs = nixpkgsFor system;
-            pkgs' = nixpkgsFor' system;
-            stdDevEnv = mkDevEnv system;
-            hls = pkgs.haskell-language-server.override { supportedGhcVersions = [ ghcVersion ]; };
+            pkgs = import plutarch.inputs.nixpkgs {
+              inherit system;
+              inherit (plutarch.inputs.haskell-nix) config;
+              overlays = [
+                plutarch.inputs.haskell-nix.overlay
+                (import "${plutarch.inputs.iohk-nix}/overlays/crypto")
+              ];
+            };
+            stdDevEnv = mkDevEnv system; # TODO: parametrize with pkgs rather?
+            hls = (plutarch.hlsFor compiler-nix-name system);
+            myHackages = plutarch.inputs.haskell-nix-extra-hackage.mkHackagesFor system compiler-nix-name [
+              "${inputs.plutarch}"
+            ];
           in
           pkgs.haskell-nix.cabalProject' (plutarch.applyPlutarchDep pkgs {
             inherit compiler-nix-name;
             src = ./.;
             cabalProjectFileName = "cabal.project.plutarch";
-            extraSources = [
-              {
-                src = inputs.plutarch;
-                subdirs = [ "." ];
-              }
-            ];
+            inherit (myHackages) extra-hackages extra-hackage-tarballs modules;
             shell = {
               withHoogle = true;
 
@@ -231,7 +233,8 @@
               shellHook = ''
                 export NIX_SHELL_TARGET="plutarch"
                 ln -fs cabal.project.plutarch cabal.project
-              '' + (pre-commit-check-for system).shellHook;
+                ${(pre-commit-check-for system).shellHook}
+              '';
             };
           });
       };
