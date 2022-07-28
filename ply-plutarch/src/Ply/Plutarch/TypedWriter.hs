@@ -10,7 +10,7 @@ import qualified Data.Text as Txt
 import Data.Typeable (Typeable)
 import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 
-import Plutarch (ClosedTerm, Config (Config), PType, TracingMode (NoTracing), compile, type (:-->))
+import Plutarch (ClosedTerm, Config, PType, compile, type (:-->))
 import Plutarch.Api.V1 (PMintingPolicy, PValidator)
 import Ply.LedgerExports (Script)
 
@@ -24,6 +24,8 @@ The result can be read by 'readTypedScript'.
 -}
 writeTypedScript ::
   TypedWriter pt =>
+  -- | Plutarch compiler configuration which will be used to compile the script.
+  Config ->
   -- | Description to be associated with the compiled script file, semantically irrelevant.
   Text ->
   -- | File path to save the file to.
@@ -31,10 +33,10 @@ writeTypedScript ::
   -- | The parameterized Plutarch validator/minting policy.
   ClosedTerm pt ->
   IO ()
-writeTypedScript descr fp target =
+writeTypedScript conf descr fp target =
   either (throwIO . userError . Txt.unpack) (writeEnvelope descr fp rl paramTypes) scrpt
   where
-    (rl, paramTypes, scrpt) = typeWriterInfo target
+    (rl, paramTypes, scrpt) = typeWriterInfo conf target
 
 type TypedWriter_ :: PType -> Constraint
 class
@@ -43,7 +45,7 @@ class
   ) =>
   TypedWriter_ ptype
   where
-  typeWriterInfo :: ClosedTerm ptype -> (ScriptRole, [Typename], Either Text Script)
+  typeWriterInfo :: Config -> ClosedTerm ptype -> (ScriptRole, [Typename], Either Text Script)
 
 class TypedWriter_ ptype => TypedWriter ptype
 instance TypedWriter_ ptype => TypedWriter ptype
@@ -54,9 +56,9 @@ instance
   ) =>
   TypedWriter_ ptype
   where
-  typeWriterInfo pterm = (rl, paramTypes, scrpt)
+  typeWriterInfo conf pterm = (rl, paramTypes, scrpt)
     where
-      scrpt = compile (Config NoTracing) pterm
+      scrpt = compile conf pterm
       rl = reifyRole $ Proxy @(RoleOf ptype)
       paramTypes = reifyTypenames $ Proxy @(PlyParamsOf (ParamsOf ptype))
 

@@ -3,6 +3,7 @@
 module Main (main) where
 
 import Data.ByteString (ByteString)
+import Data.Default (def)
 
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -22,9 +23,9 @@ testHelper ::
   [Typename] ->
   Assertion
 testHelper expectedTypes = do
-  let (actualRole0, actualTypes0, _) = typeWriterInfo @(PTypeWith PValidator ptypeList) undefined
+  let (actualRole0, actualTypes0, _) = typeWriterInfo @(PTypeWith PValidator ptypeList) def undefined
   actualRole0 @?= ValidatorRole
-  let (actualRole1, actualTypes1, _) = typeWriterInfo @(PTypeWith PMintingPolicy ptypeList) undefined
+  let (actualRole1, actualTypes1, _) = typeWriterInfo @(PTypeWith PMintingPolicy ptypeList) def undefined
   actualRole1 @?= MintingPolicyRole
   actualTypes0 @?= actualTypes1
   actualTypes0 @?= expectedTypes
