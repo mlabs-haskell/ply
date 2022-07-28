@@ -22,7 +22,7 @@ import Data.Coerce (coerce)
 import Ply.LedgerExports (
   MintingPolicy (MintingPolicy),
   Script (Script),
-  Validator (Validator)
+  Validator (Validator),
  )
 
 import Ply.Core.Apply ((#), (#!), (#$), (#$!))

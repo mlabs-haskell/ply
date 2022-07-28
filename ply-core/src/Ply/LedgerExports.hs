@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
+
 module Ply.LedgerExports (
-  module LedgerV1
+  module LedgerV1,
 ) where
 
 #ifdef NEW_LEDGER_NAMESPACE

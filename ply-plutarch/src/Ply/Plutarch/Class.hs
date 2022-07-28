@@ -7,8 +7,8 @@ import Data.Text (Text)
 
 import Plutarch.Api.V1
 import Plutarch.Prelude
-import Ply.LedgerExports
 import qualified PlutusTx.AssocMap as PlutusMap
+import Ply.LedgerExports
 
 -- TODO: How to handle 'PAsData'?
 
