@@ -81,7 +81,7 @@ instance (PlyArg a, PlyArg b) => PlyArg (a, b) where
 instance PlyArg a => PlyArg [a] where
   type UPLCRep [a] = [UPLCRep a]
   type ToDataConstraint [a] = ToDataConstraint a
-  toBuiltinArg l = map toBuiltinArg l
+  toBuiltinArg = map toBuiltinArg
   toBuiltinArgData l = List $ map toBuiltinArgData l
 
 instance (PlyArg a, ToDataConstraint a) => PlyArg (Maybe a) where
@@ -155,10 +155,12 @@ instance PlyArg Address where
 
 instance PlyArg CurrencySymbol where
   type UPLCRep CurrencySymbol = ByteString
-  toBuiltinArg (CurrencySymbol x) =
-    if BS.length bs == 28
-      then bs
-      else error "toBuiltinArg(CurrencySymbol): Expected 28 bytes"
+  toBuiltinArg cs@(CurrencySymbol x)
+    | cs == adaSymbol = bs
+    | otherwise =
+      if BS.length bs == 28
+        then bs
+        else error "toBuiltinArg(CurrencySymbol): Expected 28 bytes"
     where
       bs = fromBuiltin x
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
