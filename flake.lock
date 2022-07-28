@@ -1426,8 +1426,8 @@
       },
       "original": {
         "owner": "Plutonomicon",
+        "ref": "staging",
         "repo": "plutarch-plutus",
-        "rev": "e23f2d9ecad8482e9971bd6ec1c772f9693014ce",
         "type": "github"
       }
     },
