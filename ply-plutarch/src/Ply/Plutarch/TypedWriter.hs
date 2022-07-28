@@ -10,7 +10,7 @@ import qualified Data.Text as Txt
 import Data.Typeable (Typeable)
 import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 
-import Plutarch (ClosedTerm, PType, compile, defaultConfig, type (:-->))
+import Plutarch (ClosedTerm, Config (Config), PType, TracingMode (NoTracing), compile, type (:-->))
 import Plutarch.Api.V1 (PMintingPolicy, PValidator)
 import PlutusLedgerApi.V1.Scripts (Script)
 
@@ -56,7 +56,7 @@ instance
   where
   typeWriterInfo pterm = (rl, paramTypes, scrpt)
     where
-      scrpt = compile defaultConfig pterm
+      scrpt = compile (Config NoTracing) pterm
       rl = reifyRole $ Proxy @(RoleOf ptype)
       paramTypes = reifyTypenames $ Proxy @(PlyParamsOf (ParamsOf ptype))
 

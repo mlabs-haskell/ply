@@ -10,10 +10,7 @@
     iohk-nix.flake = false; # Bad Nix code
 
     plutarch = {
-      url = "github:Plutonomicon/plutarch?ref=staging";
-      inputs = {
-        cardano-base = cardano-base;
-      };
+      url = "github:Plutonomicon/plutarch/e23f2d9ecad8482e9971bd6ec1c772f9693014ce";
     };
 
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
@@ -217,6 +214,7 @@
             inherit compiler-nix-name;
             src = ./.;
             cabalProjectFileName = "cabal.project.plutarch";
+            index-state = "2022-06-01T00:00:00Z";
             inherit (myHackages) extra-hackages extra-hackage-tarballs modules;
             shell = {
               withHoogle = true;
