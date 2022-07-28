@@ -2,15 +2,17 @@
   description = "Ply - A helper library for working with compiled, parameterized Plutus Scripts";
 
   inputs = rec {
-    haskell-nix.url = "github:mlabs-haskell/haskell.nix";
-
+    haskell-nix.url = "github:input-output-hk/haskell.nix";
     nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
+    extra-hackage.url = "github:mlabs-haskell/haskell-nix-extra-hackage?ref=ee50d7eb739819efdb27bda9f444e007c12e9833";
+    extra-hackage.inputs.haskell-nix.follows = "haskell-nix";
+    extra-hackage.inputs.nixpkgs.follows = "nixpkgs";
 
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     iohk-nix.flake = false; # Bad Nix code
 
     plutarch = {
-      url = "github:Plutonomicon/plutarch?ref=staging";
+      url = "github:Plutonomicon/plutarch-plutus?ref=staging";
       inputs = {
         haskell-nix.follows = "haskell-nix";
         nixpkgs.follows = "nixpkgs";
@@ -47,45 +49,70 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, haskell-nix, iohk-nix, plutarch, pre-commit-hooks, ... }:
+  outputs = inputs@{ self, nixpkgs, haskell-nix, extra-hackage, iohk-nix, plutarch, pre-commit-hooks, ... }:
     let
-      extraSources = [
-        {
-          src = inputs.cardano-prelude;
-          subdirs = [
-            "cardano-prelude"
-          ];
-        }
-        {
-          src = inputs.cardano-crypto;
-          subdirs = [ "." ];
-        }
-        {
-          src = inputs.flat;
-          subdirs = [ "." ];
-        }
-        {
-          src = inputs.cardano-base;
-          subdirs = [
-            "binary"
-            "cardano-crypto-class"
-          ];
-        }
-        {
-          src = inputs.plutus;
-          subdirs = [
-            "plutus-core"
-            "plutus-ledger-api"
-            "plutus-tx"
-            "prettyprinter-configurable"
-            "word-array"
-          ];
-        }
+      # https://github.com/input-output-hk/haskell.nix/issues/1177
+      nonReinstallablePkgs = [
+        "array"
+        "array"
+        "base"
+        "binary"
+        "bytestring"
+        "Cabal"
+        "containers"
+        "deepseq"
+        "directory"
+        "exceptions"
+        "filepath"
+        "ghc"
+        "ghc-bignum"
+        "ghc-boot"
+        "ghc-boot"
+        "ghc-boot-th"
+        "ghc-compact"
+        "ghc-heap"
+        # "ghci"
+        # "haskeline"
+        "ghcjs-prim"
+        "ghcjs-th"
+        "ghc-prim"
+        "ghc-prim"
+        "hpc"
+        "integer-gmp"
+        "integer-simple"
+        "mtl"
+        "parsec"
+        "pretty"
+        "process"
+        "rts"
+        "stm"
+        "template-haskell"
+        "terminfo"
+        "text"
+        "time"
+        "transformers"
+        "unix"
+        "Win32"
+        "xhtml"
       ];
 
+      myhackages = system: compiler-nix-name: extra-hackage.mkHackagesFor system compiler-nix-name (
+        [
+          "${inputs.flat}"
+          "${inputs.cardano-prelude}/cardano-prelude"
+          "${inputs.cardano-crypto}"
+          "${inputs.cardano-base}/binary"
+          "${inputs.cardano-base}/cardano-crypto-class"
+          "${inputs.plutus}/plutus-core"
+          "${inputs.plutus}/plutus-ledger-api"
+          "${inputs.plutus}/plutus-tx"
+          "${inputs.plutus}/prettyprinter-configurable"
+          "${inputs.plutus}/word-array"
+        ]
+      );
+
       # GENERAL
-      supportedSystems = with nixpkgs.lib.systems.supported;
-        tier1 ++ tier2 ++ tier3;
+      supportedSystems = with nixpkgs.lib.systems.supported; tier1 ++ tier2 ++ tier3;
       perSystem = nixpkgs.lib.genAttrs supportedSystems;
 
       nixpkgsFor = system:
@@ -140,9 +167,9 @@
             pkgs'.nixpkgs-fmt
           ];
           shellHook = (pre-commit-check-for system).shellHook +
-            '' 
-            echo $name
-          '';
+            ''
+              echo $name
+            '';
         };
 
       # Ply core
@@ -155,9 +182,11 @@
             pkgs = nixpkgsFor system;
             pkgs' = nixpkgsFor' system;
             stdDevEnv = mkDevEnv system;
+            h = myhackages system compiler-nix-name;
           in
           (nixpkgsFor system).haskell-nix.cabalProject' {
-            inherit extraSources compiler-nix-name;
+            inherit compiler-nix-name;
+            inherit (h) extra-hackages extra-hackage-tarballs;
             src = ./.;
             cabalProjectFileName = "cabal.project.core";
             cabalProjectLocal = ''
@@ -172,7 +201,7 @@
                   };
                 }
               )
-            ];
+            ] ++ h.modules;
             shell = {
               withHoogle = true;
 
@@ -181,10 +210,6 @@
               buildInputs = stdDevEnv.buildInputs;
 
               tools.haskell-language-server = { };
-
-              additional = ps: [
-                ps.plutus-ledger-api
-              ];
 
               shellHook = ''
                 export NIX_SHELL_TARGET="core"
@@ -196,7 +221,7 @@
 
       # Ply x Plutarch
       ply-plutarch = rec {
-        ghcVersion = "921";
+        ghcVersion = "923";
         compiler-nix-name = "ghc${ghcVersion}";
 
         projectFor = system:
@@ -210,12 +235,11 @@
             inherit compiler-nix-name;
             src = ./.;
             cabalProjectFileName = "cabal.project.plutarch";
-            extraSources = [
-              {
-                src = inputs.plutarch;
-                subdirs = [ "." ];
-              }
-            ];
+            inherit (extra-hackage.mkHackagesFor system compiler-nix-name (
+              [
+                "${inputs.plutarch}"
+                "${inputs.plutarch}/plutarch-extra"
+              ])) extra-hackages extra-hackage-tarballs;
             shell = {
               withHoogle = true;
 

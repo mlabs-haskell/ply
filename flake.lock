@@ -97,7 +97,6 @@
       "original": {
         "owner": "input-output-hk",
         "repo": "cardano-base",
-        "rev": "0f3a867493059e650cda69e20a5cbf1ace289a57",
         "type": "github"
       }
     },
@@ -260,6 +259,30 @@
         "owner": "srid",
         "ref": "master",
         "repo": "emanote",
+        "type": "github"
+      }
+    },
+    "extra-hackage": {
+      "inputs": {
+        "haskell-nix": [
+          "haskell-nix"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1658790167,
+        "narHash": "sha256-QRZCAz/k5hEvXiHc2aVDDc2jgPTeiRXUtARg0GA9rDU=",
+        "owner": "mlabs-haskell",
+        "repo": "haskell-nix-extra-hackage",
+        "rev": "ee50d7eb739819efdb27bda9f444e007c12e9833",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mlabs-haskell",
+        "ref": "ee50d7eb739819efdb27bda9f444e007c12e9833",
+        "repo": "haskell-nix-extra-hackage",
         "type": "github"
       }
     },
@@ -508,20 +531,21 @@
         "nixpkgs-2003": "nixpkgs-2003",
         "nixpkgs-2105": "nixpkgs-2105",
         "nixpkgs-2111": "nixpkgs-2111",
+        "nixpkgs-2205": "nixpkgs-2205",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "old-ghc-nix": "old-ghc-nix",
         "stackage": "stackage"
       },
       "locked": {
-        "lastModified": 1653486569,
-        "narHash": "sha256-342b0LPX6kaBuEX8KZV40FwCCFre1lCtjdTQIDEt9kw=",
-        "owner": "mlabs-haskell",
+        "lastModified": 1658869813,
+        "narHash": "sha256-AN5Ajzz/S+3Xc2TAtR6qz+AnXt8PWgA/lUbemkBwlD4=",
+        "owner": "input-output-hk",
         "repo": "haskell.nix",
-        "rev": "220f8a9cd166e726aea62843bdafa7ecded3375c",
+        "rev": "e3397e0ace4aeadefe941241bd5b7bfefad850a9",
         "type": "github"
       },
       "original": {
-        "owner": "mlabs-haskell",
+        "owner": "input-output-hk",
         "repo": "haskell.nix",
         "type": "github"
       }
@@ -822,6 +846,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-2205": {
+      "locked": {
+        "lastModified": 1658863075,
+        "narHash": "sha256-S//KMfJ9yZxP3UIqCv1423vug3zHh/Y37sZZhzz29vI=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "aab3441eb644d28dc6fabf856865957cd109df91",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixpkgs-22.05-darwin",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixpkgs-latest": {
       "locked": {
         "lastModified": 1653918805,
@@ -1003,17 +1043,17 @@
         "secp256k1-haskell": "secp256k1-haskell"
       },
       "locked": {
-        "lastModified": 1657531766,
-        "narHash": "sha256-LvQd4620wpDLRR8IgZeMvWVh/9Dn7PnXhcSRoq9eGXY=",
+        "lastModified": 1658833185,
+        "narHash": "sha256-kOpzTnWkZge3+nCrb8jxGNACZDOq7pVz9NYKFZuxfz8=",
         "owner": "Plutonomicon",
-        "repo": "plutarch",
-        "rev": "bc7d54b38bb19f87a36eff14452b5919b4e3cd32",
+        "repo": "plutarch-plutus",
+        "rev": "e23f2d9ecad8482e9971bd6ec1c772f9693014ce",
         "type": "github"
       },
       "original": {
         "owner": "Plutonomicon",
         "ref": "staging",
-        "repo": "plutarch",
+        "repo": "plutarch-plutus",
         "type": "github"
       }
     },
@@ -1116,6 +1156,7 @@
         "cardano-base": "cardano-base",
         "cardano-crypto": "cardano-crypto",
         "cardano-prelude": "cardano-prelude",
+        "extra-hackage": "extra-hackage",
         "flat": "flat",
         "haskell-nix": "haskell-nix",
         "iohk-nix": "iohk-nix",
