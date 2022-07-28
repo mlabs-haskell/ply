@@ -10,7 +10,7 @@ import Data.Text (Text)
 import qualified Data.Text.Encoding as Txt
 
 import qualified Cardano.Binary as CBOR
-import PlutusLedgerApi.V1.Scripts (Script)
+import Ply.LedgerExports (Script)
 
 import Ply.Core.Types (
   ScriptRole,

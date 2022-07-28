@@ -9,7 +9,7 @@ import Test.Tasty.HUnit
 
 import Plutarch.Api.V1
 import Plutarch.Prelude
-import PlutusLedgerApi.V1
+import Ply.LedgerExports
 import qualified PlutusTx.AssocMap as PlutusMap
 
 import Ply (ScriptRole (MintingPolicyRole, ValidatorRole), Typename, typeName)
