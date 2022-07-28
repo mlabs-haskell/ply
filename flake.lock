@@ -1484,23 +1484,6 @@
         "type": "github"
       }
     },
-    "protolude_2": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1655056009,
-        "narHash": "sha256-FEmT9n8U0aSgEQoEhPjM8Lai/eFxCjp0bsZulKrqEbk=",
-        "owner": "protolude",
-        "repo": "protolude",
-        "rev": "e40b7351ec88093169f628fcddc0e3f46c74815f",
-        "type": "github"
-      },
-      "original": {
-        "owner": "protolude",
-        "repo": "protolude",
-        "rev": "e40b7351ec88093169f628fcddc0e3f46c74815f",
-        "type": "github"
-      }
-    },
     "root": {
       "inputs": {
         "cardano-base": "cardano-base",
@@ -1515,8 +1498,7 @@
         ],
         "plutarch": "plutarch",
         "plutus": "plutus_2",
-        "pre-commit-hooks": "pre-commit-hooks",
-        "protolude": "protolude_2"
+        "pre-commit-hooks": "pre-commit-hooks"
       }
     },
     "secp256k1-haskell": {
