@@ -8,11 +8,7 @@ import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy (Proxy))
 import Data.Typeable (Typeable)
 
-#ifdef PLUTUS_NEW
-import PlutusLedgerApi.V1.Scripts (Script (Script))
-#else
-import Plutus.V1.Ledger.Scripts (Script (Script))
-#endif
+import Ply.LedgerExports (Script (Script))
 
 import Ply.Core.Deserialize (readEnvelope)
 import Ply.Core.Types (

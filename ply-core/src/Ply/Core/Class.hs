@@ -13,18 +13,8 @@ import Data.Text (Text)
 import GHC.TypeLits (ErrorMessage (ShowType, Text))
 
 import PlutusCore (DefaultUni, Includes, Some, ValueOf)
+import Ply.LedgerExports as LedgerV1
 import qualified PlutusCore as PLC
-#ifdef PLUTUS_NEW
-import PlutusLedgerApi.V1 as LedgerV1
-import PlutusLedgerApi.V1.Scripts (ScriptHash (ScriptHash))
-import PlutusLedgerApi.V1.Time (DiffMilliSeconds (DiffMilliSeconds))
-import PlutusLedgerApi.V1.Value (AssetClass (AssetClass))
-#else
-import Plutus.V1.Ledger.Api as LedgerV1
-import Plutus.V1.Ledger.Scripts (ScriptHash (ScriptHash))
-import Plutus.V1.Ledger.Time (DiffMilliSeconds (DiffMilliSeconds))
-import Plutus.V1.Ledger.Value (AssetClass (AssetClass))
-#endif
 import qualified PlutusTx.AssocMap as PlutusMap
 
 type BottomConstraint s t = 'Text s ~ ShowType t

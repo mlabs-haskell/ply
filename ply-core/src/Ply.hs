@@ -19,19 +19,11 @@ module Ply (
 
 import Data.Coerce (coerce)
 
-#if PLUTUS_NEW
-import PlutusLedgerApi.V1.Scripts (
+import Ply.LedgerExports (
   MintingPolicy (MintingPolicy),
   Script (Script),
-  Validator (Validator),
+  Validator (Validator)
  )
-#else
-import Plutus.V1.Ledger.Scripts (
-  MintingPolicy (MintingPolicy),
-  Script (Script),
-  Validator (Validator),
- )
-#endif
 
 import Ply.Core.Apply ((#), (#!), (#$), (#$!))
 import Ply.Core.Class (PlyArg)
