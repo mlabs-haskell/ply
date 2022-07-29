@@ -103,6 +103,7 @@ test-suite ply-plutarch-test
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
   build-depends:
+    , data-default
     , ply-plutarch
     , tasty
     , tasty-hunit
