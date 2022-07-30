@@ -4,7 +4,7 @@
   inputs = rec {
     haskell-nix.url = "github:input-output-hk/haskell.nix";
     nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
-    extra-hackage.url = "github:mlabs-haskell/haskell-nix-extra-hackage?ref=ee50d7eb739819efdb27bda9f444e007c12e9833";
+    extra-hackage.url = "github:mlabs-haskell/haskell-nix-extra-hackage";
     extra-hackage.inputs.haskell-nix.follows = "haskell-nix";
     extra-hackage.inputs.nixpkgs.follows = "nixpkgs";
 

@@ -20,6 +20,13 @@ Ply has 2 components: `ply-core`, and `ply-plutarch`.
 
 `ply-core` is the package you'll be using in your offchain project, where you cannot depend on Plutarch (potentially due to dependency conflicts). This comes with support for reading the serialized scripts with their types.
 
+> **NOTE**: If your offchain project has not yet upgraded to the new ledger api namespace (i.e `PlutusLedgerApi`), you need to disable the flag `new-ledger-namespace` when building `ply-core` for your offchain. To do this, simply use:
+>
+> ```cabal
+> package ply-core
+>   flags: -new-ledger-namespace
+> ```
+
 `ply-plutarch` is the package you'll be using in your onchain Plutarch project. Usually, you'll want to create an executable target in this project to compile your plutus scripts into the file system. These files can then be read back in your offchain project using `ply-core`.
 
 ## Onchain/Plutarch project
@@ -30,6 +37,8 @@ This is what the type of `writeTypedScript` looks like:
 ```hs
 writeTypedScript ::
   TypedWriter pt =>
+  -- | Plutarch compiler configuration which will be used to compile the script.
+  Config ->
   -- | Description for the file, semantically irrelevant - just for human comprehension!
   Text ->
   -- | The path where this file should be written
@@ -44,6 +53,8 @@ writeTypedScript ::
 This is how it'd look in practice:
 
 ```hs
+import Data.Default (def)
+
 import Plutarch
 import Plutarch.Builtin (pasInt)
 import Plutarch.Prelude
@@ -59,7 +70,7 @@ parameterizedLockV = plam $ \i datm redm ctx -> parameterizedLock v # datm # (pa
 
 main :: IO ()
 main =
-  writeTypedScript "Parameterized lock validator" "path/to/script.plutus" parameterizedLockV
+  writeTypedScript def "Parameterized lock validator" "path/to/script.plutus" parameterizedLockV
 ```
 
 Now you're ready to read the script from `path/to/script.plutus` in your offchain project!

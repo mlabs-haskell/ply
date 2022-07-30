@@ -45,6 +45,7 @@ class
   ) =>
   TypedWriter_ ptype
   where
+  -- | The core `ply-plutarch` function: obtain all the necessary information about a Plutarch script.
   typeWriterInfo :: Config -> ClosedTerm ptype -> (ScriptRole, [Typename], Either Text Script)
 
 class TypedWriter_ ptype => TypedWriter ptype

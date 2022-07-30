@@ -364,7 +364,6 @@
       },
       "original": {
         "owner": "mlabs-haskell",
-        "ref": "ee50d7eb739819efdb27bda9f444e007c12e9833",
         "repo": "haskell-nix-extra-hackage",
         "type": "github"
       }
