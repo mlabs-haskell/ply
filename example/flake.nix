@@ -132,6 +132,11 @@
                 ];
 
                 tools.haskell-language-server = { };
+
+                additional = ps: [
+                  ps.plutip
+                  ps.ply-core
+                ];
               };
             };
           in
