@@ -14,18 +14,18 @@ import qualified PlutusTx.AssocMap as PlutusMap
 import Ply.LedgerExports
 
 import Ply (ScriptRole (MintingPolicyRole, ValidatorRole), Typename, typeName)
-import Ply.Plutarch.TypedWriter (TypedWriter, typeWriterInfo)
+import Ply.Plutarch.TypedWriter (TypedWriter, typedWriterInfo)
 
--- | Ensure 'typeWriterInfo @ptype' yields the expected 'ScriptRole' and '[Typename]'.
+-- | Ensure 'typedWriterInfo @ptype' yields the expected 'ScriptRole' and '[Typename]'.
 testHelper ::
   forall ptypeList.
   (TypedWriter (PTypeWith PValidator ptypeList), TypedWriter (PTypeWith PMintingPolicy ptypeList)) =>
   [Typename] ->
   Assertion
 testHelper expectedTypes = do
-  let (actualRole0, actualTypes0, _) = typeWriterInfo @(PTypeWith PValidator ptypeList) def undefined
+  let (actualRole0, actualTypes0, _) = typedWriterInfo @(PTypeWith PValidator ptypeList) def undefined
   actualRole0 @?= ValidatorRole
-  let (actualRole1, actualTypes1, _) = typeWriterInfo @(PTypeWith PMintingPolicy ptypeList) def undefined
+  let (actualRole1, actualTypes1, _) = typedWriterInfo @(PTypeWith PMintingPolicy ptypeList) def undefined
   actualRole1 @?= MintingPolicyRole
   actualTypes0 @?= actualTypes1
   actualTypes0 @?= expectedTypes
@@ -36,7 +36,7 @@ baselineTest = testHelper @'[] []
 tests :: TestTree
 tests =
   testGroup
-    "typeWriterInfo works as expected"
+    "typedWriterInfo works as expected"
     [ testCase "@PValidator/@PMintingPolicy" baselineTest
     , testCase "@(PBool :--> _)" $
         testHelper @'[PBool] [typeName @Bool]
