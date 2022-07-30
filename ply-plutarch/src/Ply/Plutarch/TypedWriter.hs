@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Ply.Plutarch.TypedWriter (TypedWriter, writeTypedScript, typeWriterInfo) where
+module Ply.Plutarch.TypedWriter (TypedWriter, writeTypedScript, typedWriterInfo) where
 
 import Control.Exception (throwIO)
 import Data.Kind (Constraint, Type)
@@ -36,7 +36,7 @@ writeTypedScript ::
 writeTypedScript conf descr fp target =
   either (throwIO . userError . Txt.unpack) (writeEnvelope descr fp rl paramTypes) scrpt
   where
-    (rl, paramTypes, scrpt) = typeWriterInfo conf target
+    (rl, paramTypes, scrpt) = typedWriterInfo conf target
 
 type TypedWriter_ :: PType -> Constraint
 class
@@ -46,7 +46,7 @@ class
   TypedWriter_ ptype
   where
   -- | The core `ply-plutarch` function: obtain all the necessary information about a Plutarch script.
-  typeWriterInfo :: Config -> ClosedTerm ptype -> (ScriptRole, [Typename], Either Text Script)
+  typedWriterInfo :: Config -> ClosedTerm ptype -> (ScriptRole, [Typename], Either Text Script)
 
 class TypedWriter_ ptype => TypedWriter ptype
 instance TypedWriter_ ptype => TypedWriter ptype
@@ -57,7 +57,7 @@ instance
   ) =>
   TypedWriter_ ptype
   where
-  typeWriterInfo conf pterm = (rl, paramTypes, scrpt)
+  typedWriterInfo conf pterm = (rl, paramTypes, scrpt)
     where
       scrpt = compile conf pterm
       rl = reifyRole $ Proxy @(RoleOf ptype)
