@@ -20,8 +20,14 @@ import Data.Kind (Type)
 import Data.Text (Text)
 import qualified Data.Text as Txt
 import qualified Data.Text.Encoding as Text
-import Data.Typeable (Proxy (Proxy), Typeable, typeRep)
 import GHC.Generics (Generic)
+import Type.Reflection (
+  Typeable,
+  tyConModule,
+  tyConName,
+  typeRep,
+  typeRepTyCon,
+ )
 
 import Data.Aeson.Types (
   FromJSON (parseJSON),
@@ -129,9 +135,15 @@ newtype Typename = Typename Text
   deriving stock (Eq, Show)
   deriving newtype (ToJSON)
 
--- | Obtain the 'Typename' for a given type.
+{- | Obtain the 'Typename' for a given type.
+
+No specific guarantees are given as per the representation of the 'Typename', as it is an internal detail.
+However, typenames of 2 different types (different module) won't be the same.
+-}
 typeName :: forall a. Typeable a => Typename
-typeName = Typename . Txt.pack . show $ typeRep (Proxy @a)
+typeName = Typename . Txt.pack $ tyConModule tyCon ++ ':' : tyConName tyCon
+  where
+    tyCon = typeRepTyCon $ typeRep @a
 
 -- FIXME: Must have stricter parsing rules.
 instance FromJSON Typename where
