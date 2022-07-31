@@ -34,7 +34,7 @@ import Data.Aeson.Types (
  )
 
 import Cardano.Binary (DecoderError)
-import Ply.LedgerExports (Script)
+import Ply.LedgerExports.Common (Script)
 import UntypedPlutusCore (DeBruijn, DefaultFun, DefaultUni, Program)
 
 -- | Compiled scripts that preserve script role and parameter types.

@@ -15,7 +15,9 @@ import GHC.TypeLits (ErrorMessage (ShowType, Text))
 import PlutusCore (DefaultUni, Includes, Some, ValueOf)
 import qualified PlutusCore as PLC
 import qualified PlutusTx.AssocMap as PlutusMap
-import Ply.LedgerExports as LedgerV1
+
+import Ply.LedgerExports.Common
+import qualified Ply.LedgerExports.V1 as LedgerV1
 
 type BottomConstraint s t = 'Text s ~ ShowType t
 

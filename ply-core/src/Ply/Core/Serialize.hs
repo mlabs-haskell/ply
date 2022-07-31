@@ -10,7 +10,7 @@ import Data.Text (Text)
 import qualified Data.Text.Encoding as Txt
 
 import qualified Cardano.Binary as CBOR
-import Ply.LedgerExports (Script)
+import Ply.LedgerExports.Common (Script)
 
 import Ply.Core.Types (
   ScriptRole,

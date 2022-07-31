@@ -19,7 +19,7 @@ module Ply (
 
 import Data.Coerce (coerce)
 
-import Ply.LedgerExports (
+import Ply.LedgerExports.Common (
   MintingPolicy (MintingPolicy),
   Script (Script),
   Validator (Validator),

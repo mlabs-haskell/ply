@@ -8,7 +8,7 @@ import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy (Proxy))
 import Data.Typeable (Typeable)
 
-import Ply.LedgerExports (Script (Script))
+import Ply.LedgerExports.Common (Script (Script))
 
 import Ply.Core.Deserialize (readEnvelope)
 import Ply.Core.Types (
