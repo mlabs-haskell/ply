@@ -12,8 +12,6 @@ import PlutusLedgerApi.V1 as LedgerCommon hiding
   , TxInfo (..)
   , TxInInfo (..)
   , TxOut
-  , ParamName (..)
-  , mkEvaluationContext
   )
 import PlutusLedgerApi.V1.Scripts as LedgerCommon (
   Script (Script),
@@ -31,8 +29,6 @@ import Plutus.V1.Ledger.Api as LedgerCommon hiding
   , TxInfo (..)
   , TxInInfo (..)
   , TxOut
-  , ParamName (..)
-  , mkEvaluationContext
   )
 import Plutus.V1.Ledger.Scripts as LedgerCommon (
   Script (Script),

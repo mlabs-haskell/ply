@@ -12,13 +12,13 @@ import qualified Data.Aeson as Aeson
 
 import Cardano.Binary (DecoderError, FromCBOR (fromCBOR))
 import qualified Cardano.Binary as CBOR
-import qualified Ply.LedgerExports.Common as Ledger
 
 import Ply.Core.Types (
   ScriptReaderException (AesonDecodeError, CBORDecodeError),
   TypedScriptEnvelope (TypedScriptEnvelope),
   TypedScriptEnvelope' (TypedScriptEnvelope'),
  )
+import qualified Ply.LedgerExports.Common as Ledger
 
 -- | Read a 'TypedScriptEnvelope'.
 readEnvelope :: FilePath -> IO TypedScriptEnvelope
