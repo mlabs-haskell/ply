@@ -7,6 +7,7 @@ module Ply (
   Typename,
   typeName,
   PlyArg,
+  getPlutusVersion,
   toValidator,
   toScript,
   toMintingPolicy,
@@ -38,14 +39,18 @@ import Ply.Core.Types (
   Typename,
  )
 
+-- | Obtain the Plutus script (ledger) version associated with given 'TypedScript'.
+getPlutusVersion :: TypedScript r params -> ScriptVersion
+getPlutusVersion (TypedScript ver _) = ver
+
 -- | Obtain a 'Validator' from a 'TypedScript'.
 toValidator :: TypedScript 'ValidatorRole '[] -> Validator
-toValidator (TypedScript s) = coerce s
+toValidator (TypedScript _ s) = coerce s
 
 -- | Obtain a 'MintingPolicy' from a 'TypedScript'.
 toMintingPolicy :: TypedScript 'MintingPolicyRole '[] -> MintingPolicy
-toMintingPolicy (TypedScript s) = coerce s
+toMintingPolicy (TypedScript _ s) = coerce s
 
 -- | Unconditionally obtain the raw untyped 'Script' from a 'TypedScript'.
 toScript :: TypedScript r params -> Script
-toScript (TypedScript s) = coerce s
+toScript (TypedScript _ s) = coerce s

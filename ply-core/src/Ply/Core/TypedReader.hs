@@ -20,9 +20,12 @@ import Ply.Core.Types (
 import Ply.LedgerExports.Common (Script (Script))
 
 class TypedReader_ r params where
+  -- | Pure function to parse a 'TypedScript' from a 'TypedScriptEnvelope'.
   mkTypedScript :: TypedScriptEnvelope -> Either ScriptReaderException (TypedScript r params)
 
+-- | Class of 'TypedScript' parameters that are supported and can be read.
 class TypedReader_ r params => TypedReader r params
+
 instance TypedReader_ r params => TypedReader r params
 
 {- | Read and verify a 'TypedScript' from given filepath.
@@ -39,18 +42,18 @@ readTypedScript ::
 readTypedScript p = readEnvelope p >>= either throwIO pure . mkTypedScript
 
 instance MkTypenames params => TypedReader_ ValidatorRole params where
-  mkTypedScript (TypedScriptEnvelope _ rol params _ (Script prog)) = do
+  mkTypedScript (TypedScriptEnvelope ver rol params _ (Script prog)) = do
     unless (rol == ValidatorRole) . Left $ ScriptRoleError ValidatorRole rol
     let expectedParams = mkTypenames $ Proxy @params
     unless (expectedParams == params) . Left $ ScriptTypeError expectedParams params
-    pure $ TypedScript prog
+    pure $ TypedScript ver prog
 
 instance MkTypenames params => TypedReader_ MintingPolicyRole params where
-  mkTypedScript (TypedScriptEnvelope _ rol params _ (Script prog)) = do
+  mkTypedScript (TypedScriptEnvelope ver rol params _ (Script prog)) = do
     unless (rol == MintingPolicyRole) . Left $ ScriptRoleError MintingPolicyRole rol
     let expectedParams = mkTypenames $ Proxy @params
     unless (expectedParams == params) . Left $ ScriptTypeError expectedParams params
-    pure $ TypedScript prog
+    pure $ TypedScript ver prog
 
 type MkTypenames :: [Type] -> Constraint
 class MkTypenames a where
