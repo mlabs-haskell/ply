@@ -105,11 +105,14 @@ library
     Ply.Core.Deserialize
     Ply.Core.Serialize
     Ply.Core.TypedReader
-    Ply.LedgerExports
 
   other-modules:
+    Ply.Core.Typename
     Ply.Core.Types
     Ply.Core.UPLC
+    Ply.LedgerExports.Common
+    Ply.LedgerExports.V1
+    Ply.LedgerExports.V2
 
   hs-source-dirs:  src
 

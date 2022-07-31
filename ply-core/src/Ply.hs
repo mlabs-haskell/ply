@@ -19,7 +19,7 @@ module Ply (
 
 import Data.Coerce (coerce)
 
-import Ply.LedgerExports (
+import Ply.LedgerExports.Common (
   MintingPolicy (MintingPolicy),
   Script (Script),
   Validator (Validator),
@@ -28,6 +28,7 @@ import Ply.LedgerExports (
 import Ply.Core.Apply ((#), (#!), (#$), (#$!))
 import Ply.Core.Class (PlyArg)
 import Ply.Core.TypedReader (readTypedScript)
+import Ply.Core.Typename (typeName)
 import Ply.Core.Types (
   ScriptReaderException (..),
   ScriptRole (MintingPolicyRole, ValidatorRole),
@@ -35,7 +36,6 @@ import Ply.Core.Types (
   TypedScript (TypedScript),
   TypedScriptEnvelope (..),
   Typename,
-  typeName,
  )
 
 -- | Obtain a 'Validator' from a 'TypedScript'.

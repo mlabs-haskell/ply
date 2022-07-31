@@ -10,7 +10,6 @@ import Data.Text (Text)
 import qualified Data.Text.Encoding as Txt
 
 import qualified Cardano.Binary as CBOR
-import Ply.LedgerExports (Script)
 
 import Ply.Core.Types (
   ScriptRole,
@@ -18,6 +17,7 @@ import Ply.Core.Types (
   TypedScriptEnvelope' (..),
   Typename,
  )
+import Ply.LedgerExports.Common (Script)
 
 -- | Serialize a script into its raw form.
 serializeScript :: Script -> ByteString
