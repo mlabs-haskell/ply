@@ -137,6 +137,20 @@ main = do
 
 > Aside: Notice how I didn't use type applications, it got inferred automatically!
 
+# How does Ply perform type validation across onchain <-> offchain? (Read this!)
+
+Ply's onchain <-> offchain type validation isn't magic. All Ply can really do is ask the compiler for the qualified type name in string form, and put it inside the generated ".plutus" file. For the validation to pass, the qualified type names for each parameter has to match in both the offchain and the onchain project.
+
+For example, if one of your parameter has type `MyParameterType`, and it was defined in the module: `MyPackage.Types` - then the generated parameter type in the ".plutus" envelope will contain `MyPackage.Types` and `MyParameterType` as the core identifiers. As a result, in your offchain project, `MyParameterType` should also have the same qualified type name.
+
+This is usually the case in most projects, as custom types are usually defined in some common package shared by both offchain and onchain - so they always have the same qualified type name.
+
+However, there is a huge exception: the plutus ledger api. Many outdated offchain projects will still be using the older ledger api namespace (`Plutus.Vx.Ledger`), and the onchain Plutarch project is going to be using the newer ledger api namespace (`PlutusLedgerApi`).
+
+So `typeOf @CurrencySymbol`, for example, generates `PlutusLedgerApi.V1.Value` as its module name in the onchain project - but `Plutus.V1.Ledger.Value` on the outdated offchain project...
+
+For this reason, Ply handles this case specially - you can read more on it [in the code](./ply-core/src/Ply/Core/Typename.hs). But the idea is that you _won't_ need to care about this one exception.
+
 # Examples
 
 You can find a full example demonstrating the usage of Ply on a simple nft minting contract inside [example](./example/).
