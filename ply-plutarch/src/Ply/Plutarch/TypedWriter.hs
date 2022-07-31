@@ -14,7 +14,7 @@ import Plutarch (ClosedTerm, Config, PType, compile, type (:-->))
 import Plutarch.Api.V1 (PMintingPolicy, PValidator)
 import PlutusLedgerApi.V1.Scripts (Script)
 
-import Ply (ScriptRole (MintingPolicyRole, ValidatorRole), Typename, typeName)
+import Ply (ScriptRole (MintingPolicyRole, ValidatorRole), ScriptVersion (ScriptV1), Typename, typeName)
 import Ply.Core.Serialize (writeEnvelope)
 import Ply.Plutarch.Class (PlyArgOf)
 
@@ -34,7 +34,7 @@ writeTypedScript ::
   ClosedTerm pt ->
   IO ()
 writeTypedScript conf descr fp target =
-  either (throwIO . userError . Txt.unpack) (writeEnvelope descr fp rl paramTypes) scrpt
+  either (throwIO . userError . Txt.unpack) (writeEnvelope descr fp ScriptV1 rl paramTypes) scrpt
   where
     (rl, paramTypes, scrpt) = typedWriterInfo conf target
 
