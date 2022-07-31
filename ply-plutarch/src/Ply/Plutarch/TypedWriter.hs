@@ -94,7 +94,7 @@ instance (Typeable x, ReifyTypenames xs) => ReifyTypenames (x : xs) where
 >>> :k! ParamsOf (PByteString :--> PData :--> PScriptContext :--> POpaque)
 [PByteString]
 
-=== Note ===
+=== Note
 Indeed, there is a possibility for ambiguity here. Is `PData :--> PData :--> PScriptContext :--> POpaque` a
 minting policy with an extra 'PData' parameter? Or is it a validator?
 
@@ -124,7 +124,7 @@ MintingPolicyRole
 >>> :k! RoleOf (PByteString :--> PData :--> PScriptContext :--> POpaque)
 MintingPolicyRole
 
-=== Note ===
+=== Note
 Indeed, there is a possibility for ambiguity here. Is `PData :--> PData :--> PScriptContext :--> POpaque` a
 minting policy with an extra 'PData' parameter? Or is it a validator?
 
