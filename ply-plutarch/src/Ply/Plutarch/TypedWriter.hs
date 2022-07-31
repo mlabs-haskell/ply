@@ -1,26 +1,40 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Ply.Plutarch.TypedWriter (TypedWriter, writeTypedScript, typedWriterInfo) where
+module Ply.Plutarch.TypedWriter (
+  TypedWriter,
+  type ParamsOf,
+  type RoleOf,
+  type PlyParamsOf,
+  writeTypedScript,
+  typedWriterInfo,
+) where
 
 import Control.Exception (throwIO)
-import Data.Kind (Constraint, Type)
+import Data.Kind (Type)
 import Data.Proxy (Proxy (Proxy))
 import Data.Text (Text)
 import qualified Data.Text as Txt
-import Data.Typeable (Typeable)
 import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 
 import Plutarch (ClosedTerm, Config, PType, compile, type (:-->))
 import Plutarch.Api.V1 (PMintingPolicy, PValidator)
 import PlutusLedgerApi.V1.Scripts (Script)
 
-import Ply (ScriptRole (MintingPolicyRole, ValidatorRole), ScriptVersion (ScriptV1), Typename, typeName)
+import Ply (ScriptRole (MintingPolicyRole, ValidatorRole), ScriptVersion (ScriptV1), Typename)
+import Ply.Core.Internal.Reify (
+  ReifyRole,
+  ReifyTypenames,
+  reifyRole,
+  reifyTypenames,
+ )
 import Ply.Core.Serialize (writeEnvelope)
 import Ply.Plutarch.Class (PlyArgOf)
 
 {- | Write a parameterized Plutarch validator or minting policy into the filesystem.
 
 The result can be read by 'readTypedScript'.
+
+Please also see: 'typedWriterInfo'.
 -}
 writeTypedScript ::
   TypedWriter pt =>
@@ -38,50 +52,34 @@ writeTypedScript conf descr fp target =
   where
     (rl, paramTypes, scrpt) = typedWriterInfo conf target
 
-type TypedWriter_ :: PType -> Constraint
-class
+{- | Class of Plutarch function types that can be written to the filesystem as 'TypedScript's.
+
+See: 'typedWriterInfo'.
+-}
+type TypedWriter ptype =
   ( ReifyRole (RoleOf ptype)
   , ReifyTypenames (PlyParamsOf (ParamsOf ptype))
-  ) =>
-  TypedWriter_ ptype
+  )
+
+{- | The core `ply-plutarch` function: obtain all the necessary information about a Plutarch script.
+
+For a description of extra parameters are determined, see: 'PlyParamsOf' and 'ParamsOf' type families.
+
+For a description of 'ScriptVersion' is determined, see: 'VersionOf' type family.
+
+For a description of 'ScriptRole' is determined, see: 'RoleOf' type family.
+-}
+typedWriterInfo ::
+  forall ptype.
+  TypedWriter ptype =>
+  Config ->
+  ClosedTerm ptype ->
+  (ScriptRole, [Typename], Either Text Script)
+typedWriterInfo conf pterm = (rl, paramTypes, scrpt)
   where
-  -- | The core `ply-plutarch` function: obtain all the necessary information about a Plutarch script.
-  typedWriterInfo :: Config -> ClosedTerm ptype -> (ScriptRole, [Typename], Either Text Script)
-
-class TypedWriter_ ptype => TypedWriter ptype
-instance TypedWriter_ ptype => TypedWriter ptype
-
-instance
-  ( ReifyRole (RoleOf ptype)
-  , ReifyTypenames (PlyParamsOf (ParamsOf ptype))
-  ) =>
-  TypedWriter_ ptype
-  where
-  typedWriterInfo conf pterm = (rl, paramTypes, scrpt)
-    where
-      scrpt = compile conf pterm
-      rl = reifyRole $ Proxy @(RoleOf ptype)
-      paramTypes = reifyTypenames $ Proxy @(PlyParamsOf (ParamsOf ptype))
-
-type ReifyRole :: ScriptRole -> Constraint
-class ReifyRole s where
-  reifyRole :: Proxy s -> ScriptRole
-
-type ReifyTypenames :: [Type] -> Constraint
-class ReifyTypenames ts where
-  reifyTypenames :: Proxy ts -> [Typename]
-
-instance ReifyRole 'ValidatorRole where
-  reifyRole _ = ValidatorRole
-
-instance ReifyRole 'MintingPolicyRole where
-  reifyRole _ = MintingPolicyRole
-
-instance ReifyTypenames '[] where
-  reifyTypenames _ = []
-
-instance (Typeable x, ReifyTypenames xs) => ReifyTypenames (x : xs) where
-  reifyTypenames _ = typeName @x : reifyTypenames (Proxy @xs)
+    scrpt = compile conf pterm
+    rl = reifyRole $ Proxy @(RoleOf ptype)
+    paramTypes = reifyTypenames $ Proxy @(PlyParamsOf (ParamsOf ptype))
 
 {- | Given a Plutarch function type ending in 'PValidator' or 'PMintingPolicy', determine its extra parameters.
 
