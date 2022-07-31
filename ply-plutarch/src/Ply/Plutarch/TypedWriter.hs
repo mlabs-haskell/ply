@@ -12,7 +12,7 @@ import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 
 import Plutarch (ClosedTerm, Config, PType, compile, type (:-->))
 import Plutarch.Api.V1 (PMintingPolicy, PValidator)
-import Ply.LedgerExports (Script)
+import PlutusLedgerApi.V1.Scripts (Script)
 
 import Ply (ScriptRole (MintingPolicyRole, ValidatorRole), Typename, typeName)
 import Ply.Core.Serialize (writeEnvelope)

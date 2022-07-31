@@ -5,10 +5,10 @@ module Ply.Plutarch.Class (PlyArgOf) where
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 
-import Plutarch.Api.V1
+import Plutarch.Api.V1 as PLedgerV1
 import Plutarch.Prelude
+import PlutusLedgerApi.V1 as LedgerV1
 import qualified PlutusTx.AssocMap as PlutusMap
-import Ply.LedgerExports
 
 -- TODO: How to handle 'PAsData'?
 
@@ -66,15 +66,15 @@ type instance PlyArgOf PTxId = TxId
 
 type instance PlyArgOf PTxOutRef = TxOutRef
 
-type instance PlyArgOf PTxOut = TxOut
+type instance PlyArgOf PLedgerV1.PTxOut = LedgerV1.TxOut
 
-type instance PlyArgOf PTxInInfo = TxInInfo
+type instance PlyArgOf PLedgerV1.PTxInInfo = LedgerV1.TxInInfo
 
-type instance PlyArgOf PTxInfo = TxInfo
+type instance PlyArgOf PLedgerV1.PTxInfo = LedgerV1.TxInfo
 
 type instance PlyArgOf PScriptPurpose = ScriptPurpose
 
-type instance PlyArgOf PScriptContext = ScriptContext
+type instance PlyArgOf PLedgerV1.PScriptContext = LedgerV1.ScriptContext
 
 type instance PlyArgOf PDatum = Datum
 
