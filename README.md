@@ -7,10 +7,12 @@ This facilitates the onchain/offchain split that is often utilized, without forc
 # Goals
 
 - Efficiency: Applying constants with `Ply` should be equally efficient as using `pconstant`/`pconstantData` in the Plutarch function body directly.
-- Ergonomics: Users shouldn't need to deal with UPLC intricacies.
+
+  _However_, some protocols require **deterministic parameterization** - optimizations are not acceptable. In this case, Ply also provides the same ergonomics of application, with a different application function - which does not perform _any optimizations_.
+- Ergonomics: Users shouldn't need to deal with UPLC intricacies. Users shouldn't have to care about micro-managing Plutus script versions (V1 and V2).
 - Invariant validation: Before given Haskell constant is applied to the script, all its invariants are validated and any relevant normalization is performed. e.g `PValue` is sorted and normalized (zero elements removed) before being passed into the script.
 
-  You can bestow custom invariants for your custom types using `PlyArg`.
+  You can bestow _custom invariants_ for your **custom types** using `PlyArg`.
 - First class Plutarch support: Preference given to and ease of use with Plutarch written scripts.
 - Minimal dependencies: Not dependent on the entire `plutus-apps` stack, not dependent on problematic/conflicting dependencies that may prevent compilation in certain repositories.
 
@@ -108,6 +110,8 @@ parameterizedLockV <- readTypedScript @'ValidatorRole @'[Integer] "path/to/scrip
 ```
 
 Once you have the script itself - you can now work with it! You can apply the extra parameters to it at your leisure using `#` from `Ply`. When you're all done - you can convert it to a `Validator` or `MintingPolicy` using `Ply.toValidator` or `Ply.toMintingPolicy` respectively.
+
+> Aside: As mentioned previously, if you require deterministic and predictable parameter application: please use `#!` (or any of its synonyms) instead of `#`. Those will not perform any optimizations and guaranteed to be a singular, predictable UPLC `Apply` constructor wrapper.
 
 Here's a full example of obtaining the `Validator` from our `parameterizedLockV` by applying the integer `42` as the extra parameter:
 
