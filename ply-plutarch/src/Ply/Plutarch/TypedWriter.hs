@@ -4,6 +4,7 @@ module Ply.Plutarch.TypedWriter (
   TypedWriter,
   type ParamsOf,
   type RoleOf,
+  type VersionOf,
   type PlyParamsOf,
   writeTypedScript,
   typedWriterInfo,
@@ -17,17 +18,21 @@ import qualified Data.Text as Txt
 import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 
 import Plutarch (ClosedTerm, Config, PType, compile, type (:-->))
-import Plutarch.Api.V1 (PMintingPolicy, PValidator)
+import qualified Plutarch.Api.V1 as PLedgerV1 (PMintingPolicy, PValidator)
+import qualified Plutarch.Api.V2 as PLedgerV2 (PMintingPolicy, PValidator)
 import PlutusLedgerApi.V1.Scripts (Script)
 
-import Ply (ScriptRole (MintingPolicyRole, ValidatorRole), ScriptVersion (ScriptV1), Typename)
+import Ply (ScriptRole (MintingPolicyRole, ValidatorRole), ScriptVersion (ScriptV1, ScriptV2), Typename)
 import Ply.Core.Internal.Reify (
   ReifyRole,
   ReifyTypenames,
+  ReifyVersion,
   reifyRole,
   reifyTypenames,
+  reifyVersion,
  )
 import Ply.Core.Serialize (writeEnvelope)
+
 import Ply.Plutarch.Class (PlyArgOf)
 
 {- | Write a parameterized Plutarch validator or minting policy into the filesystem.
@@ -48,16 +53,17 @@ writeTypedScript ::
   ClosedTerm pt ->
   IO ()
 writeTypedScript conf descr fp target =
-  either (throwIO . userError . Txt.unpack) (writeEnvelope descr fp ScriptV1 rl paramTypes) scrpt
+  either (throwIO . userError . Txt.unpack) (writeEnvelope descr fp ver rl paramTypes) scrpt
   where
-    (rl, paramTypes, scrpt) = typedWriterInfo conf target
+    (ver, rl, paramTypes, scrpt) = typedWriterInfo conf target
 
 {- | Class of Plutarch function types that can be written to the filesystem as 'TypedScript's.
 
 See: 'typedWriterInfo'.
 -}
 type TypedWriter ptype =
-  ( ReifyRole (RoleOf ptype)
+  ( ReifyVersion (VersionOf ptype)
+  , ReifyRole (RoleOf ptype)
   , ReifyTypenames (PlyParamsOf (ParamsOf ptype))
   )
 
@@ -74,10 +80,11 @@ typedWriterInfo ::
   TypedWriter ptype =>
   Config ->
   ClosedTerm ptype ->
-  (ScriptRole, [Typename], Either Text Script)
-typedWriterInfo conf pterm = (rl, paramTypes, scrpt)
+  (ScriptVersion, ScriptRole, [Typename], Either Text Script)
+typedWriterInfo conf pterm = (ver, rl, paramTypes, scrpt)
   where
     scrpt = compile conf pterm
+    ver = reifyVersion $ Proxy @(VersionOf ptype)
     rl = reifyRole $ Proxy @(RoleOf ptype)
     paramTypes = reifyTypenames $ Proxy @(PlyParamsOf (ParamsOf ptype))
 
@@ -101,13 +108,17 @@ Currently, the Validator choice is given precedence. If you wanted to use the al
 -}
 type ParamsOf :: PType -> [PType]
 type family ParamsOf a where
-  ParamsOf PValidator = '[]
-  ParamsOf PMintingPolicy = '[]
+  ParamsOf PLedgerV1.PValidator = '[]
+  ParamsOf PLedgerV1.PMintingPolicy = '[]
+  ParamsOf PLedgerV2.PValidator = '[]
+  ParamsOf PLedgerV2.PMintingPolicy = '[]
   ParamsOf (a :--> rest) = a : ParamsOf rest
   ParamsOf wrong =
     TypeError
-      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType PValidator
-          :$$: 'Text "Or with: " :<>: ShowType PMintingPolicy
+      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType PLedgerV1.PValidator
+          :$$: 'Text "Or with: " :<>: ShowType PLedgerV1.PMintingPolicy
+          :$$: 'Text "Or with: " :<>: ShowType PLedgerV2.PValidator
+          :$$: 'Text "Or with: " :<>: ShowType PLedgerV2.PMintingPolicy
           :$$: 'Text "But reached: " :<>: ShowType wrong
       )
 
@@ -131,13 +142,45 @@ Currently, the Validator choice is given precedence. If you wanted to use the al
 -}
 type RoleOf :: PType -> ScriptRole
 type family RoleOf a where
-  RoleOf PValidator = ValidatorRole
-  RoleOf PMintingPolicy = MintingPolicyRole
+  RoleOf PLedgerV1.PValidator = ValidatorRole
+  RoleOf PLedgerV1.PMintingPolicy = MintingPolicyRole
+  RoleOf PLedgerV2.PValidator = ValidatorRole
+  RoleOf PLedgerV2.PMintingPolicy = MintingPolicyRole
   RoleOf (_ :--> rest) = RoleOf rest
   RoleOf wrong =
     TypeError
-      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType PValidator
-          :$$: 'Text "Or with: " :<>: ShowType PMintingPolicy
+      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType PLedgerV1.PValidator
+          :$$: 'Text "Or with: " :<>: ShowType PLedgerV1.PMintingPolicy
+          :$$: 'Text "Or with: " :<>: ShowType PLedgerV2.PValidator
+          :$$: 'Text "Or with: " :<>: ShowType PLedgerV2.PMintingPolicy
+          :$$: 'Text "But reached: " :<>: ShowType wrong
+      )
+
+{- | Given a Plutarch function type ending in 'PValidator' or 'PMintingPolicy' (from either V1 or V2)
+, determine its 'ScriptVersion'.
+
+>>> :k! VersionOf (PData :--> PData :--> PLedgerV1.PScriptContext :--> POpaque)
+ScriptV1
+
+>>> :k! VersionOf (PData :--> PData :--> PLedgerV2.PScriptContext :--> POpaque)
+ScriptV2
+
+>>> :k! VersionOf (PData :--> PLedgerV2.PScriptContext :--> POpaque)
+ScriptV2
+-}
+type VersionOf :: PType -> ScriptVersion
+type family VersionOf a where
+  VersionOf PLedgerV1.PValidator = ScriptV1
+  VersionOf PLedgerV1.PMintingPolicy = ScriptV1
+  VersionOf PLedgerV2.PValidator = ScriptV2
+  VersionOf PLedgerV2.PMintingPolicy = ScriptV2
+  VersionOf (_ :--> rest) = VersionOf rest
+  VersionOf wrong =
+    TypeError
+      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType PLedgerV1.PValidator
+          :$$: 'Text "Or with: " :<>: ShowType PLedgerV1.PMintingPolicy
+          :$$: 'Text "Or with: " :<>: ShowType PLedgerV2.PValidator
+          :$$: 'Text "Or with: " :<>: ShowType PLedgerV2.PMintingPolicy
           :$$: 'Text "But reached: " :<>: ShowType wrong
       )
 
