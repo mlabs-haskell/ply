@@ -8,40 +8,31 @@ module Ply.Core.Types (
   TypedScriptEnvelope' (..),
   TypedScriptEnvelope (..),
   Typename,
-  typeName,
 ) where
 
 import Control.Exception (Exception)
-import Control.Monad (when)
 import Data.Aeson (object, (.=))
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as Base16
 import Data.Kind (Type)
 import Data.Text (Text)
-import qualified Data.Text as Txt
 import qualified Data.Text.Encoding as Text
 import GHC.Generics (Generic)
-import Type.Reflection (
-  Typeable,
-  tyConModule,
-  tyConName,
-  typeRep,
-  typeRepTyCon,
- )
 
 import Data.Aeson.Types (
   FromJSON (parseJSON),
   ToJSON (toJSON),
-  Value (Object, String),
+  Value (Object),
   prependFailure,
   typeMismatch,
-  unexpected,
   (.:),
  )
 
 import Cardano.Binary (DecoderError)
-import Ply.LedgerExports.Common (Script)
 import UntypedPlutusCore (DeBruijn, DefaultFun, DefaultUni, Program)
+
+import Ply.Core.Typename (Typename)
+import Ply.LedgerExports.Common (Script)
 
 -- | Compiled scripts that preserve script role and parameter types.
 type role TypedScript nominal nominal
@@ -129,25 +120,3 @@ instance ToJSON TypedScriptEnvelope' where
 data ScriptVersion = ScriptV1 | ScriptV2
   deriving stock (Bounded, Enum, Eq, Ord, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
-
--- | Alphanumeric type names as per Haskell syntax. Does not support type operators.
-newtype Typename = Typename Text
-  deriving stock (Eq, Show)
-  deriving newtype (ToJSON)
-
-{- | Obtain the 'Typename' for a given type.
-
-No specific guarantees are given as per the representation of the 'Typename', as it is an internal detail.
-However, typenames of 2 different types (different module) won't be the same.
--}
-typeName :: forall a. Typeable a => Typename
-typeName = Typename . Txt.pack $ tyConModule tyCon ++ ':' : tyConName tyCon
-  where
-    tyCon = typeRepTyCon $ typeRep @a
-
--- FIXME: Must have stricter parsing rules.
-instance FromJSON Typename where
-  parseJSON (String t) = do
-    when (Txt.null t) $ fail "Typename cannot be empty"
-    pure $ Typename t
-  parseJSON x = unexpected x

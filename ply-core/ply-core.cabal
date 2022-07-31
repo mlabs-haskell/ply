@@ -107,6 +107,7 @@ library
     Ply.Core.TypedReader
 
   other-modules:
+    Ply.Core.Typename
     Ply.Core.Types
     Ply.Core.UPLC
     Ply.LedgerExports.Common

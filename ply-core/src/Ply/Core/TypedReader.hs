@@ -8,17 +8,16 @@ import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy (Proxy))
 import Data.Typeable (Typeable)
 
-import Ply.LedgerExports.Common (Script (Script))
-
 import Ply.Core.Deserialize (readEnvelope)
+import Ply.Core.Typename (typeName)
 import Ply.Core.Types (
   ScriptReaderException (ScriptRoleError, ScriptTypeError),
   ScriptRole (MintingPolicyRole, ValidatorRole),
   TypedScript (TypedScript),
   TypedScriptEnvelope (TypedScriptEnvelope),
   Typename,
-  typeName,
  )
+import Ply.LedgerExports.Common (Script (Script))
 
 class TypedReader_ r params where
   mkTypedScript :: TypedScriptEnvelope -> Either ScriptReaderException (TypedScript r params)
