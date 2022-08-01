@@ -53,7 +53,7 @@ For example, if using 'plutus-apps' - you can create a function that determines 
 unifiedOtherScript :: TypedScript ValidatorRole '[] -> ScriptLookups a
 unifiedOtherScript ts = (if ver == ScriptV1 then plutusV1OtherScript else plutusV2OtherScript) vald
   where
-    ver = getPlutusVersion ts
+    ver = Ply.getPlutusVersion ts
     vald = Ply.toValidator ts
 @
 -}

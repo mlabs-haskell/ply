@@ -12,6 +12,8 @@ This facilitates the onchain/offchain split that is often utilized, without forc
 
   You can bestow custom invariants for your custom types using `PlyArg`.
 - First class Plutarch support: Preference given to and ease of use with Plutarch written scripts.
+
+  Thanks to the tight integration with Plutarch, Ply can figure out whether a Plutarch validator/minting policy is PlutusV1 or PlutusV2 on its own!
 - Minimal dependencies: Not dependent on the entire `plutus-apps` stack, not dependent on problematic/conflicting dependencies that may prevent compilation in certain repositories.
 
 # Usage
@@ -48,7 +50,7 @@ writeTypedScript ::
   IO ()
 ```
 
-> Aside: The `TypedWriter` constraint on the Plutarch type effectively barricades unsupported types. Of course, only validators and minting policies with 0 or more extra parameters are supported. The specific parameter types themselves also need to satisfy some constraints.
+> Aside: The `TypedWriter` constraint on the Plutarch type effectively barricades unsupported types. Of course, only validators and minting policies with 0 or more extra parameters are supported. The specific parameter types themselves also need to satisfy some constraints. See: [Using custom types as script parameters](#custom-types-as-script-parameters)
 
 This is how it'd look in practice:
 
@@ -109,19 +111,39 @@ parameterizedLockV <- readTypedScript @'ValidatorRole @'[Integer] "path/to/scrip
 
 Once you have the script itself - you can now work with it! You can apply the extra parameters to it at your leisure using `#` from `Ply`. When you're all done - you can convert it to a `Validator` or `MintingPolicy` using `Ply.toValidator` or `Ply.toMintingPolicy` respectively.
 
-Here's a full example of obtaining the `Validator` from our `parameterizedLockV` by applying the integer `42` as the extra parameter:
+> Aside: As mentioned previously, if you require deterministic and predictable parameter application: please use `#!` (or any of its synonyms) instead of `#`. Those will not perform any optimizations and guaranteed to be a singular, predictable UPLC `Apply` constructor wrapper.
+
+Here's a full example of using a `TypedScript`, utilizing its Plutus version tracking, and applying the integer `42` as the extra parameter:
 
 ```hs
 import Data.Text (Text)
 
 import Plutus.Contract (Contract, EmptySchema)
+import qualified Plutus.Contract as Contract
+import Ledger.Constraints (ScriptLookups)
+import qualified Ledger.Constraints as Constraints
 import PlutusLedgerApi.V1.Scripts (Validator)
 
-import Ply (readTypedScript, (#))
+import Ply (ScriptRole(ValidatorRole), ScriptVersion(ScriptV1), readTypedScript, (#))
 import qualified Ply
 
-someContract :: Validator -> Contract () EmptySchema Text ()
-someContract lockV = ... -- imagine a really useful contract!
+-- | Dispatch to either 'plutusV1OtherScript' or 'plutusV2OtherScript' depending on the script version.
+otherTypedScript :: TypedScript ValidatorRole '[] -> ScriptLookups a
+otherTypedScript ts = dispatcher vald
+  where
+    dispatcher = if ver == ScriptV1 then Constraints.plutusV1OtherScript else Constraints.plutusV2OtherScript
+    ver = Ply.getPlutusVersion ts
+    vald = Ply.toValidator ts
+
+someContract :: TypedScript ValidatorRole '[Integer] -> Contract () EmptySchema Text ()
+someContract lockV = do
+  let preparedValidator = lockV # param
+      lookups = otherTypedScript preparedValidator
+      tx = ... -- Some constraints
+  void $ Contract.submitTxConstraintsWith @Void lookups tx
+  where
+    param :: Integer
+    param = 42
 
 runContract :: Contract w s e a -> IO a
 runContract = ... -- imagine a contract runner impl!
@@ -129,13 +151,18 @@ runContract = ... -- imagine a contract runner impl!
 main :: IO ()
 main = do
   parameterizedLockV <- readTypedScript "path/to/script.plutus"
-  runContract . someContract . Ply.toValidator $ parameterizedLockV # param
-  where
-    param :: Integer
-    param = 42
+  runContract $ someContract parameterizedLockV
 ```
 
-> Aside: Notice how I didn't use type applications, it got inferred automatically!
+> Aside: Notice how I didn't use type applications, it got inferred from the surrounding context!
+
+# Custom Types as Script Parameters
+
+By default, Ply supports most `plutus-ledger-api` types and you can use any of them as your script parameters.
+
+If you want to use your custom type as a script parameter, you will need a lawful `PlyArg` instance for the Haskell type and a `PlyArgOf` instance on the Plutarch synonym, set to the Haskell type.
+
+Eventually, there will be generic derivation support for this.
 
 # How does Ply perform type validation across onchain <-> offchain? (Read this!)
 

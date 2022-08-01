@@ -28,7 +28,7 @@ associated invariants the type may have. It may also _normalize_ types.
 
 As a result, 'toBuiltinArg' is partial for types that don't hold their invariants.
 -}
-class (DefaultUni `Includes` UPLCRep a) => PlyArg a where
+class DefaultUni `Includes` UPLCRep a => PlyArg a where
   type UPLCRep a :: Type
   type ToDataConstraint a :: Constraint
   type ToDataConstraint a = ()
