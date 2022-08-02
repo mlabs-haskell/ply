@@ -4,6 +4,8 @@ Ply allows you to serialize your Plutarch validators/minting policies (with opti
 
 This facilitates the onchain/offchain split that is often utilized, without forcing the user to manage the intricacies of the types and their UPLC representation when it comes to parameterized scripts. i.e scripts that take extra parameters before being submitted to the chain.
 
+> N.B: Ply currently integrates with Plutarch 1.2
+
 # Goals
 
 - Efficiency: Applying constants with `Ply` should be equally efficient as using `pconstant`/`pconstantData` in the Plutarch function body directly.
