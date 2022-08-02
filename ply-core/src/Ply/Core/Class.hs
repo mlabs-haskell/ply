@@ -27,14 +27,27 @@ This class is meant to not only convert a type to its UPLC builtin representatio
 associated invariants the type may have. It may also _normalize_ types.
 
 As a result, 'toBuiltinArg' is partial for types that don't hold their invariants.
+
+== Laws
+
+ 1. If 'toBuiltinArg'/'toBuiltinArgData' is applied over `x`, all contained 'PlyArg's within should also have
+ their corresponding 'toBuiltinArg'/'toBuiltinArgData' applied over them.
+
+ 2. If @UPLCRep a = Data@; @toBuiltinArgData = toBuiltinArg@
+
+ 3. Assuming a lawful 'Eq' instance (i.e the 'Eq' instance is aware of any invariants):
+    @fromData (toBuiltinArgData x) == Just x@
+
+ 4. 'toBuiltinArgData' implementation must perform the same validations/normalizations as 'toBuiltinArg'.
 -}
-class (DefaultUni `Includes` UPLCRep a) => PlyArg a where
+class DefaultUni `Includes` UPLCRep a => PlyArg a where
   type UPLCRep a :: Type
   type ToDataConstraint a :: Constraint
   type ToDataConstraint a = ()
   toBuiltinArg :: a -> UPLCRep a
   toBuiltinArgData :: ToDataConstraint a => a -> Data
 
+-- | Create a PlutusCore 'Some' value from a 'PlyArg'.
 someBuiltinArg :: PlyArg a => a -> Some (ValueOf DefaultUni)
 someBuiltinArg = PLC.someValue . toBuiltinArg
 
@@ -63,6 +76,7 @@ instance PlyArg ByteString where
   toBuiltinArg = id
   toBuiltinArgData = toData . toBuiltin
 
+-- | 'toBuiltinArgData' is uncallable for this instance.
 instance PlyArg Text where
   type UPLCRep Text = Text
   type ToDataConstraint Text = BottomConstraint "toBuiltinArgData(Text): unsupported" Text
@@ -92,6 +106,7 @@ instance (PlyArg a, ToDataConstraint a) => PlyArg (Maybe a) where
   toBuiltinArg (Just x) = Constr 0 [toBuiltinArgData x]
   toBuiltinArgData = toBuiltinArg
 
+-- | This instance sorts the map.
 instance
   ( PlyArg k
   , ToDataConstraint k
@@ -109,6 +124,7 @@ instance
       . PlutusMap.toList
   toBuiltinArgData = Map . toBuiltinArg
 
+-- | This instance sorts the 'Value' and removes all zero entries.
 instance PlyArg Value where
   type UPLCRep Value = [(Data, Data)]
   toBuiltinArg (Value m) =
@@ -130,15 +146,12 @@ instance PlyArg Value where
           $ PlutusMap.toList m
   toBuiltinArgData = Map . toBuiltinArg
 
+-- | This verifies the underlying bytestring is exactly 28 bytes.
 instance PlyArg Credential where
   type UPLCRep Credential = Data
-  toBuiltinArg cred =
-    let credHash = case cred of
-          PubKeyCredential (PubKeyHash h) -> fromBuiltin h
-          ScriptCredential (ValidatorHash h) -> fromBuiltin h
-     in if BS.length credHash == 28
-          then toData cred
-          else error "toBuiltinArg(Credential): Expected 28 bytes"
+  toBuiltinArg cred = toData . toBuiltin $ case cred of
+    PubKeyCredential h -> toBuiltinArg h
+    ScriptCredential h -> toBuiltinArg h
   toBuiltinArgData = toBuiltinArg
 
 instance PlyArg StakingCredential where
@@ -155,6 +168,7 @@ instance PlyArg Address where
      in Constr 0 [credData, stakeCredData]
   toBuiltinArgData = toBuiltinArg
 
+-- | This verifies the underlying bytestring is exactly 0 (for adaSymbol) or 28 bytes.
 instance PlyArg CurrencySymbol where
   type UPLCRep CurrencySymbol = ByteString
   toBuiltinArg cs@(CurrencySymbol x)
@@ -162,15 +176,15 @@ instance PlyArg CurrencySymbol where
     | otherwise =
       if BS.length bs == 28
         then bs
-        else error "toBuiltinArg(CurrencySymbol): Expected 28 bytes"
+        else error "toBuiltinArg(CurrencySymbol): Expected exactly 0 or 28 bytes"
     where
       bs = fromBuiltin x
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
 
+-- | This verifies the underlying bytestring is no longer than 32 bytes.
 instance PlyArg TokenName where
   type UPLCRep TokenName = ByteString
   toBuiltinArg (TokenName x) =
-    -- FIXME: Is this the correct invariant for token name?
     if BS.length bs <= 32
       then bs
       else error "toBuiltinArg(TokenName): Expected 32 bytes or less"
@@ -183,6 +197,7 @@ instance PlyArg AssetClass where
   toBuiltinArg (AssetClass i) = toBuiltinArgData i
   toBuiltinArgData = toBuiltinArg
 
+-- | This verifies the underlying bytestring is exactly 28 bytes.
 instance PlyArg PubKeyHash where
   type UPLCRep PubKeyHash = ByteString
   toBuiltinArg (PubKeyHash x) =
@@ -193,6 +208,7 @@ instance PlyArg PubKeyHash where
       bs = fromBuiltin x
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
 
+-- | This verifies the underlying integer is non-negative.
 instance PlyArg POSIXTime where
   type UPLCRep POSIXTime = Integer
   toBuiltinArg (POSIXTime i) =
@@ -201,6 +217,7 @@ instance PlyArg POSIXTime where
       else error "toBuiltinArg(POSIXTime): Expected non-negative"
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
 
+-- | This verifies the underlying integer is non-negative.
 instance PlyArg DiffMilliSeconds where
   type UPLCRep DiffMilliSeconds = Integer
   toBuiltinArg (DiffMilliSeconds i) =
@@ -242,6 +259,7 @@ instance PlyArg DCert where
   toBuiltinArg DCertMir = Constr 6 []
   toBuiltinArgData = toBuiltinArg
 
+-- | This verifies the underlying bytestring is exactly 32 bytes.
 instance PlyArg TxId where
   -- TxId is a Constr data instead of just a bytestring, for some reason.
   type UPLCRep TxId = Data
@@ -253,6 +271,7 @@ instance PlyArg TxId where
       bs = fromBuiltin x
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
 
+-- | This verifies the txIdx is non-negative.
 instance PlyArg TxOutRef where
   type UPLCRep TxOutRef = Data
   toBuiltinArg (TxOutRef txId txIdx) =
@@ -330,6 +349,7 @@ instance PlyArg Redeemer where
   toBuiltinArg (Redeemer d) = toData d
   toBuiltinArgData = toBuiltinArg
 
+-- | This verifies the underlying bytestring is exactly 28 bytes.
 instance PlyArg ScriptHash where
   type UPLCRep ScriptHash = ByteString
   toBuiltinArg (ScriptHash x) =
@@ -340,6 +360,7 @@ instance PlyArg ScriptHash where
       bs = fromBuiltin x
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
 
+-- | This verifies the underlying bytestring is exactly 28 bytes.
 instance PlyArg ValidatorHash where
   type UPLCRep ValidatorHash = ByteString
   toBuiltinArg (ValidatorHash x) =
@@ -350,6 +371,7 @@ instance PlyArg ValidatorHash where
       bs = fromBuiltin x
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
 
+-- | This verifies the underlying bytestring is exactly 28 bytes.
 instance PlyArg MintingPolicyHash where
   type UPLCRep MintingPolicyHash = ByteString
   toBuiltinArg (MintingPolicyHash x) =
@@ -360,6 +382,7 @@ instance PlyArg MintingPolicyHash where
       bs = fromBuiltin x
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
 
+-- | This verifies the underlying bytestring is exactly 28 bytes.
 instance PlyArg DatumHash where
   type UPLCRep DatumHash = ByteString
   toBuiltinArg (DatumHash x) =
@@ -370,6 +393,7 @@ instance PlyArg DatumHash where
       bs = fromBuiltin x
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
 
+-- | This verifies the underlying bytestring is exactly 28 bytes.
 instance PlyArg RedeemerHash where
   type UPLCRep RedeemerHash = ByteString
   toBuiltinArg (RedeemerHash x) =
