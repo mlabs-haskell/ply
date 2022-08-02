@@ -115,7 +115,7 @@ parameterizedLockV <- readTypedScript @'ValidatorRole @'[Integer] "path/to/scrip
 
 Once you have the script itself - you can now work with it! You can apply the extra parameters to it at your leisure using `#` from `Ply`. When you're all done - you can convert it to a `Validator` or `MintingPolicy` using `Ply.toValidator` or `Ply.toMintingPolicy` respectively.
 
-> Aside: As mentioned previously, if you require deterministic and predictable parameter application: please use `#!` (or any of its synonyms) instead of `#`. Those will not perform any optimizations and guaranteed to be a singular, predictable UPLC `Apply` constructor wrapper.
+> Aside: As mentioned previously, if you require deterministic and predictable parameter application: please use `#!` (or any of its synonyms) instead of `#`. Those will not perform any optimizations and is guaranteed to use a raw UPLC `Apply` constructor wrapper.
 
 Here's a full example of using a `TypedScript`, utilizing its Plutus version tracking, and applying the integer `42` as the extra parameter:
 

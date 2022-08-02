@@ -30,7 +30,6 @@ format_check:
 	env -C ply-plutarch fourmolu --mode check --check-idempotence $(EXTENSIONS) $(shell env -C ply-plutarch fd -ehs)
 	env -C example/offchain fourmolu -i --check-idempotence $(EXTENSIONS) $(shell env -C example/offchain fd -ehs)
 	env -C example/onchain fourmolu -i --check-idempotence $(EXTENSIONS) $(shell env -C example/onchain fd -ehs)
-	env -C ply-test-core fourmolu -i --check-idempotence $(EXTENSIONS) $(shell env -C ply-test-core fd -ehs)
 	nixpkgs-fmt --check $(NIX_SOURCES)
 	cabal-fmt -c $(CABAL_SOURCES)
 
