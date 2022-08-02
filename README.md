@@ -7,10 +7,12 @@ This facilitates the onchain/offchain split that is often utilized, without forc
 # Goals
 
 - Efficiency: Applying constants with `Ply` should be equally efficient as using `pconstant`/`pconstantData` in the Plutarch function body directly.
-- Ergonomics: Users shouldn't need to deal with UPLC intricacies.
+
+  _However_, some protocols require **deterministic parameterization** - optimizations are not acceptable. In this case, Ply also provides the same ergonomics of application, with a different application function - which does not perform _any optimizations_.
+- Ergonomics: Users shouldn't need to deal with UPLC intricacies. Users shouldn't have to care about micro-managing Plutus script versions (V1 and V2).
 - Invariant validation: Before given Haskell constant is applied to the script, all its invariants are validated and any relevant normalization is performed. e.g `PValue` is sorted and normalized (zero elements removed) before being passed into the script.
 
-  You can bestow custom invariants for your custom types using `PlyArg`.
+  You can bestow _custom invariants_ for your **custom types** using `PlyArg`.
 - First class Plutarch support: Preference given to and ease of use with Plutarch written scripts.
 
   Thanks to the tight integration with Plutarch, Ply can figure out whether a Plutarch validator/minting policy is PlutusV1 or PlutusV2 on its own!
