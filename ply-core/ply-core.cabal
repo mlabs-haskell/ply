@@ -103,6 +103,7 @@ library
     Ply.Core.Apply
     Ply.Core.Class
     Ply.Core.Deserialize
+    Ply.Core.Internal.Reify
     Ply.Core.Serialize
     Ply.Core.TypedReader
 

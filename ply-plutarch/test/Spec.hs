@@ -8,27 +8,46 @@ import Data.Default (def)
 import Test.Tasty
 import Test.Tasty.HUnit
 
-import Plutarch.Api.V1
+import Plutarch.Api.V1 as PLedgerV1
+import Plutarch.Api.V2 as PLedgerV2
 import Plutarch.Prelude
 import PlutusLedgerApi.V1
 import qualified PlutusTx.AssocMap as PlutusMap
 
-import Ply (ScriptRole (MintingPolicyRole, ValidatorRole), Typename, typeName)
+import Ply (ScriptRole (MintingPolicyRole, ValidatorRole), ScriptVersion (ScriptV1, ScriptV2), Typename, typeName)
 import Ply.Plutarch.TypedWriter (TypedWriter, typedWriterInfo)
 
 -- | Ensure 'typedWriterInfo @ptype' yields the expected 'ScriptRole' and '[Typename]'.
 testHelper ::
   forall ptypeList.
-  (TypedWriter (PTypeWith PValidator ptypeList), TypedWriter (PTypeWith PMintingPolicy ptypeList)) =>
+  ( TypedWriter (PTypeWith PLedgerV1.PValidator ptypeList)
+  , TypedWriter (PTypeWith PLedgerV1.PMintingPolicy ptypeList)
+  , TypedWriter (PTypeWith PLedgerV2.PValidator ptypeList)
+  , TypedWriter (PTypeWith PLedgerV2.PMintingPolicy ptypeList)
+  ) =>
   [Typename] ->
   Assertion
 testHelper expectedTypes = do
-  let (actualRole0, actualTypes0, _) = typedWriterInfo @(PTypeWith PValidator ptypeList) def undefined
+  let (actualVersion0, actualRole0, actualTypes0, _) =
+        typedWriterInfo @(PTypeWith PLedgerV1.PValidator ptypeList) def undefined
   actualRole0 @?= ValidatorRole
-  let (actualRole1, actualTypes1, _) = typedWriterInfo @(PTypeWith PMintingPolicy ptypeList) def undefined
+  let (actualVersion1, actualRole1, actualTypes1, _) =
+        typedWriterInfo @(PTypeWith PLedgerV1.PMintingPolicy ptypeList) def undefined
   actualRole1 @?= MintingPolicyRole
-  actualTypes0 @?= actualTypes1
+  actualVersion0 @?= ScriptV1
+  actualVersion0 @?= actualVersion1
+  let (actualVersion2, actualRole2, actualTypes2, _) =
+        typedWriterInfo @(PTypeWith PLedgerV2.PValidator ptypeList) def undefined
+  actualRole2 @?= ValidatorRole
+  let (actualVersion3, actualRole3, actualTypes3, _) =
+        typedWriterInfo @(PTypeWith PLedgerV2.PMintingPolicy ptypeList) def undefined
+  actualRole3 @?= MintingPolicyRole
+  actualVersion2 @?= ScriptV2
+  actualVersion2 @?= actualVersion3
   actualTypes0 @?= expectedTypes
+  actualTypes0 @?= actualTypes1
+  actualTypes0 @?= actualTypes2
+  actualTypes0 @?= actualTypes3
 
 baselineTest :: Assertion
 baselineTest = testHelper @'[] []
@@ -64,10 +83,10 @@ tests =
     , testCase
         ( "@(PBuiltinList PTxInInfo "
             ++ ":--> PTxOutRef :--> PExtended PInteger :--> PPubKeyHash "
-            ++ ":--> PMaybeData PByteString :--> PMap PDatumHash PDatum)"
+            ++ ":--> PMaybeData PByteString :--> PMap PDatumHash PDatum :--> _)"
         )
         $ testHelper
-          @'[ PBuiltinList PTxInInfo
+          @'[ PBuiltinList PLedgerV1.PTxInInfo
             , PTxOutRef
             , PExtended PInteger
             , PPubKeyHash
