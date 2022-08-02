@@ -28,15 +28,15 @@ format: requires_nix_shell
 format_check:
 	env -C ply-core fourmolu --mode check --check-idempotence $(EXTENSIONS) $(shell env -C ply-core fd -ehs)
 	env -C ply-plutarch fourmolu --mode check --check-idempotence $(EXTENSIONS) $(shell env -C ply-plutarch fd -ehs)
+	env -C example/offchain fourmolu -i --check-idempotence $(EXTENSIONS) $(shell env -C example/offchain fd -ehs)
+	env -C example/onchain fourmolu -i --check-idempotence $(EXTENSIONS) $(shell env -C example/onchain fd -ehs)
 	nixpkgs-fmt --check $(NIX_SOURCES)
 	cabal-fmt -c $(CABAL_SOURCES)
 
 # Nix files to format
 NIX_SOURCES := $(shell fd -enix)
+# Cabal files to format
 CABAL_SOURCES := $(shell fd -ecabal)
-
-# Nix files to format
-NIX_SOURCES := $(shell git ls-tree -r HEAD --full-tree --name-only | grep -E '.*\.nix' )
 
 nixfmt: requires_nix_shell
 	nixfmt $(NIX_SOURCES)

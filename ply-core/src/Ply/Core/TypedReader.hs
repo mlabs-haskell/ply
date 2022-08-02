@@ -4,27 +4,38 @@ module Ply.Core.TypedReader (TypedReader, readTypedScript, mkTypedScript) where
 
 import Control.Exception (throwIO)
 import Control.Monad (unless)
-import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy (Proxy))
-import Data.Typeable (Typeable)
-
-import Plutus.V1.Ledger.Scripts (Script (Script))
 
 import Ply.Core.Deserialize (readEnvelope)
+import Ply.Core.Internal.Reify
 import Ply.Core.Types (
   ScriptReaderException (ScriptRoleError, ScriptTypeError),
-  ScriptRole (MintingPolicyRole, ValidatorRole),
+  ScriptRole (ValidatorRole),
   TypedScript (TypedScript),
   TypedScriptEnvelope (TypedScriptEnvelope),
-  Typename,
-  typeName,
  )
+import Ply.LedgerExports.Common (Script (Script))
 
-class TypedReader_ r params where
-  mkTypedScript :: TypedScriptEnvelope -> Either ScriptReaderException (TypedScript r params)
+{- | Class of 'TypedScript' parameters that are supported and can be read.
 
-class TypedReader_ r params => TypedReader r params
-instance TypedReader_ r params => TypedReader r params
+See: 'mkTypedScript'.
+-}
+type TypedReader rl params =
+  ( ReifyRole rl
+  , ReifyTypenames params
+  )
+
+-- | Pure function to parse a 'TypedScript' from a 'TypedScriptEnvelope'.
+mkTypedScript ::
+  forall rl params.
+  TypedReader rl params =>
+  TypedScriptEnvelope ->
+  Either ScriptReaderException (TypedScript rl params)
+mkTypedScript (TypedScriptEnvelope ver rol params _ (Script prog)) = do
+  unless (rol == reifyRole (Proxy @rl)) . Left $ ScriptRoleError ValidatorRole rol
+  let expectedParams = reifyTypenames $ Proxy @params
+  unless (expectedParams == params) . Left $ ScriptTypeError expectedParams params
+  pure $ TypedScript ver prog
 
 {- | Read and verify a 'TypedScript' from given filepath.
 
@@ -38,27 +49,3 @@ readTypedScript ::
   FilePath ->
   IO (TypedScript r params)
 readTypedScript p = readEnvelope p >>= either throwIO pure . mkTypedScript
-
-instance MkTypenames params => TypedReader_ ValidatorRole params where
-  mkTypedScript (TypedScriptEnvelope _ rol params _ (Script prog)) = do
-    unless (rol == ValidatorRole) . Left $ ScriptRoleError ValidatorRole rol
-    let expectedParams = mkTypenames $ Proxy @params
-    unless (expectedParams == params) . Left $ ScriptTypeError expectedParams params
-    pure $ TypedScript prog
-
-instance MkTypenames params => TypedReader_ MintingPolicyRole params where
-  mkTypedScript (TypedScriptEnvelope _ rol params _ (Script prog)) = do
-    unless (rol == MintingPolicyRole) . Left $ ScriptRoleError MintingPolicyRole rol
-    let expectedParams = mkTypenames $ Proxy @params
-    unless (expectedParams == params) . Left $ ScriptTypeError expectedParams params
-    pure $ TypedScript prog
-
-type MkTypenames :: [Type] -> Constraint
-class MkTypenames a where
-  mkTypenames :: Proxy a -> [Typename]
-
-instance MkTypenames '[] where
-  mkTypenames _ = []
-
-instance (Typeable x, MkTypenames xs) => MkTypenames (x ': xs) where
-  mkTypenames _ = typeName @x : mkTypenames (Proxy @xs)

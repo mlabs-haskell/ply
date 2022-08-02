@@ -15,7 +15,7 @@ result
 result-*
 
 # direnv
-#.envrc
+.direnv/
 *.sw*
 */Session.vim
 
@@ -60,10 +60,8 @@ cabal.project.local*
 
 # Ignore 'cabal.project' in favor of 'cabal.project.contracts' and 'cabal.project.scripts'
 cabal.project
-
-# But don't ignore the ones within `example/` and `ply-test-core/`
+# But don't ignore the ones within `example/`
 !example/*/cabal.project
-!ply-test-core/cabal.project
 
 # Debug logs
 *.log
@@ -72,3 +70,6 @@ test.log
 # Plutip output
 db/
 *#
+
+# pre-commit-hooks
+.pre-commit-config.yaml

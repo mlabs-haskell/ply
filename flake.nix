@@ -1,30 +1,30 @@
 {
   description = "Ply - A helper library for working with compiled, parameterized Plutus Scripts";
 
-  inputs = {
-    haskell-nix.url = "github:mlabs-haskell/haskell.nix";
-
+  inputs = rec {
+    haskell-nix.url = "github:input-output-hk/haskell.nix";
     nixpkgs.follows = "haskell-nix/nixpkgs-unstable";
+    extra-hackage.url = "github:mlabs-haskell/haskell-nix-extra-hackage";
+    extra-hackage.inputs.haskell-nix.follows = "haskell-nix";
+    extra-hackage.inputs.nixpkgs.follows = "nixpkgs";
 
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     iohk-nix.flake = false; # Bad Nix code
 
     plutarch = {
-      url = "github:Plutonomicon/plutarch";
-      inputs = {
-        haskell-nix.follows = "haskell-nix";
-        nixpkgs.follows = "nixpkgs";
-      };
+      url = "github:Plutonomicon/plutarch-plutus?ref=staging";
     };
+
+    pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
 
     plutus = {
       url =
-        "github:input-output-hk/plutus/892d9b03a67e3b9f8c452784ab4e758ff3eb2781";
+        "github:input-output-hk/plutus/b39a526e983cb931d0cc49b7d073d6d43abd22b5";
       flake = false;
     };
     cardano-base = {
       url =
-        "github:input-output-hk/cardano-base/0b1b5b37e305c4bb10791f843bc8c81686a0cba4";
+        "github:input-output-hk/cardano-base/0f3a867493059e650cda69e20a5cbf1ace289a57";
       flake = false;
     };
     cardano-crypto = {
@@ -44,45 +44,70 @@
     };
   };
 
-  outputs = inputs@{ self, nixpkgs, haskell-nix, iohk-nix, plutarch, ... }:
+  outputs = inputs@{ self, nixpkgs, haskell-nix, extra-hackage, iohk-nix, plutarch, pre-commit-hooks, ... }:
     let
-      extraSources = [
-        {
-          src = inputs.cardano-prelude;
-          subdirs = [
-            "cardano-prelude"
-          ];
-        }
-        {
-          src = inputs.cardano-crypto;
-          subdirs = [ "." ];
-        }
-        {
-          src = inputs.flat;
-          subdirs = [ "." ];
-        }
-        {
-          src = inputs.cardano-base;
-          subdirs = [
-            "binary"
-            "cardano-crypto-class"
-          ];
-        }
-        {
-          src = inputs.plutus;
-          subdirs = [
-            "plutus-core"
-            "plutus-ledger-api"
-            "plutus-tx"
-            "prettyprinter-configurable"
-            "word-array"
-          ];
-        }
+      # https://github.com/input-output-hk/haskell.nix/issues/1177
+      nonReinstallablePkgs = [
+        "array"
+        "array"
+        "base"
+        "binary"
+        "bytestring"
+        "Cabal"
+        "containers"
+        "deepseq"
+        "directory"
+        "exceptions"
+        "filepath"
+        "ghc"
+        "ghc-bignum"
+        "ghc-boot"
+        "ghc-boot"
+        "ghc-boot-th"
+        "ghc-compact"
+        "ghc-heap"
+        # "ghci"
+        # "haskeline"
+        "ghcjs-prim"
+        "ghcjs-th"
+        "ghc-prim"
+        "ghc-prim"
+        "hpc"
+        "integer-gmp"
+        "integer-simple"
+        "mtl"
+        "parsec"
+        "pretty"
+        "process"
+        "rts"
+        "stm"
+        "template-haskell"
+        "terminfo"
+        "text"
+        "time"
+        "transformers"
+        "unix"
+        "Win32"
+        "xhtml"
       ];
 
+      myhackages = system: compiler-nix-name: extra-hackage.mkHackagesFor system compiler-nix-name (
+        [
+          "${inputs.flat}"
+          "${inputs.cardano-prelude}/cardano-prelude"
+          "${inputs.cardano-crypto}"
+          "${inputs.cardano-base}/binary"
+          "${inputs.cardano-base}/cardano-crypto-class"
+          "${inputs.plutus}/plutus-core"
+          "${inputs.plutus}/plutus-ledger-api"
+          "${inputs.plutus}/plutus-tx"
+          "${inputs.plutus}/prettyprinter-configurable"
+          "${inputs.plutus}/word-array"
+        ]
+      );
+
       # GENERAL
-      supportedSystems = with nixpkgs.lib.systems.supported;
-        tier1 ++ tier2 ++ tier3;
+      supportedSystems = with nixpkgs.lib.systems.supported; tier1 ++ tier2 ++ tier3;
       perSystem = nixpkgs.lib.genAttrs supportedSystems;
 
       nixpkgsFor = system:
@@ -95,6 +120,24 @@
           inherit (haskell-nix) config;
         };
       nixpkgsFor' = system: import nixpkgs { inherit system; };
+
+      pre-commit-check-for = system: pre-commit-hooks.lib.${system}.run {
+        src = ./.;
+        settings = {
+          ormolu.defaultExtensions = [
+            "TypeApplications"
+            "PatternSynonyms"
+          ];
+        };
+
+        hooks = {
+          nixpkgs-fmt.enable = true;
+          cabal-fmt.enable = true;
+          fourmolu.enable = true;
+          hlint.enable = true;
+        };
+      };
+
 
       mkDevEnv = system:
         # Generic environment bringing generic utilities. To be used only as a
@@ -118,45 +161,32 @@
             pkgs'.hlint
             pkgs'.nixpkgs-fmt
           ];
-          shellHook = "echo $name";
+          shellHook = (pre-commit-check-for system).shellHook +
+            ''
+              echo $name
+            '';
         };
-
-      formatCheckFor = system:
-        let
-          pkgs = nixpkgsFor system;
-          pkgs' = nixpkgsFor' system;
-          stdDevEnv = mkDevEnv system;
-        in
-        pkgs.runCommand "format-check"
-          {
-            buildInputs = stdDevEnv.buildInputs;
-          } ''
-          export LC_CTYPE=C.UTF-8
-          export LC_ALL=C.UTF-8
-          export LANG=C.UTF-8
-          cd ${self}
-          make  format_check
-          mkdir $out
-        '';
 
       # Ply core
       ply-core = rec {
-        ghcVersion = "ghc8107";
+        ghcVersion = "8107";
+        compiler-nix-name = "ghc${ghcVersion}";
 
         projectFor = system:
           let
             pkgs = nixpkgsFor system;
             pkgs' = nixpkgsFor' system;
             stdDevEnv = mkDevEnv system;
+            h = myhackages system compiler-nix-name;
           in
           (nixpkgsFor system).haskell-nix.cabalProject' {
+            inherit compiler-nix-name;
+            inherit (h) extra-hackages extra-hackage-tarballs;
             src = ./.;
-            compiler-nix-name = ghcVersion;
             cabalProjectFileName = "cabal.project.core";
             cabalProjectLocal = ''
               allow-newer: size-based:template-haskell
             '';
-            inherit extraSources;
             modules = [
               ({ pkgs, ... }:
                 {
@@ -166,7 +196,7 @@
                   };
                 }
               )
-            ];
+            ] ++ h.modules;
             shell = {
               withHoogle = true;
 
@@ -176,50 +206,47 @@
 
               tools.haskell-language-server = { };
 
-              additional = ps: [
-                ps.plutus-ledger-api
-              ];
-
               shellHook = ''
                 export NIX_SHELL_TARGET="core"
                 ln -fs cabal.project.core cabal.project
-              '';
+              '' + (pre-commit-check-for system).shellHook;
             };
           };
       };
 
       # Ply x Plutarch
       ply-plutarch = rec {
-        ghcVersion = "ghc921";
+        ghcVersion = "923";
+        compiler-nix-name = "ghc${ghcVersion}";
 
         projectFor = system:
           let
-            pkgs = nixpkgsFor system;
-            pkgs' = nixpkgsFor' system;
-            stdDevEnv = mkDevEnv system;
-          in
-          (nixpkgsFor system).haskell-nix.cabalProject' {
-            src = ./.;
-            compiler-nix-name = ghcVersion;
-            cabalProjectFileName = "cabal.project.plutarch";
-            inherit (plutarch) cabalProjectLocal;
-            extraSources = plutarch.extraSources ++ [
-              {
-                src = inputs.plutarch;
-                subdirs = [
-                  "."
-                ];
-              }
+            pkgs = import plutarch.inputs.nixpkgs {
+              inherit system;
+              inherit (plutarch.inputs.haskell-nix) config;
+              overlays = [
+                plutarch.inputs.haskell-nix.overlay
+                (import "${plutarch.inputs.iohk-nix}/overlays/crypto")
+              ];
+            };
+            stdDevEnv = mkDevEnv system; # TODO: parametrize with pkgs rather?
+            hls = (plutarch.hlsFor compiler-nix-name system);
+            myPlutarchHackages = plutarch.inputs.haskell-nix-extra-hackage.mkHackagesFor system compiler-nix-name [
+              "${inputs.plutarch}"
             ];
-            modules = [ (plutarch.haskellModule system) ];
+          in
+          pkgs.haskell-nix.cabalProject' (plutarch.applyPlutarchDep pkgs {
+            inherit compiler-nix-name;
+            src = ./.;
+            cabalProjectFileName = "cabal.project.plutarch";
+            index-state = "2022-06-01T00:00:00Z";
+            inherit (myPlutarchHackages) extra-hackages extra-hackage-tarballs modules;
             shell = {
               withHoogle = true;
 
               exactDeps = true;
 
-              buildInputs = stdDevEnv.buildInputs;
-
-              tools = removeAttrs plutarch.tools [ "fourmolu" ];
+              buildInputs = stdDevEnv.buildInputs ++ [ hls ];
 
               additional = ps: [
                 ps.plutarch
@@ -229,9 +256,10 @@
               shellHook = ''
                 export NIX_SHELL_TARGET="plutarch"
                 ln -fs cabal.project.plutarch cabal.project
+                ${(pre-commit-check-for system).shellHook}
               '';
             };
-          };
+          });
       };
 
     in
@@ -278,7 +306,7 @@
 
       checks = perSystem (system:
         self.ply-core.flake.${system}.checks // self.ply-plutarch.flake.${system}.checks
-        // (formatCheckFor system));
+        // { formatting-checks = pre-commit-check-for system; });
 
       check = perSystem (system:
         (nixpkgsFor system).runCommand "combined-test"
@@ -294,7 +322,8 @@
 
       apps = perSystem (system: self.ply-core.flake.${system}.apps // self.ply-plutarch.flake.${system}.apps);
 
-      devShells = perSystem (system: {
+      devShells = perSystem (system: rec {
+        default = devEnv;
         core = self.ply-core.flake.${system}.devShell;
         plutarch = self.ply-plutarch.flake.${system}.devShell;
         devEnv = self.packages.${system}.devEnv;

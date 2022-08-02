@@ -10,14 +10,14 @@ import Data.Text (Text)
 import qualified Data.Text.Encoding as Txt
 
 import qualified Cardano.Binary as CBOR
-import Plutus.V1.Ledger.Scripts (Script)
 
 import Ply.Core.Types (
   ScriptRole,
-  ScriptVersion (ScriptV1),
+  ScriptVersion,
   TypedScriptEnvelope' (..),
   Typename,
  )
+import Ply.LedgerExports.Common (Script)
 
 -- | Serialize a script into its raw form.
 serializeScript :: Script -> ByteString
@@ -31,12 +31,14 @@ serializeScriptCbor = CBOR.serialize' . SBS.toShort . serializeScript
 serializeScriptCborHex :: Script -> Text
 serializeScriptCborHex = Txt.decodeUtf8 . Base16.encode . serializeScriptCbor
 
--- | Write a typed script into a 'TypedScriptEnvelope'.
+-- | Write a typed script into a "Ply.Core.Types.TypedScriptEnvelope".
 writeEnvelope ::
   -- | Description for the script (semantically irrelevant).
   Text ->
   -- | Path to write the file to.
   FilePath ->
+  -- | Version of the script.
+  ScriptVersion ->
   -- | Whether the script is a validator or a minting policy.
   ScriptRole ->
   -- | The extra parameter types for the script.
@@ -44,10 +46,10 @@ writeEnvelope ::
   -- | The script itself.
   Script ->
   IO ()
-writeEnvelope descr filepath scrptRole paramTypes scrpt = do
+writeEnvelope descr filepath scrptVer scrptRole paramTypes scrpt = do
   let plutusEnvelope =
         TypedScriptEnvelope'
-          { tsVersion' = ScriptV1
+          { tsVersion' = scrptVer
           , tsRole' = scrptRole
           , tsParamTypes' = paramTypes
           , tsDescription' = descr

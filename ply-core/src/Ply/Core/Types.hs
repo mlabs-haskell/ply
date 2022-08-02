@@ -8,40 +8,37 @@ module Ply.Core.Types (
   TypedScriptEnvelope' (..),
   TypedScriptEnvelope (..),
   Typename,
-  typeName,
 ) where
 
 import Control.Exception (Exception)
-import Control.Monad (when)
 import Data.Aeson (object, (.=))
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as Base16
 import Data.Kind (Type)
 import Data.Text (Text)
-import qualified Data.Text as Txt
 import qualified Data.Text.Encoding as Text
-import Data.Typeable (Proxy (Proxy), Typeable, typeRep)
 import GHC.Generics (Generic)
 
 import Data.Aeson.Types (
   FromJSON (parseJSON),
   ToJSON (toJSON),
-  Value (Object, String),
+  Value (Object),
   prependFailure,
   typeMismatch,
-  unexpected,
   (.:),
  )
 
 import Cardano.Binary (DecoderError)
-import Plutus.V1.Ledger.Scripts (Script)
 import UntypedPlutusCore (DeBruijn, DefaultFun, DefaultUni, Program)
+
+import Ply.Core.Typename (Typename)
+import Ply.LedgerExports.Common (Script)
 
 -- | Compiled scripts that preserve script role and parameter types.
 type role TypedScript nominal nominal
 
 type TypedScript :: ScriptRole -> [Type] -> Type
-newtype TypedScript r a = TypedScript (Program DeBruijn DefaultUni DefaultFun ())
+data TypedScript r a = TypedScript !ScriptVersion !(Program DeBruijn DefaultUni DefaultFun ())
   deriving stock (Show)
 
 -- | Script role: either a validator or a minting policy.
@@ -123,19 +120,3 @@ instance ToJSON TypedScriptEnvelope' where
 data ScriptVersion = ScriptV1 | ScriptV2
   deriving stock (Bounded, Enum, Eq, Ord, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
-
--- | Alphanumeric type names as per Haskell syntax. Does not support type operators.
-newtype Typename = Typename Text
-  deriving stock (Eq, Show)
-  deriving newtype (ToJSON)
-
--- | Obtain the 'Typename' for a given type.
-typeName :: forall a. Typeable a => Typename
-typeName = Typename . Txt.pack . show $ typeRep (Proxy @a)
-
--- FIXME: Must have stricter parsing rules.
-instance FromJSON Typename where
-  parseJSON (String t) = do
-    when (Txt.null t) $ fail "Typename cannot be empty"
-    pure $ Typename t
-  parseJSON x = unexpected x

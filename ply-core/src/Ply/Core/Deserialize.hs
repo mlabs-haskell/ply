@@ -12,13 +12,13 @@ import qualified Data.Aeson as Aeson
 
 import Cardano.Binary (DecoderError, FromCBOR (fromCBOR))
 import qualified Cardano.Binary as CBOR
-import qualified Plutus.V1.Ledger.Scripts as PlutusScript
 
 import Ply.Core.Types (
   ScriptReaderException (AesonDecodeError, CBORDecodeError),
   TypedScriptEnvelope (TypedScriptEnvelope),
   TypedScriptEnvelope' (TypedScriptEnvelope'),
  )
+import qualified Ply.LedgerExports.Common as Ledger
 
 -- | Read a 'TypedScriptEnvelope'.
 readEnvelope :: FilePath -> IO TypedScriptEnvelope
@@ -30,7 +30,7 @@ readEnvelope path = do
   scrpt <- either (throwIO . CBORDecodeError) pure $ cborToScript cborHex
   pure $ TypedScriptEnvelope ver rol params desc scrpt
 
-cborToScript :: ByteString -> Either DecoderError PlutusScript.Script
+cborToScript :: ByteString -> Either DecoderError Ledger.Script
 cborToScript x = deserialise . LBS.fromStrict . SBS.fromShort . getSerializedScript <$> CBOR.decodeFull' x
 
 newtype SerializedScript = SerializedScript {getSerializedScript :: ShortByteString}

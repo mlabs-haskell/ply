@@ -1,9 +1,13 @@
-cabal-version:      3.0
-name:               ply-core
-version:            0.0.1
-author:             Chase <chase@mlabs.city>
-license:            MIT
-extra-source-files: ../README.md
+cabal-version: 3.0
+name:          ply-core
+version:       0.1.0
+author:        Chase <chase@mlabs.city>
+license:       MIT
+
+flag new-ledger-namespace
+  description: Use the new plutus-ledger-api namespace (0a8b1ad)
+  manual:      True
+  default:     True
 
 -- Common sections
 
@@ -99,14 +103,22 @@ library
     Ply.Core.Apply
     Ply.Core.Class
     Ply.Core.Deserialize
+    Ply.Core.Internal.Reify
     Ply.Core.Serialize
     Ply.Core.TypedReader
 
   other-modules:
+    Ply.Core.Typename
     Ply.Core.Types
     Ply.Core.UPLC
+    Ply.LedgerExports.Common
+    Ply.LedgerExports.V1
+    Ply.LedgerExports.V2
 
   hs-source-dirs:  src
+
+  if flag(new-ledger-namespace)
+    cpp-options: -DNEW_LEDGER_NAMESPACE
 
 test-suite ply-core-test
   import:         common-lang

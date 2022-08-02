@@ -1,9 +1,8 @@
-cabal-version:      3.0
-name:               ply-plutarch
-version:            0.0.1
-author:             Chase <chase@mlabs.city>
-license:            MIT
-extra-source-files: ../README.md
+cabal-version: 3.0
+name:          ply-plutarch
+version:       0.1.0
+author:        Chase <chase@mlabs.city>
+license:       MIT
 
 -- Common sections
 
@@ -104,6 +103,7 @@ test-suite ply-plutarch-test
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
   build-depends:
+    , data-default
     , ply-plutarch
     , tasty
     , tasty-hunit

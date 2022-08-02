@@ -4,16 +4,20 @@ Ply allows you to serialize your Plutarch validators/minting policies (with opti
 
 This facilitates the onchain/offchain split that is often utilized, without forcing the user to manage the intricacies of the types and their UPLC representation when it comes to parameterized scripts. i.e scripts that take extra parameters before being submitted to the chain.
 
-> **NOTE**: Please check out the [`staging`](https://github.com/mlabs-haskell/ply/tree/staging) branch if you want to use `ply` with Plutarch `staging` (i.e Plutarch 1.2 as of now).
+> N.B: Ply currently integrates with Plutarch 1.2
 
 # Goals
 
 - Efficiency: Applying constants with `Ply` should be equally efficient as using `pconstant`/`pconstantData` in the Plutarch function body directly.
-- Ergonomics: Users shouldn't need to deal with UPLC intricacies.
+
+  _However_, some protocols require **deterministic parameterization** - optimizations are not acceptable. In this case, Ply also provides the same ergonomics of application, with a different application function - which does not perform _any optimizations_.
+- Ergonomics: Users shouldn't need to deal with UPLC intricacies. Users shouldn't have to care about micro-managing Plutus script versions (V1 and V2).
 - Invariant validation: Before given Haskell constant is applied to the script, all its invariants are validated and any relevant normalization is performed. e.g `PValue` is sorted and normalized (zero elements removed) before being passed into the script.
 
-  You can bestow custom invariants for your custom types using `PlyArg`.
+  You can bestow _custom invariants_ for your **custom types** using `PlyArg`.
 - First class Plutarch support: Preference given to and ease of use with Plutarch written scripts.
+
+  Thanks to the tight integration with Plutarch, Ply can figure out whether a Plutarch validator/minting policy is PlutusV1 or PlutusV2 on its own!
 - Minimal dependencies: Not dependent on the entire `plutus-apps` stack, not dependent on problematic/conflicting dependencies that may prevent compilation in certain repositories.
 
 # Usage
@@ -21,6 +25,13 @@ This facilitates the onchain/offchain split that is often utilized, without forc
 Ply has 2 components: `ply-core`, and `ply-plutarch`.
 
 `ply-core` is the package you'll be using in your offchain project, where you cannot depend on Plutarch (potentially due to dependency conflicts). This comes with support for reading the serialized scripts with their types.
+
+> **NOTE**: If your offchain project has not yet upgraded to the new ledger api namespace (i.e `PlutusLedgerApi`), you need to disable the flag `new-ledger-namespace` when building `ply-core` for your offchain. To do this, simply use:
+>
+> ```cabal
+> package ply-core
+>   flags: -new-ledger-namespace
+> ```
 
 `ply-plutarch` is the package you'll be using in your onchain Plutarch project. Usually, you'll want to create an executable target in this project to compile your plutus scripts into the file system. These files can then be read back in your offchain project using `ply-core`.
 
@@ -32,6 +43,8 @@ This is what the type of `writeTypedScript` looks like:
 ```hs
 writeTypedScript ::
   TypedWriter pt =>
+  -- | Plutarch compiler configuration which will be used to compile the script.
+  Config ->
   -- | Description for the file, semantically irrelevant - just for human comprehension!
   Text ->
   -- | The path where this file should be written
@@ -41,11 +54,13 @@ writeTypedScript ::
   IO ()
 ```
 
-> Aside: The `TypedWriter` constraint on the Plutarch type effectively barricades unsupported types. Of course, only validators and minting policies with 0 or more extra parameters are supported. The specific parameter types themselves also need to satisfy some constraints.
+> Aside: The `TypedWriter` constraint on the Plutarch type effectively barricades unsupported types. Of course, only validators and minting policies with 0 or more extra parameters are supported. The specific parameter types themselves also need to satisfy some constraints. See: [Using custom types as script parameters](#custom-types-as-script-parameters)
 
 This is how it'd look in practice:
 
 ```hs
+import Data.Default (def)
+
 import Plutarch
 import Plutarch.Builtin (pasInt)
 import Plutarch.Prelude
@@ -61,7 +76,7 @@ parameterizedLockV = plam $ \i datm redm ctx -> parameterizedLock v # datm # (pa
 
 main :: IO ()
 main =
-  writeTypedScript "Parameterized lock validator" "path/to/script.plutus" parameterizedLockV
+  writeTypedScript def "Parameterized lock validator" "path/to/script.plutus" parameterizedLockV
 ```
 
 Now you're ready to read the script from `path/to/script.plutus` in your offchain project!
@@ -100,19 +115,39 @@ parameterizedLockV <- readTypedScript @'ValidatorRole @'[Integer] "path/to/scrip
 
 Once you have the script itself - you can now work with it! You can apply the extra parameters to it at your leisure using `#` from `Ply`. When you're all done - you can convert it to a `Validator` or `MintingPolicy` using `Ply.toValidator` or `Ply.toMintingPolicy` respectively.
 
-Here's a full example of obtaining the `Validator` from our `parameterizedLockV` by applying the integer `42` as the extra parameter:
+> Aside: As mentioned previously, if you require deterministic and predictable parameter application: please use `#!` (or any of its synonyms) instead of `#`. Those will not perform any optimizations and is guaranteed to use a raw UPLC `Apply` constructor wrapper.
+
+Here's a full example of using a `TypedScript`, utilizing its Plutus version tracking, and applying the integer `42` as the extra parameter:
 
 ```hs
 import Data.Text (Text)
 
 import Plutus.Contract (Contract, EmptySchema)
-import Plutus.V1.Ledger.Scripts (Validator)
+import qualified Plutus.Contract as Contract
+import Ledger.Constraints (ScriptLookups)
+import qualified Ledger.Constraints as Constraints
+import PlutusLedgerApi.V1.Scripts (Validator)
 
-import Ply (readTypedScript, (#))
+import Ply (ScriptRole(ValidatorRole), ScriptVersion(ScriptV1), readTypedScript, (#))
 import qualified Ply
 
-someContract :: Validator -> Contract () EmptySchema Text ()
-someContract lockV = ... -- imagine a really useful contract!
+-- | Dispatch to either 'plutusV1OtherScript' or 'plutusV2OtherScript' depending on the script version.
+otherTypedScript :: TypedScript ValidatorRole '[] -> ScriptLookups a
+otherTypedScript ts = dispatcher vald
+  where
+    dispatcher = if ver == ScriptV1 then Constraints.plutusV1OtherScript else Constraints.plutusV2OtherScript
+    ver = Ply.getPlutusVersion ts
+    vald = Ply.toValidator ts
+
+someContract :: TypedScript ValidatorRole '[Integer] -> Contract () EmptySchema Text ()
+someContract lockV = do
+  let preparedValidator = lockV # param
+      lookups = otherTypedScript preparedValidator
+      tx = ... -- Some constraints
+  void $ Contract.submitTxConstraintsWith @Void lookups tx
+  where
+    param :: Integer
+    param = 42
 
 runContract :: Contract w s e a -> IO a
 runContract = ... -- imagine a contract runner impl!
@@ -120,13 +155,32 @@ runContract = ... -- imagine a contract runner impl!
 main :: IO ()
 main = do
   parameterizedLockV <- readTypedScript "path/to/script.plutus"
-  runContract . someContract . Ply.toValidator $ parameterizedLockV # param
-  where
-    param :: Integer
-    param = 42
+  runContract $ someContract parameterizedLockV
 ```
 
-> Aside: Notice how I didn't use type applications, it got inferred automatically!
+> Aside: Notice how I didn't use type applications, it got inferred from the surrounding context!
+
+# Custom Types as Script Parameters
+
+By default, Ply supports most `plutus-ledger-api` types and you can use any of them as your script parameters.
+
+If you want to use your custom type as a script parameter, you will need a lawful `PlyArg` instance for the Haskell type and a `PlyArgOf` instance on the Plutarch synonym, set to the Haskell type.
+
+Eventually, there will be generic derivation support for this.
+
+# How does Ply perform type validation across onchain <-> offchain? (Read this!)
+
+Ply's onchain <-> offchain type validation isn't magic. All Ply can really do is ask the compiler for the qualified type name in string form, and put it inside the generated ".plutus" file. For the validation to pass, the qualified type names for each parameter has to match in both the offchain and the onchain project.
+
+For example, if one of your parameter has type `MyParameterType`, and it was defined in the module: `MyPackage.Types` - then the generated parameter type in the ".plutus" envelope will contain `MyPackage.Types` and `MyParameterType` as the core identifiers. As a result, in your offchain project, `MyParameterType` should also have the same qualified type name.
+
+This is usually the case in most projects, as custom types are usually defined in some common package shared by both offchain and onchain - so they always have the same qualified type name.
+
+However, there is a huge exception: the plutus ledger api. Many outdated offchain projects will still be using the older ledger api namespace (`Plutus.Vx.Ledger`), and the onchain Plutarch project is going to be using the newer ledger api namespace (`PlutusLedgerApi`).
+
+So `typeOf @CurrencySymbol`, for example, generates `PlutusLedgerApi.V1.Value` as its module name in the onchain project - but `Plutus.V1.Ledger.Value` on the outdated offchain project...
+
+For this reason, Ply handles this case specially - you can read more on it [in the code](./ply-core/src/Ply/Core/Typename.hs). But the idea is that you _won't_ need to care about this one exception.
 
 # Examples
 

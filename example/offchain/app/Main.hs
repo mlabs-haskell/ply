@@ -22,6 +22,7 @@ import Test.Plutip.LocalCluster (
 
 import Ledger (PaymentPubKeyHash (PaymentPubKeyHash))
 import Ply (readTypedScript)
+import qualified Ply
 
 import Example.Nft (
   MintParams (
@@ -39,6 +40,10 @@ main = do
   -- Start the node.
   (clusterStat, (cEnv, ownWallet)) <- startCluster def setup
   nftMp <- readTypedScript $ "../" </> "compiled" </> "nftMp.plutus"
+
+  -- Print the Plutus ledger version used by the minting policy.
+  putStr "NFT Minting Policy version: "
+  print $ Ply.getPlutusVersion nftMp
 
   -- Do stuff.
   ExecutionResult exOutcome _ _ _ <-
