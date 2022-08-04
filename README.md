@@ -72,7 +72,7 @@ parameterizedLock :: ClosedTerm (PInteger :--> PData :--> PInteger :--> PScriptC
 parameterizedLock = plam $ \i datm redm ctx -> pif (redm #== i) (pconstant ()) $ ptraceError "incorrect guess"
 
 parameterizedLockV :: ClosedTerm (PInteger :--> PValidator)
-parameterizedLockV = plam $ \i datm redm ctx -> parameterizedLock v # datm # (pasInt # redm) # ctx
+parameterizedLockV = plam $ \i datm redm ctx -> popaque $ parameterizedLock # i # datm # (pasInt # redm) # ctx
 
 main :: IO ()
 main =
