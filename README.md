@@ -26,7 +26,7 @@ Ply has 2 components: `ply-core`, and `ply-plutarch`.
 
 `ply-core` is the package you'll be using in your offchain project, where you cannot depend on Plutarch (potentially due to dependency conflicts). This comes with support for reading the serialized scripts with their types.
 
-> **NOTE**: If your offchain project has not yet upgraded to the new ledger api namespace (i.e `PlutusLedgerApi`), you need to disable the flag `new-ledger-namespace` when building `ply-core` for your offchain. To do this, simply use:
+> **NOTE**: If your offchain project has not yet upgraded to the new ledger api namespace (i.e `PlutusLedgerApi`), you need to disable the flag `new-ledger-namespace` when building `ply-core` for your offchain. To do this, add the following lines to your project's `cabal.project`:
 >
 > ```cabal
 > package ply-core
