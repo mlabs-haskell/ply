@@ -7,7 +7,7 @@
 
     plutip.url = "github:mlabs-haskell/plutip";
 
-    plutarch.url = "github:Plutonomicon/plutarch?ref=staging";
+    plutarch.url = "github:Plutonomicon/plutarch-plutus";
 
     ply.url = "../.";
   };

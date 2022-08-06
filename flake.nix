@@ -11,9 +11,7 @@
     iohk-nix.url = "github:input-output-hk/iohk-nix";
     iohk-nix.flake = false; # Bad Nix code
 
-    plutarch = {
-      url = "github:Plutonomicon/plutarch-plutus?ref=staging";
-    };
+    plutarch.url = "github:Plutonomicon/plutarch-plutus";
 
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
 

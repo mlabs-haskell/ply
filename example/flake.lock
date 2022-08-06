@@ -3386,17 +3386,16 @@
         "secp256k1-haskell": "secp256k1-haskell"
       },
       "locked": {
-        "lastModified": 1658833185,
-        "narHash": "sha256-kOpzTnWkZge3+nCrb8jxGNACZDOq7pVz9NYKFZuxfz8=",
+        "lastModified": 1659381725,
+        "narHash": "sha256-W0EWY0DV2idbIeqtJnShVHQ83exME8TK2GYQGbVpz8A=",
         "owner": "Plutonomicon",
-        "repo": "plutarch",
-        "rev": "e23f2d9ecad8482e9971bd6ec1c772f9693014ce",
+        "repo": "plutarch-plutus",
+        "rev": "3140f47adefae4523a0ca777fc09e724703d9269",
         "type": "github"
       },
       "original": {
         "owner": "Plutonomicon",
-        "ref": "staging",
-        "repo": "plutarch",
+        "repo": "plutarch-plutus",
         "type": "github"
       }
     },
@@ -3424,16 +3423,15 @@
         "secp256k1-haskell": "secp256k1-haskell_2"
       },
       "locked": {
-        "lastModified": 1658833185,
-        "narHash": "sha256-kOpzTnWkZge3+nCrb8jxGNACZDOq7pVz9NYKFZuxfz8=",
+        "lastModified": 1659381725,
+        "narHash": "sha256-W0EWY0DV2idbIeqtJnShVHQ83exME8TK2GYQGbVpz8A=",
         "owner": "Plutonomicon",
         "repo": "plutarch-plutus",
-        "rev": "e23f2d9ecad8482e9971bd6ec1c772f9693014ce",
+        "rev": "3140f47adefae4523a0ca777fc09e724703d9269",
         "type": "github"
       },
       "original": {
         "owner": "Plutonomicon",
-        "ref": "staging",
         "repo": "plutarch-plutus",
         "type": "github"
       }
@@ -3596,12 +3594,12 @@
       },
       "locked": {
         "lastModified": 0,
-        "narHash": "sha256-RLic2t9fX4fzJDBuw8d8vLTOsLektrAWxPzENwzg2Hg=",
-        "path": "/nix/store/1f7bdi16lhgx03586qgxg3yi57sy0744-source",
+        "narHash": "sha256-gYh0unnfV4t0ZDw0oQq1QeikTNqb4jzAlY7g8AvzVYE=",
+        "path": "/nix/store/1srwpvhvbdjy5fr8np55ri7lrwkwzxpw-source",
         "type": "path"
       },
       "original": {
-        "path": "/nix/store/1f7bdi16lhgx03586qgxg3yi57sy0744-source",
+        "path": "/nix/store/1srwpvhvbdjy5fr8np55ri7lrwkwzxpw-source",
         "type": "path"
       }
     },
