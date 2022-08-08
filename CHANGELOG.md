@@ -1,3 +1,7 @@
+# 0.1.1 - Hot fix for `PlyArg`
+
+- Export `ToDataConstraint` and `toBuiltinArgData`.
+
 # 0.1.0 - Initial Release
 
 - Full Plutus V2 support with machinery for distinguishing between V1 and V2 Plutarch scripts.

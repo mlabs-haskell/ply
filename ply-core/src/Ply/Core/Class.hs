@@ -2,7 +2,7 @@
 {-# LANGUAGE UndecidableSuperClasses #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module Ply.Core.Class (PlyArg (UPLCRep, toBuiltinArg), someBuiltinArg) where
+module Ply.Core.Class (PlyArg (UPLCRep, ToDataConstraint, toBuiltinArg, toBuiltinArgData), someBuiltinArg) where
 
 import Data.Bifunctor (Bifunctor (bimap), second)
 import Data.ByteString (ByteString)
