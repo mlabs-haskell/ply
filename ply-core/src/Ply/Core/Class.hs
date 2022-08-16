@@ -149,9 +149,9 @@ instance PlyArg Value where
 -- | This verifies the underlying bytestring is exactly 28 bytes.
 instance PlyArg Credential where
   type UPLCRep Credential = Data
-  toBuiltinArg cred = toData . toBuiltin $ case cred of
-    PubKeyCredential h -> toBuiltinArg h
-    ScriptCredential h -> toBuiltinArg h
+  toBuiltinArg cred = case cred of
+    PubKeyCredential h -> Constr 0 [toBuiltinArgData h]
+    ScriptCredential h -> Constr 1 [toBuiltinArgData h]
   toBuiltinArgData = toBuiltinArg
 
 instance PlyArg StakingCredential where
