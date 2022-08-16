@@ -12,7 +12,14 @@ import qualified PlutusTx.AssocMap as PlutusMap
 
 -- TODO: How to handle 'PAsData'?
 
--- | 'PlyArgOf' yields the corresponding Haskell type for a given Plutarch type.
+{- | 'PlyArgOf' yields the corresponding Haskell type for a given Plutarch type.
+
+== Laws
+
+'PlyArgOf p' should be the _proper Haskell synonym_ of the Plutarch type p. Refer to
+the Plutarch docs, specifically 'PIsData' and 'PConstant'/'PLift', for information
+on type representation and correspondence.
+-}
 type PlyArgOf :: PType -> Type
 type family PlyArgOf a = r | r -> a
 
