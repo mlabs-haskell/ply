@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name:          ply-core
-version:       0.1.2
+version:       0.2.0
 author:        Chase <chase@mlabs.city>
 license:       MIT
 
@@ -127,6 +127,10 @@ test-suite ply-core-test
   import:         common-ghc-opts
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
-  build-depends:  ply-core
+  build-depends:
+    , ply-core
+    , tasty
+    , tasty-quickcheck
+
   hs-source-dirs: test
   ghc-options:    -threaded -rtsopts -with-rtsopts=-N
