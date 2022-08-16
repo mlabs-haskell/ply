@@ -1,3 +1,9 @@
+# 0.1.2 - **Critical fix** for `PlyArg Credential` instance
+
+- The instance was buggy and did not produce proper UPLC. Any types containing `Credential` (e.g `Address`) may have been affected.
+
+  Thanks to @rmgaray for reporting the bug.
+
 # 0.1.1 - Hot fix for `PlyArg`
 
 - Export `ToDataConstraint` and `toBuiltinArgData`.
