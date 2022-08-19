@@ -229,8 +229,8 @@ instance PlyArg DiffMilliSeconds where
 instance (PlyArg a, ToDataConstraint a) => PlyArg (Extended a) where
   type UPLCRep (Extended a) = Data
   toBuiltinArg NegInf = Constr 0 []
-  toBuiltinArg (Finite a) = Constr 0 [toBuiltinArgData a]
-  toBuiltinArg PosInf = Constr 1 []
+  toBuiltinArg (Finite a) = Constr 1 [toBuiltinArgData a]
+  toBuiltinArg PosInf = Constr 2 []
   toBuiltinArgData = toBuiltinArg
 
 instance (PlyArg a, ToDataConstraint a) => PlyArg (UpperBound a) where
