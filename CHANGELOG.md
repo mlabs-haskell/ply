@@ -1,3 +1,9 @@
+# 0.1.3 - **Critical fix** for `PlyArg Extended` instance
+
+- The constructor indices were incorrect.
+
+  Thanks to @danielfarrelly for reporting and fixing the bug.
+
 # 0.1.2 - **Critical fix** for `PlyArg Credential` instance
 
 - The instance was buggy and did not produce proper UPLC. Any types containing `Credential` (e.g `Address`) may have been affected.
