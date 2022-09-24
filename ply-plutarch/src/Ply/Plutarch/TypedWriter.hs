@@ -7,6 +7,7 @@ module Ply.Plutarch.TypedWriter (
   type VersionOf,
   type PlyParamsOf,
   writeTypedScript,
+  makeTypedScript,
   typedWriterInfo,
 ) where
 
@@ -22,7 +23,12 @@ import qualified Plutarch.Api.V1 as PLedgerV1 (PMintingPolicy, PValidator)
 import qualified Plutarch.Api.V2 as PLedgerV2 (PMintingPolicy, PValidator)
 import PlutusLedgerApi.V1.Scripts (Script)
 
-import Ply (ScriptRole (MintingPolicyRole, ValidatorRole), ScriptVersion (ScriptV1, ScriptV2), Typename)
+import Ply (
+  ScriptRole (MintingPolicyRole, ValidatorRole),
+  ScriptVersion (ScriptV1, ScriptV2),
+  TypedScriptEnvelope (TypedScriptEnvelope, tsDescription, tsParamTypes, tsRole, tsScript, tsVersion),
+  Typename,
+ )
 import Ply.Core.Internal.Reify (
   ReifyRole,
   ReifyTypenames,
@@ -56,6 +62,32 @@ writeTypedScript conf descr fp target =
   either (throwIO . userError . Txt.unpack) (writeEnvelope descr fp ver rl paramTypes) scrpt
   where
     (ver, rl, paramTypes, scrpt) = typedWriterInfo conf target
+
+{- | Make a 'TypedScriptEnvelope' from Plutarch validator or minting policy.
+
+Unlike 'writeTypedScript', it does not write to filesystem.
+-}
+makeTypedScript ::
+  TypedWriter pt =>
+  -- | Plutarch compiler configuration which will be used to compile the script.
+  Config ->
+  -- | Description to be associated with the compiled script file, semantically irrelevant.
+  Text ->
+  -- | The parameterized Plutarch validator/minting policy.
+  ClosedTerm pt ->
+  Either Text TypedScriptEnvelope
+makeTypedScript conf descr target = do
+  let (ver, rl, paramTypes, scrpt) = typedWriterInfo conf target
+
+  scrpt' <- scrpt
+  return $
+    TypedScriptEnvelope
+      { tsVersion = ver
+      , tsRole = rl
+      , tsParamTypes = paramTypes
+      , tsDescription = descr
+      , tsScript = scrpt'
+      }
 
 {- | Class of Plutarch function types that can be written to the filesystem as 'TypedScript's.
 
