@@ -7,7 +7,7 @@ module Ply.Plutarch.TypedWriter (
   type VersionOf,
   type PlyParamsOf,
   writeTypedScript,
-  makeTypedScript,
+  mkTypedScript,
   typedWriterInfo,
 ) where
 
@@ -37,7 +37,7 @@ import Ply.Core.Internal.Reify (
   reifyTypenames,
   reifyVersion,
  )
-import Ply.Core.Serialize (writeEnvelope)
+import Ply.Core.Serialize (writeTypedScriptEnvolope)
 
 import Ply.Plutarch.Class (PlyArgOf)
 
@@ -59,15 +59,15 @@ writeTypedScript ::
   ClosedTerm pt ->
   IO ()
 writeTypedScript conf descr fp target =
-  either (throwIO . userError . Txt.unpack) (writeEnvelope descr fp ver rl paramTypes) scrpt
+  either (throwIO . userError . Txt.unpack) (writeTypedScriptEnvolope fp) envelope
   where
-    (ver, rl, paramTypes, scrpt) = typedWriterInfo conf target
+    envelope = mkTypedScript conf descr target
 
 {- | Make a 'TypedScriptEnvelope' from Plutarch validator or minting policy.
 
 Unlike 'writeTypedScript', it does not write to filesystem.
 -}
-makeTypedScript ::
+mkTypedScript ::
   TypedWriter pt =>
   -- | Plutarch compiler configuration which will be used to compile the script.
   Config ->
@@ -76,7 +76,7 @@ makeTypedScript ::
   -- | The parameterized Plutarch validator/minting policy.
   ClosedTerm pt ->
   Either Text TypedScriptEnvelope
-makeTypedScript conf descr target = do
+mkTypedScript conf descr target = do
   let (ver, rl, paramTypes, scrpt) = typedWriterInfo conf target
 
   scrpt' <- scrpt

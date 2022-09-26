@@ -1,4 +1,10 @@
-module Ply.Core.Serialize (writeEnvelope, serializeScript, serializeScriptCbor, serializeScriptCborHex) where
+module Ply.Core.Serialize (
+  writeEnvelope,
+  writeTypedScriptEnvolope,
+  serializeScript,
+  serializeScriptCbor,
+  serializeScriptCborHex,
+) where
 
 import Codec.Serialise (serialise)
 import Data.Aeson.Encode.Pretty (encodePretty)
@@ -14,6 +20,7 @@ import qualified Cardano.Binary as CBOR
 import Ply.Core.Types (
   ScriptRole,
   ScriptVersion,
+  TypedScriptEnvelope (..),
   TypedScriptEnvelope' (..),
   Typename,
  )
@@ -30,6 +37,11 @@ serializeScriptCbor = CBOR.serialize' . SBS.toShort . serializeScript
 -- | A showable hex string representing a serialized script in CBOR.
 serializeScriptCborHex :: Script -> Text
 serializeScriptCborHex = Txt.decodeUtf8 . Base16.encode . serializeScriptCbor
+
+-- | Write 'TypedScriptEnvelop' into file.
+writeTypedScriptEnvolope :: FilePath -> TypedScriptEnvelope -> IO ()
+writeTypedScriptEnvolope filepath (TypedScriptEnvelope ver role param descr script) =
+  writeEnvelope descr filepath ver role param script
 
 -- | Write a typed script into a "Ply.Core.Types.TypedScriptEnvelope".
 writeEnvelope ::
