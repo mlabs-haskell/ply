@@ -7,11 +7,10 @@ module Ply.Core.Types (
   ScriptReaderException (..),
   TypedScriptEnvelope (..),
   Typename,
-  serializeScriptCbor,
 ) where
 
 import qualified Cardano.Binary as CBOR
-import Codec.Serialise (deserialise, serialise)
+import Codec.Serialise (deserialise)
 import Control.Exception (Exception)
 import Data.Aeson (object, (.=))
 import Data.ByteString (ByteString)
@@ -23,6 +22,7 @@ import Data.Kind (Type)
 import Data.Text (Text)
 import qualified Data.Text.Encoding as Text
 import GHC.Generics (Generic)
+import Ply.Core.Serialize.Script (serializeScript, serializeScriptCbor)
 import qualified Ply.LedgerExports.Common as Ledger
 
 import Data.Aeson.Types (
@@ -101,14 +101,6 @@ instance FromJSON TypedScriptEnvelope where
     prependFailure
       "parsing TypedScriptEnvelope' failed, "
       (typeMismatch "Object" invalid)
-
--- | Serialize a script into its raw form.
-serializeScript :: Script -> ByteString
-serializeScript = LBS.toStrict . serialise
-
--- | Serialize a script into CBOR.
-serializeScriptCbor :: Script -> ByteString
-serializeScriptCbor = CBOR.serialize' . SBS.toShort . serializeScript
 
 instance ToJSON TypedScriptEnvelope where
   toJSON (TypedScriptEnvelope ver rol params desc script) =

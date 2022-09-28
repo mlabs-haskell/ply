@@ -1,3 +1,11 @@
+# 0.2.0 - Internal Type Cleanup
+
+- `TypedScriptEnvelope'` is deprecated. `TypedScriptEnvelope` now implements `toJSON` and `fromJSON` directly.
+- `writeEnvelope` and `readEnvelope` are updated to have more sensible types. They will read and write to and from `TypedScriptEnvelope`.
+- `mkEnvelope` at `Ply.Plutarch` will convert Plutarch term into `TypedScriptEnvelope` given config and description.
+- `CBORDecodeError` is removed, `AesonDecodeError` will be thrown when decoding error happen.
+- Script serialization utilites are now relocated to `Ply.Core.Serialize.Script`.
+
 # 0.1.3 - **Critical fix** for `PlyArg Extended` instance
 
 - The constructor indices were incorrect.

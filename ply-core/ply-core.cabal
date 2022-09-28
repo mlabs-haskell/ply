@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name:          ply-core
-version:       0.1.3
+version:       0.2.0
 author:        Chase <chase@mlabs.city>
 license:       MIT
 
@@ -105,6 +105,7 @@ library
     Ply.Core.Deserialize
     Ply.Core.Internal.Reify
     Ply.Core.Serialize
+    Ply.Core.Serialize.Script
     Ply.Core.TypedReader
 
   other-modules:

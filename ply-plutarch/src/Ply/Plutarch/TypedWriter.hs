@@ -7,8 +7,7 @@ module Ply.Plutarch.TypedWriter (
   type VersionOf,
   type PlyParamsOf,
   writeTypedScript,
-  mkTypedScript,
-  typedWriterInfo,
+  mkEnvelope,
 ) where
 
 import Control.Exception (throwIO)
@@ -21,13 +20,11 @@ import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 import Plutarch (ClosedTerm, Config, PType, compile, type (:-->))
 import qualified Plutarch.Api.V1 as PLedgerV1 (PMintingPolicy, PValidator)
 import qualified Plutarch.Api.V2 as PLedgerV2 (PMintingPolicy, PValidator)
-import PlutusLedgerApi.V1.Scripts (Script)
 
 import Ply (
   ScriptRole (MintingPolicyRole, ValidatorRole),
   ScriptVersion (ScriptV1, ScriptV2),
-  TypedScriptEnvelope (TypedScriptEnvelope, tsDescription, tsParamTypes, tsRole, tsScript, tsVersion),
-  Typename,
+  TypedScriptEnvelope (TypedScriptEnvelope),
  )
 import Ply.Core.Internal.Reify (
   ReifyRole,
@@ -37,7 +34,7 @@ import Ply.Core.Internal.Reify (
   reifyTypenames,
   reifyVersion,
  )
-import Ply.Core.Serialize (writeTypedScriptEnvolope)
+import Ply.Core.Serialize (writeEnvelope)
 
 import Ply.Plutarch.Class (PlyArgOf)
 
@@ -59,35 +56,9 @@ writeTypedScript ::
   ClosedTerm pt ->
   IO ()
 writeTypedScript conf descr fp target =
-  either (throwIO . userError . Txt.unpack) (writeTypedScriptEnvolope fp) envelope
+  either (throwIO . userError . Txt.unpack) (writeEnvelope fp) envelope
   where
-    envelope = mkTypedScript conf descr target
-
-{- | Make a 'TypedScriptEnvelope' from Plutarch validator or minting policy.
-
-Unlike 'writeTypedScript', it does not write to filesystem.
--}
-mkTypedScript ::
-  TypedWriter pt =>
-  -- | Plutarch compiler configuration which will be used to compile the script.
-  Config ->
-  -- | Description to be associated with the compiled script file, semantically irrelevant.
-  Text ->
-  -- | The parameterized Plutarch validator/minting policy.
-  ClosedTerm pt ->
-  Either Text TypedScriptEnvelope
-mkTypedScript conf descr target = do
-  let (ver, rl, paramTypes, scrpt) = typedWriterInfo conf target
-
-  scrpt' <- scrpt
-  return $
-    TypedScriptEnvelope
-      { tsVersion = ver
-      , tsRole = rl
-      , tsParamTypes = paramTypes
-      , tsDescription = descr
-      , tsScript = scrpt'
-      }
+    envelope = mkEnvelope conf target descr
 
 {- | Class of Plutarch function types that can be written to the filesystem as 'TypedScript's.
 
@@ -107,13 +78,19 @@ For a description of 'ScriptVersion' is determined, see: 'VersionOf' type family
 
 For a description of 'ScriptRole' is determined, see: 'RoleOf' type family.
 -}
-typedWriterInfo ::
+mkEnvelope ::
   forall ptype.
   TypedWriter ptype =>
   Config ->
   ClosedTerm ptype ->
-  (ScriptVersion, ScriptRole, [Typename], Either Text Script)
-typedWriterInfo conf pterm = (ver, rl, paramTypes, scrpt)
+  Text ->
+  Either Text TypedScriptEnvelope
+mkEnvelope conf pterm descr =
+  pure (TypedScriptEnvelope ver)
+    <*> pure rl
+    <*> pure paramTypes
+    <*> pure descr
+    <*> scrpt
   where
     scrpt = compile conf pterm
     ver = reifyVersion $ Proxy @(VersionOf ptype)
