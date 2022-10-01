@@ -4,14 +4,17 @@ module Ply.Core.Serialize.Script (
   serializeScriptCborHex,
 ) where
 
-import qualified Cardano.Binary as CBOR
-import Codec.Serialise (serialise)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Short as SBS
 import Data.Text (Text)
 import qualified Data.Text.Encoding as Txt
+
+import Codec.Serialise (serialise)
+
+import qualified Cardano.Binary as CBOR
+
 import Ply.LedgerExports.Common (Script)
 
 -- | Serialize a script into its raw form.

@@ -9,10 +9,7 @@ module Ply.Core.Types (
   Typename,
 ) where
 
-import qualified Cardano.Binary as CBOR
-import Codec.Serialise (deserialise)
 import Control.Exception (Exception)
-import Data.Aeson (object, (.=))
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Lazy as LBS
@@ -22,9 +19,9 @@ import Data.Kind (Type)
 import Data.Text (Text)
 import qualified Data.Text.Encoding as Text
 import GHC.Generics (Generic)
-import Ply.Core.Serialize.Script (serializeScript, serializeScriptCbor)
-import qualified Ply.LedgerExports.Common as Ledger
 
+import Codec.Serialise (deserialise)
+import Data.Aeson (object, (.=))
 import Data.Aeson.Types (
   FromJSON (parseJSON),
   ToJSON (toJSON),
@@ -35,10 +32,14 @@ import Data.Aeson.Types (
  )
 
 import Cardano.Binary (DecoderError, FromCBOR (fromCBOR))
+import qualified Cardano.Binary as CBOR
+
 import UntypedPlutusCore (DeBruijn, DefaultFun, DefaultUni, Program)
 
+import Ply.Core.Serialize.Script (serializeScript, serializeScriptCbor)
 import Ply.Core.Typename (Typename)
 import Ply.LedgerExports.Common (Script)
+import qualified Ply.LedgerExports.Common as Ledger
 
 -- | Compiled scripts that preserve script role and parameter types.
 type role TypedScript nominal nominal
