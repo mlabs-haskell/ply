@@ -58,7 +58,7 @@ writeTypedScript ::
 writeTypedScript conf descr fp target =
   either (throwIO . userError . Txt.unpack) (writeEnvelope fp) envelope
   where
-    envelope = mkEnvelope conf target descr
+    envelope = mkEnvelope conf descr target
 
 {- | Class of Plutarch function types that can be written to the filesystem as 'TypedScript's.
 
@@ -82,10 +82,10 @@ mkEnvelope ::
   forall ptype.
   TypedWriter ptype =>
   Config ->
-  ClosedTerm ptype ->
   Text ->
+  ClosedTerm ptype ->
   Either Text TypedScriptEnvelope
-mkEnvelope conf pterm descr =
+mkEnvelope conf descr pterm =
   pure (TypedScriptEnvelope ver)
     <*> pure rl
     <*> pure paramTypes

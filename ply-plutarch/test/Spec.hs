@@ -36,18 +36,18 @@ testHelper ::
   Assertion
 testHelper expectedTypes = do
   let (actualVersion0, actualRole0, actualTypes0, _) =
-        unEnvelope $ mkEnvelope @(PTypeWith PLedgerV1.PValidator ptypeList) def (punsafeCoerce $ plam id) mempty
+        unEnvelope $ mkEnvelope @(PTypeWith PLedgerV1.PValidator ptypeList) def mempty (punsafeCoerce $ plam id)
   actualRole0 @?= ValidatorRole
   let (actualVersion1, actualRole1, actualTypes1, _) =
-        unEnvelope $ mkEnvelope @(PTypeWith PLedgerV1.PMintingPolicy ptypeList) def (punsafeCoerce $ plam id) mempty
+        unEnvelope $ mkEnvelope @(PTypeWith PLedgerV1.PMintingPolicy ptypeList) def mempty (punsafeCoerce $ plam id)
   actualRole1 @?= MintingPolicyRole
   actualVersion0 @?= ScriptV1
   actualVersion0 @?= actualVersion1
   let (actualVersion2, actualRole2, actualTypes2, _) =
-        unEnvelope $ mkEnvelope @(PTypeWith PLedgerV2.PValidator ptypeList) def (punsafeCoerce $ plam id) mempty
+        unEnvelope $ mkEnvelope @(PTypeWith PLedgerV2.PValidator ptypeList) def mempty (punsafeCoerce $ plam id)
   actualRole2 @?= ValidatorRole
   let (actualVersion3, actualRole3, actualTypes3, _) =
-        unEnvelope $ mkEnvelope @(PTypeWith PLedgerV2.PMintingPolicy ptypeList) def (punsafeCoerce $ plam id) mempty
+        unEnvelope $ mkEnvelope @(PTypeWith PLedgerV2.PMintingPolicy ptypeList) def mempty (punsafeCoerce $ plam id)
   actualRole3 @?= MintingPolicyRole
   actualVersion2 @?= ScriptV2
   actualVersion2 @?= actualVersion3
