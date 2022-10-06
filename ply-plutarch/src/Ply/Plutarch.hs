@@ -1,4 +1,4 @@
-module Ply.Plutarch (PlyArgOf, writeTypedScript) where
+module Ply.Plutarch (PlyArgOf, writeTypedScript, mkEnvelope) where
 
 import Ply.Plutarch.Class (PlyArgOf)
-import Ply.Plutarch.TypedWriter (writeTypedScript)
+import Ply.Plutarch.TypedWriter (mkEnvelope, writeTypedScript)
