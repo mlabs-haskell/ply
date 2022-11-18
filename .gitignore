@@ -58,8 +58,6 @@ cabal.project.local*
 # Notes
 *.txt
 
-# Ignore 'cabal.project' in favor of 'cabal.project.contracts' and 'cabal.project.scripts'
-cabal.project
 # But don't ignore the ones within `example/`
 !example/*/cabal.project
 

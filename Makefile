@@ -1,7 +1,4 @@
-.PHONY: hoogle build-all test-core format lint requires_nix_shell
-
-build-all:
-	nix -L --show-trace build .#build-all.x86_64-linux
+.PHONY: hoogle format lint requires_nix_shell
 
 hoogle: requires_nix_shell
 	hoogle server --local --port=8070 > /dev/null &
@@ -9,9 +6,6 @@ hoogle: requires_nix_shell
 ifdef FLAGS
 GHC_FLAGS = --ghc-options "$(FLAGS)"
 endif
-
-test-core:
-	nix -L --show-trace build .#test-core.x86_64-linux
 
 EXTENSIONS := -o -XTypeApplications -o -XPatternSynonyms
 
