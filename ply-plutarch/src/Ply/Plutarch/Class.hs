@@ -80,8 +80,6 @@ type instance PlyArgOf PDatum = Datum
 
 type instance PlyArgOf PRedeemer = Redeemer
 
-type instance PlyArgOf PValidatorHash = ValidatorHash
-
 type instance PlyArgOf PDatumHash = DatumHash
 
 type instance PlyArgOf PRedeemerHash = RedeemerHash

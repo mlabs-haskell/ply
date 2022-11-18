@@ -36,10 +36,9 @@ import qualified Cardano.Binary as CBOR
 
 import UntypedPlutusCore (DeBruijn, DefaultFun, DefaultUni, Program)
 
-import Ply.Core.Serialize.Script (serializeScript, serializeScriptCbor)
+import Ply.Core.Serialize.Script (serializeScriptCbor)
 import Ply.Core.Typename (Typename)
-import Ply.LedgerExports.Common (Script)
-import qualified Ply.LedgerExports.Common as Ledger
+import Ply.LedgerExports.Common (SerialisedScript)
 
 -- | Compiled scripts that preserve script role and parameter types.
 type role TypedScript nominal nominal
@@ -72,7 +71,7 @@ data TypedScriptEnvelope = TypedScriptEnvelope
   , -- | Description of the script, not semantically relevant.
     tsDescription :: !Text
   , -- | The actual script.
-    tsScript :: !Script
+    tsScript :: !SerialisedScript
   }
   deriving stock (Eq, Show)
 
@@ -81,7 +80,7 @@ newtype SerializedScript = SerializedScript {getSerializedScript :: ShortByteStr
 instance FromCBOR SerializedScript where
   fromCBOR = SerializedScript . SBS.toShort <$> CBOR.fromCBOR
 
-cborToScript :: ByteString -> Either DecoderError Ledger.Script
+cborToScript :: ByteString -> Either DecoderError SerialisedScript
 cborToScript x = deserialise . LBS.fromStrict . SBS.fromShort . getSerializedScript <$> CBOR.decodeFull' x
 
 instance FromJSON TypedScriptEnvelope where
@@ -116,7 +115,7 @@ instance ToJSON TypedScriptEnvelope where
         ]
     where
       cborHex = serializeScriptCbor script
-      rawHex = serializeScript script
+      rawHex = SBS.fromShort script
 
 -- | Version identifier for the Plutus script.
 data ScriptVersion = ScriptV1 | ScriptV2

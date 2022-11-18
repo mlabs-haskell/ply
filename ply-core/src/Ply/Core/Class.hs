@@ -361,28 +361,6 @@ instance PlyArg ScriptHash where
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
 
 -- | This verifies the underlying bytestring is exactly 28 bytes.
-instance PlyArg ValidatorHash where
-  type UPLCRep ValidatorHash = ByteString
-  toBuiltinArg (ValidatorHash x) =
-    if BS.length bs == 28
-      then bs
-      else error "toBuiltinArg(ValidatorHash): Expected 28 bytes"
-    where
-      bs = fromBuiltin x
-  toBuiltinArgData = toBuiltinArgData . toBuiltinArg
-
--- | This verifies the underlying bytestring is exactly 28 bytes.
-instance PlyArg MintingPolicyHash where
-  type UPLCRep MintingPolicyHash = ByteString
-  toBuiltinArg (MintingPolicyHash x) =
-    if BS.length bs == 28
-      then bs
-      else error "toBuiltinArg(MintingPolicyHash): Expected 28 bytes"
-    where
-      bs = fromBuiltin x
-  toBuiltinArgData = toBuiltinArgData . toBuiltinArg
-
--- | This verifies the underlying bytestring is exactly 28 bytes.
 instance PlyArg DatumHash where
   type UPLCRep DatumHash = ByteString
   toBuiltinArg (DatumHash x) =

@@ -36,6 +36,7 @@ import Ply.Core.Internal.Reify (
  )
 import Ply.Core.Serialize (writeEnvelope)
 
+import Plutarch.Script (serialiseScript)
 import Ply.Plutarch.Class (PlyArgOf)
 
 {- | Write a parameterized Plutarch validator or minting policy into the filesystem.
@@ -92,7 +93,7 @@ mkEnvelope conf descr pterm =
     <*> pure descr
     <*> scrpt
   where
-    scrpt = compile conf pterm
+    scrpt = serialiseScript <$> compile conf pterm
     ver = reifyVersion $ Proxy @(VersionOf ptype)
     rl = reifyRole $ Proxy @(RoleOf ptype)
     paramTypes = reifyTypenames $ Proxy @(PlyParamsOf (ParamsOf ptype))

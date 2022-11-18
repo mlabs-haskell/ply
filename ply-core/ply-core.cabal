@@ -4,11 +4,6 @@ version:       0.2.0
 author:        Chase <chase@mlabs.city>
 license:       MIT
 
-flag new-ledger-namespace
-  description: Use the new plutus-ledger-api namespace (0a8b1ad)
-  manual:      True
-  default:     True
-
 -- Common sections
 
 common common-configs
@@ -117,9 +112,6 @@ library
     Ply.LedgerExports.V2
 
   hs-source-dirs:  src
-
-  if flag(new-ledger-namespace)
-    cpp-options: -DNEW_LEDGER_NAMESPACE
 
 test-suite ply-core-test
   import:         common-lang
