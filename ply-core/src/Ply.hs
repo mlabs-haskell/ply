@@ -1,5 +1,5 @@
 module Ply (
-  TypedScript,
+  TypedScript (TypedScript),
   ScriptRole (..),
   ScriptReaderException (..),
   TypedScriptEnvelope (..),
@@ -7,18 +7,13 @@ module Ply (
   Typename,
   typeName,
   PlyArg,
-  getPlutusVersion,
-  toUPLC,
   readTypedScript,
+  getPlutusVersion,
   (#),
   (#$),
   (#!),
   (#$!),
 ) where
-
-import Data.Coerce (coerce)
-
-import UntypedPlutusCore (DeBruijn, DefaultFun, DefaultUni, Program)
 
 import Ply.Core.Apply ((#), (#!), (#$), (#$!))
 import Ply.Core.Class (PlyArg)
@@ -28,10 +23,16 @@ import Ply.Core.Types (
   ScriptReaderException (..),
   ScriptRole (MintingPolicyRole, ValidatorRole),
   ScriptVersion (..),
-  TypedScript (TypedScript),
+  TypedScript (TypedScriptConstr),
   TypedScriptEnvelope (..),
   Typename,
+  UPLCProgram,
  )
+
+-- Note: Extraction of the inner script is only allowed once the 'TypedScript' is fully applied.
+pattern TypedScript :: ScriptVersion -> UPLCProgram -> TypedScript r '[]
+pattern TypedScript ver s <- TypedScriptConstr ver s
+{-# COMPLETE TypedScript #-}
 
 {- | Obtain the Plutus script (ledger) version associated with given 'TypedScript'.
 
@@ -45,15 +46,11 @@ For example, if using 'plutus-apps' - you can create a function that determines 
 
 @
 unifiedOtherScript :: TypedScript ValidatorRole '[] -> ScriptLookups a
-unifiedOtherScript ts = (if ver == ScriptV1 then plutusV1OtherScript else plutusV2OtherScript) vald
+unifiedOtherScript (TypedScript ver s) = (if ver == ScriptV1 then plutusV1OtherScript else plutusV2OtherScript) vald
   where
     ver = Ply.getPlutusVersion ts
-    vald = Ply.toValidator ts
+    vald = Validator ts
 @
 -}
 getPlutusVersion :: TypedScript r params -> ScriptVersion
-getPlutusVersion (TypedScript ver _) = ver
-
--- | Unconditionally obtain the raw UPLC program from a 'TypedScript'.
-toUPLC :: TypedScript r params -> Program DeBruijn DefaultUni DefaultFun ()
-toUPLC (TypedScript _ s) = coerce s
+getPlutusVersion (TypedScriptConstr ver _) = ver

@@ -107,9 +107,6 @@ library
     Ply.Core.Typename
     Ply.Core.Types
     Ply.Core.UPLC
-    Ply.LedgerExports.Common
-    Ply.LedgerExports.V1
-    Ply.LedgerExports.V2
 
   hs-source-dirs:  src
 

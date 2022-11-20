@@ -16,8 +16,19 @@ import PlutusCore (DefaultUni, Includes, Some, ValueOf)
 import qualified PlutusCore as PLC
 import qualified PlutusTx.AssocMap as PlutusMap
 
-import Ply.LedgerExports.Common
-import qualified Ply.LedgerExports.V1 as LedgerV1
+import PlutusLedgerApi.V1 as LedgerCommon hiding (
+  ScriptContext (..),
+  TxInInfo (..),
+  TxInfo (..),
+  TxOut,
+ )
+import qualified PlutusLedgerApi.V1 as LedgerV1
+import PlutusLedgerApi.V1.Time as LedgerCommon (
+  DiffMilliSeconds (DiffMilliSeconds),
+ )
+import PlutusLedgerApi.V1.Value as LedgerCommon (
+  AssetClass (AssetClass),
+ )
 
 type BottomConstraint s t = 'Text s ~ ShowType t
 

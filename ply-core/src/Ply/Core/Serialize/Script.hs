@@ -10,7 +10,7 @@ import qualified Data.Text.Encoding as Txt
 
 import qualified Cardano.Binary as CBOR
 
-import Ply.LedgerExports.Common (SerialisedScript)
+import PlutusLedgerApi.Common (SerialisedScript)
 
 -- | Serialize a script into CBOR.
 serializeScriptCbor :: SerialisedScript -> ByteString

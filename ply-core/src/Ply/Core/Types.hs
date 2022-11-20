@@ -7,20 +7,18 @@ module Ply.Core.Types (
   ScriptReaderException (..),
   TypedScriptEnvelope (..),
   Typename,
+  UPLCProgram,
 ) where
 
 import Control.Exception (Exception)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as Base16
-import qualified Data.ByteString.Lazy as LBS
-import Data.ByteString.Short (ShortByteString)
 import qualified Data.ByteString.Short as SBS
 import Data.Kind (Type)
 import Data.Text (Text)
 import qualified Data.Text.Encoding as Text
 import GHC.Generics (Generic)
 
-import Codec.Serialise (deserialise)
 import Data.Aeson (object, (.=))
 import Data.Aeson.Types (
   FromJSON (parseJSON),
@@ -31,24 +29,31 @@ import Data.Aeson.Types (
   (.:),
  )
 
-import Cardano.Binary (DecoderError, FromCBOR (fromCBOR))
+import Cardano.Binary as CBOR (DecoderError)
 import qualified Cardano.Binary as CBOR
 
+import PlutusLedgerApi.Common (deserialiseUPLC, serialiseUPLC)
 import UntypedPlutusCore (DeBruijn, DefaultFun, DefaultUni, Program)
 
 import Ply.Core.Serialize.Script (serializeScriptCbor)
 import Ply.Core.Typename (Typename)
-import Ply.LedgerExports.Common (SerialisedScript)
+
+type UPLCProgram = Program DeBruijn DefaultUni DefaultFun ()
 
 -- | Compiled scripts that preserve script role and parameter types.
 type role TypedScript nominal nominal
 
 type TypedScript :: ScriptRole -> [Type] -> Type
-data TypedScript r a = TypedScript !ScriptVersion !(Program DeBruijn DefaultUni DefaultFun ())
+data TypedScript r a = TypedScriptConstr !ScriptVersion !UPLCProgram
   deriving stock (Show)
 
 -- | Script role: either a validator or a minting policy.
 data ScriptRole = ValidatorRole | MintingPolicyRole
+  deriving stock (Bounded, Enum, Eq, Ord, Show, Generic)
+  deriving anyclass (ToJSON, FromJSON)
+
+-- | Version identifier for the Plutus script.
+data ScriptVersion = ScriptV1 | ScriptV2
   deriving stock (Bounded, Enum, Eq, Ord, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
@@ -71,17 +76,12 @@ data TypedScriptEnvelope = TypedScriptEnvelope
   , -- | Description of the script, not semantically relevant.
     tsDescription :: !Text
   , -- | The actual script.
-    tsScript :: !SerialisedScript
+    tsScript :: !UPLCProgram
   }
   deriving stock (Eq, Show)
 
-newtype SerializedScript = SerializedScript {getSerializedScript :: ShortByteString}
-
-instance FromCBOR SerializedScript where
-  fromCBOR = SerializedScript . SBS.toShort <$> CBOR.fromCBOR
-
-cborToScript :: ByteString -> Either DecoderError SerialisedScript
-cborToScript x = deserialise . LBS.fromStrict . SBS.fromShort . getSerializedScript <$> CBOR.decodeFull' x
+cborToScript :: ByteString -> Either DecoderError UPLCProgram
+cborToScript x = deserialiseUPLC <$> CBOR.decodeFull' x
 
 instance FromJSON TypedScriptEnvelope where
   parseJSON (Object v) =
@@ -114,10 +114,6 @@ instance ToJSON TypedScriptEnvelope where
         , "rawHex" .= Text.decodeUtf8 (Base16.encode rawHex)
         ]
     where
-      cborHex = serializeScriptCbor script
-      rawHex = SBS.fromShort script
-
--- | Version identifier for the Plutus script.
-data ScriptVersion = ScriptV1 | ScriptV2
-  deriving stock (Bounded, Enum, Eq, Ord, Show, Generic)
-  deriving anyclass (ToJSON, FromJSON)
+      serializedScript = serialiseUPLC script
+      cborHex = serializeScriptCbor serializedScript
+      rawHex = SBS.fromShort serializedScript
