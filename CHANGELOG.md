@@ -1,3 +1,25 @@
+# 0.3.0 - Plutus update, Plutarch 1.3, API changes
+
+There is no `Script` type in upstream Plutus anymore. As a result, `TypedScript` holds the UPLC program itself.
+
+Note that `Script` from Plutus was previously only a newtype to the UPLC program anyway.
+
+- Remove `toValidator`, `toMintingPolicy` (`Validator` and `MintingPolicy` no longer exist in Plutus)
+
+  Instead, `TypedScript` is now exported as a pattern - extraction of the inner UPLC program is only allowed once
+  all parameters are fully applied. See `example/reader-app`
+
+  Once you have obtained the inner UPLC, you may use it in your own `Validator`/`MintingPolicy` types depending on the PAB.
+
+- Remove several `PlyArg` and `PlyArgOf` instances (due to corresponding types being removed from upstream Plutus)
+- `new-ledger-namespace` flag has been removed. Please consider _always_ using the new ledger namespace in all projects.
+
+  Maintaining compat with the old ledger api, which exports certain types now removed from the newer ledger api, seems not worth
+  the effort.
+- `ply-core` and `ply-plutarch` are no longer built in different cabal environments. Heavy simplifications in haskell.nix and usage of CHaP allows both to be built in the same environment, without jeopardizing downstream projects (in case they still need a repo separation).
+
+  Thanks to @MangoIV for help with nix!
+
 # 0.2.0 - Internal Type Cleanup
 
 - `TypedScriptEnvelope'` is deprecated. `TypedScriptEnvelope` now implements `toJSON` and `fromJSON` directly.
