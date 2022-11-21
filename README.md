@@ -20,6 +20,10 @@ This facilitates the onchain/offchain split that is often utilized, without forc
   Thanks to the tight integration with Plutarch, Ply can figure out whether a Plutarch validator/minting policy is PlutusV1 or PlutusV2 on its own!
 - Minimal dependencies: Not dependent on the entire `plutus-apps` stack, not dependent on problematic/conflicting dependencies that may prevent compilation in certain repositories.
 
+# Adding as dependency
+
+Ply uses [CHaP](https://github.com/input-output-hk/cardano-haskell-packages). Adding it as a dependency should generally be as simple as pointing to CHaP in your `cabal.project` (you can also just copy the `cabal.project` in this repo), and adding `ply` as a source-repository package. Set the `subdirs` to the components you specifically require (`ply-core` and/or `ply-plutarch`).
+
 # Usage
 
 Ply has 2 components: `ply-core`, and `ply-plutarch`.
