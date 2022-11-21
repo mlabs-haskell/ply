@@ -12,5 +12,5 @@ main =
   writeTypedScript
     (Config {tracingMode = DoTracing})
     "NFT Minting Policy (DoTracing)"
-    ("../" </> "compiled" </> "nftMp.plutus")
+    ("compiled" </> "nftMp.plutus")
     nftMp

@@ -1,17 +1,15 @@
-cabal-version:      3.0
-name:               example-offchain
-version:            0.0.1
-synopsis:           TODO
-description:        TODO
-homepage:           https://github.com/mlabs-haskell/ply
+cabal-version: 3.0
+name:          example
+version:       0.0.1
+synopsis:      TODO
+description:   TODO
 license:
 license-file:
-author:             MLabs
-maintainer:         TODO
-copyright:          TODO
-category:           TODO
-build-type:         Simple
-extra-source-files: ../compiled/*.plutus
+author:        MLabs
+maintainer:    TODO
+copyright:     TODO
+category:      TODO
+build-type:    Simple
 
 flag dev
   description: Enable lean development
@@ -28,34 +26,30 @@ common common-ghc-opts
     -Wall -Wcompat -Wincomplete-uni-patterns
     -Wmissing-deriving-strategies -Wredundant-constraints
     -Wmissing-home-modules -Wmissing-export-lists -fwarn-unused-imports
+    -Wno-unticked-promoted-constructors
 
   if !flag(dev)
     ghc-options: -Werror
 
 common common-deps
   build-depends:
-    , aeson
     , base
-    , bytestring
-    , containers
-    , data-default
-    , directory
-    , filepath
-    , mtl
-    , plutus-contract
+    , plutarch
     , plutus-core
-    , plutus-ledger
     , plutus-ledger-api
-    , plutus-ledger-constraints
     , plutus-tx
-    , ply-core
     , text
 
 common common-lang
   default-extensions:
+    NoStarIsType
     BangPatterns
+    BinaryLiterals
+    ConstrainedClassMethods
+    ConstraintKinds
     DataKinds
     DeriveAnyClass
+    DeriveDataTypeable
     DeriveFoldable
     DeriveFunctor
     DeriveGeneric
@@ -63,25 +57,44 @@ common common-lang
     DeriveTraversable
     DerivingStrategies
     DerivingVia
+    DoAndIfThenElse
+    EmptyCase
+    EmptyDataDecls
+    EmptyDataDeriving
+    ExistentialQuantification
     ExplicitForAll
     FlexibleContexts
     FlexibleInstances
-    GADTs
-    GeneralizedNewtypeDeriving
+    ForeignFunctionInterface
+    GADTSyntax
+    GeneralisedNewtypeDeriving
+    HexFloatLiterals
+    ImplicitPrelude
+    InstanceSigs
+    KindSignatures
     LambdaCase
+    MonomorphismRestriction
+    MultiParamTypeClasses
     NamedFieldPuns
+    NamedWildCards
     NumericUnderscores
+    OverloadedRecordDot
     OverloadedStrings
+    PatternGuards
+    PolyKinds
+    PostfixOperators
     RankNTypes
-    RecordWildCards
+    RelaxedPolyRec
     ScopedTypeVariables
     StandaloneDeriving
-    TemplateHaskell
+    StandaloneKindSignatures
+    TraditionalRecordSyntax
     TupleSections
     TypeApplications
-    TypeFamilies
+    TypeFamilyDependencies
     TypeOperators
     TypeSynonymInstances
+    ViewPatterns
 
 -- Build targets
 
@@ -90,18 +103,35 @@ library
   import:          common-configs
   import:          common-deps
   import:          common-ghc-opts
-  exposed-modules: Example.Nft
+  exposed-modules: Example.NftM
   hs-source-dirs:  src
 
-executable example-demo
+executable example-compile
   import:         common-lang
   import:         common-configs
   import:         common-deps
   import:         common-ghc-opts
   main-is:        Main.hs
   build-depends:
-    , example-offchain
-    , plutip
+    , directory
+    , example
+    , filepath
+    , ply-plutarch
 
-  hs-source-dirs: app
+  hs-source-dirs: compiler-app
+  ghc-options:    -threaded -rtsopts -with-rtsopts=-N
+
+executable example-reader
+  import:         common-lang
+  import:         common-configs
+  import:         common-deps
+  import:         common-ghc-opts
+  main-is:        Main.hs
+  build-depends:
+    , directory
+    , example
+    , filepath
+    , ply-core
+
+  hs-source-dirs: reader-app
   ghc-options:    -threaded -rtsopts -with-rtsopts=-N
