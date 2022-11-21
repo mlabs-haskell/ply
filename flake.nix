@@ -46,10 +46,7 @@
             # `cabal`, `hlint` and `haskell-language-server` etc
             tools = {
               cabal = { };
-              hlint = { };
               haskell-language-server = { };
-              fourmolu = { };
-              cabal-fmt = { };
             };
             # Non-Haskell shell tools go here
             buildInputs = with pkgs; [
