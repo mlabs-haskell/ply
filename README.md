@@ -4,7 +4,7 @@ Ply allows you to serialize your Plutarch validators/minting policies (with opti
 
 This facilitates the onchain/offchain split that is often utilized, without forcing the user to manage the intricacies of the types and their UPLC representation when it comes to parameterized scripts. i.e scripts that take extra parameters before being submitted to the chain.
 
-> N.B: Ply currently integrates with Plutarch 1.2
+> N.B: Ply currently integrates with Plutarch 1.3, **with a minor revision**. You **MUST** ensure you're using a commit that includes [this patch](https://github.com/Plutonomicon/plutarch-plutus/pull/601).
 
 # Goals
 
@@ -20,18 +20,15 @@ This facilitates the onchain/offchain split that is often utilized, without forc
   Thanks to the tight integration with Plutarch, Ply can figure out whether a Plutarch validator/minting policy is PlutusV1 or PlutusV2 on its own!
 - Minimal dependencies: Not dependent on the entire `plutus-apps` stack, not dependent on problematic/conflicting dependencies that may prevent compilation in certain repositories.
 
+# Adding as dependency
+
+Ply uses [CHaP](https://github.com/input-output-hk/cardano-haskell-packages). Adding it as a dependency should generally be as simple as pointing to CHaP in your `cabal.project` (you can also just copy the `cabal.project` in this repo), and adding `ply` as a source-repository package. Set the `subdirs` to the components you specifically require (`ply-core` and/or `ply-plutarch`).
+
 # Usage
 
 Ply has 2 components: `ply-core`, and `ply-plutarch`.
 
 `ply-core` is the package you'll be using in your offchain project, where you cannot depend on Plutarch (potentially due to dependency conflicts). This comes with support for reading the serialized scripts with their types.
-
-> **NOTE**: If your offchain project has not yet upgraded to the new ledger api namespace (i.e `PlutusLedgerApi`), you need to disable the flag `new-ledger-namespace` when building `ply-core` for your offchain. To do this, add the following lines to your project's `cabal.project`:
->
-> ```cabal
-> package ply-core
->   flags: -new-ledger-namespace
-> ```
 
 `ply-plutarch` is the package you'll be using in your onchain Plutarch project. Usually, you'll want to create an executable target in this project to compile your plutus scripts into the file system. These files can then be read back in your offchain project using `ply-core`.
 
@@ -137,7 +134,7 @@ otherTypedScript ts = dispatcher vald
   where
     dispatcher = if ver == ScriptV1 then Constraints.plutusV1OtherScript else Constraints.plutusV2OtherScript
     ver = Ply.getPlutusVersion ts
-    vald = Ply.toValidator ts
+    vald = Validator ts
 
 someContract :: TypedScript ValidatorRole '[Integer] -> Contract () EmptySchema Text ()
 someContract lockV = do

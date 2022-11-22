@@ -35,7 +35,8 @@ applyConstant (Program () DefaultVersion f@(LamAbs () _ body)) c =
 applyConstant (Program () DefaultVersion f) c = Program () DefaultVersion . Apply () f $ Constant () c
 applyConstant (Program () v _) _ =
   error $
-    "applyConstant: unsupported program; expected version: " ++ show DefaultVersion
+    "applyConstant: unsupported program; expected version: "
+      ++ show DefaultVersion
       ++ "\nactual version: "
       ++ show v
 
@@ -47,7 +48,8 @@ applyConstant' ::
 applyConstant' (Program () DefaultVersion f) c = Program () DefaultVersion . Apply () f $ Constant () c
 applyConstant' (Program () v _) _ =
   error $
-    "applyConstant: unsupported program; expected version: " ++ show DefaultVersion
+    "applyConstant: unsupported program; expected version: "
+      ++ show DefaultVersion
       ++ "\nactual version: "
       ++ show v
 

@@ -11,10 +11,9 @@ import Ply.Core.Internal.Reify
 import Ply.Core.Types (
   ScriptReaderException (ScriptRoleError, ScriptTypeError),
   ScriptRole (ValidatorRole),
-  TypedScript (TypedScript),
+  TypedScript (TypedScriptConstr),
   TypedScriptEnvelope (TypedScriptEnvelope),
  )
-import Ply.LedgerExports.Common (Script (Script))
 
 {- | Class of 'TypedScript' parameters that are supported and can be read.
 
@@ -31,11 +30,11 @@ mkTypedScript ::
   TypedReader rl params =>
   TypedScriptEnvelope ->
   Either ScriptReaderException (TypedScript rl params)
-mkTypedScript (TypedScriptEnvelope ver rol params _ (Script prog)) = do
+mkTypedScript (TypedScriptEnvelope ver rol params _ prog) = do
   unless (rol == reifyRole (Proxy @rl)) . Left $ ScriptRoleError ValidatorRole rol
   let expectedParams = reifyTypenames $ Proxy @params
   unless (expectedParams == params) . Left $ ScriptTypeError expectedParams params
-  pure $ TypedScript ver prog
+  pure $ TypedScriptConstr ver prog
 
 {- | Read and verify a 'TypedScript' from given filepath.
 

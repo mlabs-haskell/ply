@@ -16,8 +16,19 @@ import PlutusCore (DefaultUni, Includes, Some, ValueOf)
 import qualified PlutusCore as PLC
 import qualified PlutusTx.AssocMap as PlutusMap
 
-import Ply.LedgerExports.Common
-import qualified Ply.LedgerExports.V1 as LedgerV1
+import PlutusLedgerApi.V1 as LedgerCommon hiding (
+  ScriptContext (..),
+  TxInInfo (..),
+  TxInfo (..),
+  TxOut,
+ )
+import qualified PlutusLedgerApi.V1 as LedgerV1
+import PlutusLedgerApi.V1.Time as LedgerCommon (
+  DiffMilliSeconds (DiffMilliSeconds),
+ )
+import PlutusLedgerApi.V1.Value as LedgerCommon (
+  AssetClass (AssetClass),
+ )
 
 type BottomConstraint s t = 'Text s ~ ShowType t
 
@@ -356,28 +367,6 @@ instance PlyArg ScriptHash where
     if BS.length bs == 28
       then bs
       else error "toBuiltinArg(ScriptHash): Expected 28 bytes"
-    where
-      bs = fromBuiltin x
-  toBuiltinArgData = toBuiltinArgData . toBuiltinArg
-
--- | This verifies the underlying bytestring is exactly 28 bytes.
-instance PlyArg ValidatorHash where
-  type UPLCRep ValidatorHash = ByteString
-  toBuiltinArg (ValidatorHash x) =
-    if BS.length bs == 28
-      then bs
-      else error "toBuiltinArg(ValidatorHash): Expected 28 bytes"
-    where
-      bs = fromBuiltin x
-  toBuiltinArgData = toBuiltinArgData . toBuiltinArg
-
--- | This verifies the underlying bytestring is exactly 28 bytes.
-instance PlyArg MintingPolicyHash where
-  type UPLCRep MintingPolicyHash = ByteString
-  toBuiltinArg (MintingPolicyHash x) =
-    if BS.length bs == 28
-      then bs
-      else error "toBuiltinArg(MintingPolicyHash): Expected 28 bytes"
     where
       bs = fromBuiltin x
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg

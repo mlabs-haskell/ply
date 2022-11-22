@@ -20,6 +20,7 @@ import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 import Plutarch (ClosedTerm, Config, PType, compile, type (:-->))
 import qualified Plutarch.Api.V1 as PLedgerV1 (PMintingPolicy, PValidator)
 import qualified Plutarch.Api.V2 as PLedgerV2 (PMintingPolicy, PValidator)
+import Plutarch.Script (unScript)
 
 import Ply (
   ScriptRole (MintingPolicyRole, ValidatorRole),
@@ -35,7 +36,6 @@ import Ply.Core.Internal.Reify (
   reifyVersion,
  )
 import Ply.Core.Serialize (writeEnvelope)
-
 import Ply.Plutarch.Class (PlyArgOf)
 
 {- | Write a parameterized Plutarch validator or minting policy into the filesystem.
@@ -92,7 +92,7 @@ mkEnvelope conf descr pterm =
     <*> pure descr
     <*> scrpt
   where
-    scrpt = compile conf pterm
+    scrpt = unScript <$> compile conf pterm
     ver = reifyVersion $ Proxy @(VersionOf ptype)
     rl = reifyRole $ Proxy @(RoleOf ptype)
     paramTypes = reifyTypenames $ Proxy @(PlyParamsOf (ParamsOf ptype))

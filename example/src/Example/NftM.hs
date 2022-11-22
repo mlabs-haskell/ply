@@ -12,7 +12,8 @@ nftMp = plam $ \ref tn _ ctx' -> popaque $
     let ownSym = pfield @"_0" # mintFlds
     txInfo <- tcont $ pletFields @'["inputs", "mint"] $ getField @"txInfo" ctx
     pguardC "UTxO not consumed" $
-      pany # plam (\x -> pfield @"outRef" # x #== pdata ref) #$ pfromData $ getField @"inputs" txInfo
+      pany # plam (\x -> pfield @"outRef" # x #== pdata ref) #$ pfromData $
+        getField @"inputs" txInfo
     pguardC "Wrong NFT mint amount" $
       PValue.pvalueOf # getField @"mint" txInfo # ownSym # tn #== 1
     pure $ pconstant ()
