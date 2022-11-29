@@ -1,4 +1,3 @@
-{-# LANGUAGE UnboxedTuples #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Ply.Plutarch.TypedWriter (
@@ -34,12 +33,11 @@ import Ply.Core.Internal.Reify (
   ReifyRole,
   ReifyTypenames,
   ReifyVersion,
-  reifyRole,
-  reifyTypenames,
   reifyVersion,
  )
 import Ply.Core.Serialize (writeEnvelope)
-import Ply.Core.Unsafe (unsafeTypedScript, unsafeUnTypedScript)
+import Ply.Core.TypedReader (typedScriptToEnvelope)
+import Ply.Core.Unsafe (unsafeTypedScript)
 import Ply.Plutarch.Class (PlyArgOf)
 
 {- | Write a parameterized Plutarch validator or minting policy into the filesystem.
@@ -82,18 +80,7 @@ mkEnvelope ::
   Text ->
   ClosedTerm ptype ->
   Either Text TypedScriptEnvelope
-mkEnvelope conf descr pterm = do
-  typedScript <- toTypedScript conf pterm
-  case unsafeUnTypedScript typedScript of
-    (# ver, scrpt #) ->
-      pure
-        TypedScriptEnvelope
-          { tsVersion = ver
-          , tsRole = reifyRole $ Proxy @(RoleOf ptype)
-          , tsParamTypes = reifyTypenames $ Proxy @(PlyParamsOf (ParamsOf ptype))
-          , tsDescription = descr
-          , tsScript = scrpt
-          }
+mkEnvelope conf descr pterm = typedScriptToEnvelope descr <$> toTypedScript conf pterm
 
 {- | The core `ply-plutarch` function: obtain all the necessary information about a Plutarch script, and turn it into 'TypedScript'.
 
