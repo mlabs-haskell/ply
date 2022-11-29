@@ -6,6 +6,7 @@ import Data.ByteString (ByteString)
 import Data.Text (Text)
 
 import Plutarch.Api.V1 as PLedgerV1
+import Plutarch.Api.V1.Scripts (PScriptHash)
 import Plutarch.Prelude
 import PlutusLedgerApi.V1 as LedgerV1
 import qualified PlutusTx.AssocMap as PlutusMap
@@ -49,6 +50,8 @@ type instance PlyArgOf PCurrencySymbol = CurrencySymbol
 type instance PlyArgOf PTokenName = TokenName
 
 type instance PlyArgOf PPubKeyHash = PubKeyHash
+
+type instance PlyArgOf PScriptHash = ScriptHash
 
 type instance PlyArgOf PPOSIXTime = POSIXTime
 
