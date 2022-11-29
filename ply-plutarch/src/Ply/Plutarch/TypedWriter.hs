@@ -1,3 +1,4 @@
+{-# LANGUAGE UnboxedTuples #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Ply.Plutarch.TypedWriter (
@@ -7,6 +8,7 @@ module Ply.Plutarch.TypedWriter (
   type VersionOf,
   type PlyParamsOf,
   writeTypedScript,
+  toTypedScript,
   mkEnvelope,
 ) where
 
@@ -25,7 +27,8 @@ import Plutarch.Script (unScript)
 import Ply (
   ScriptRole (MintingPolicyRole, ValidatorRole),
   ScriptVersion (ScriptV1, ScriptV2),
-  TypedScriptEnvelope (TypedScriptEnvelope),
+  TypedScript,
+  TypedScriptEnvelope (..),
  )
 import Ply.Core.Internal.Reify (
   ReifyRole,
@@ -36,6 +39,7 @@ import Ply.Core.Internal.Reify (
   reifyVersion,
  )
 import Ply.Core.Serialize (writeEnvelope)
+import Ply.Core.Unsafe (unsafeTypedScript, unsafeUnTypedScript)
 import Ply.Plutarch.Class (PlyArgOf)
 
 {- | Write a parameterized Plutarch validator or minting policy into the filesystem.
@@ -70,14 +74,7 @@ type TypedWriter ptype =
   , ReifyTypenames (PlyParamsOf (ParamsOf ptype))
   )
 
-{- | The core `ply-plutarch` function: obtain all the necessary information about a Plutarch script.
-
-For a description of extra parameters are determined, see: 'PlyParamsOf' and 'ParamsOf' type families.
-
-For a description of 'ScriptVersion' is determined, see: 'VersionOf' type family.
-
-For a description of 'ScriptRole' is determined, see: 'RoleOf' type family.
--}
+-- | Wrapper around 'toTypedScript' that builds a 'TypedScriptEnvelope' to serialize into the file system.
 mkEnvelope ::
   forall ptype.
   TypedWriter ptype =>
@@ -85,17 +82,37 @@ mkEnvelope ::
   Text ->
   ClosedTerm ptype ->
   Either Text TypedScriptEnvelope
-mkEnvelope conf descr pterm =
-  pure (TypedScriptEnvelope ver)
-    <*> pure rl
-    <*> pure paramTypes
-    <*> pure descr
-    <*> scrpt
+mkEnvelope conf descr pterm = do
+  typedScript <- toTypedScript conf pterm
+  case unsafeUnTypedScript typedScript of
+    (# ver, scrpt #) ->
+      pure
+        TypedScriptEnvelope
+          { tsVersion = ver
+          , tsRole = reifyRole $ Proxy @(RoleOf ptype)
+          , tsParamTypes = reifyTypenames $ Proxy @(PlyParamsOf (ParamsOf ptype))
+          , tsDescription = descr
+          , tsScript = scrpt
+          }
+
+{- | The core `ply-plutarch` function: obtain all the necessary information about a Plutarch script, and turn it into 'TypedScript'.
+
+For a description of extra parameters are determined, see: 'PlyParamsOf' and 'ParamsOf' type families.
+
+For a description of 'ScriptVersion' is determined, see: 'VersionOf' type family.
+
+For a description of 'ScriptRole' is determined, see: 'RoleOf' type family.
+-}
+toTypedScript ::
+  forall ptype.
+  TypedWriter ptype =>
+  Config ->
+  ClosedTerm ptype ->
+  Either Text (TypedScript (RoleOf ptype) (PlyParamsOf (ParamsOf ptype)))
+toTypedScript conf pterm = unsafeTypedScript ver <$> scrptEith
   where
-    scrpt = unScript <$> compile conf pterm
+    scrptEith = unScript <$> compile conf pterm
     ver = reifyVersion $ Proxy @(VersionOf ptype)
-    rl = reifyRole $ Proxy @(RoleOf ptype)
-    paramTypes = reifyTypenames $ Proxy @(PlyParamsOf (ParamsOf ptype))
 
 {- | Given a Plutarch function type ending in 'PValidator' or 'PMintingPolicy', determine its extra parameters.
 
