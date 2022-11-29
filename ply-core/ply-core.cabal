@@ -102,6 +102,7 @@ library
     Ply.Core.Serialize
     Ply.Core.Serialize.Script
     Ply.Core.TypedReader
+    Ply.Core.Unsafe
 
   other-modules:
     Ply.Core.Typename
