@@ -157,6 +157,12 @@ main = do
 
 > Aside: Notice how I didn't use type applications, it got inferred from the surrounding context!
 
+## Building a TypedScript directly from Plutarch
+
+`Ply.Plutarch.writeTypedScript` is essentially a wrapper around `Ply.Plutarch.mkEnvelope`, which is then a wrapper around `Ply.Plutarch.toTypedScript`.
+
+Indeed, you can use `toTypedScript` on your Plutarch term to directly obtain a well typed `TypedScript`. This is useful when your offchain code is on the same project and can directly import `TypedScript`. The benefit of this over applying Plutarch arguments to Plutarch term, and then compiling in the end, is simple: the UPLC compilation (which is potentially a hefty task) is done only once. The arguments applied later are done by lightweight UPLC AST modifications.
+
 # Custom Types as Script Parameters
 
 By default, Ply supports most `plutus-ledger-api` types and you can use any of them as your script parameters.
