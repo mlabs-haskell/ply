@@ -23,6 +23,7 @@ common common-deps
     , base
     , bytestring
     , plutarch
+    , plutarch-extra
     , plutus-ledger-api
     , plutus-tx
     , ply-core

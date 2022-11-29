@@ -29,6 +29,9 @@ source-repository-package
   --sha256: sha256-K4FNHQUpq4V0XkP1AUfnwFtOc2BMK007dv9aAgFStVs=
   location: https://github.com/Plutonomicon/plutarch-plutus.git
   tag: 95e40b42a1190191d0a07e3e4e938b72e6f75268
+  subdir:
+    .
+    plutarch-extra
 
 constraints:
   dependent-sum >= 0.7.1.0
