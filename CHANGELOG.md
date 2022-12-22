@@ -1,3 +1,9 @@
+# 0.3.1 - Hotfix for Integer parameters
+
+- Older GHCs export 'Integer' at "GHC.Num.Integer", but older ones have it at "GHC.Integer.Type". So two GHC version discrepancy between onchain and offchain where one of the typed scripts used integers broke everything.
+
+  Ply will now rename the old module (if encountered) to be like the new one.
+
 # 0.3.0 - Plutus update, Plutarch 1.3, API changes
 
 There is no `Script` type in upstream Plutus anymore. As a result, `TypedScript` holds the UPLC program itself.
