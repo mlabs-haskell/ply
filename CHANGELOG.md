@@ -1,3 +1,7 @@
+# 0.2.1 - Backport "Handle GHC.Num.Integer module name"
+
+- See: https://github.com/mlabs-haskell/ply/pull/40/files
+
 # 0.2.0 - Internal Type Cleanup
 
 - `TypedScriptEnvelope'` is deprecated. `TypedScriptEnvelope` now implements `toJSON` and `fromJSON` directly.
