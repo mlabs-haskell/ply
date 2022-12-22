@@ -21,7 +21,7 @@ No specific guarantees are given as per the representation of the 'Typename', as
 However, typenames of 2 different types (different module) won't be the same.
 -}
 typeName :: forall a. Typeable a => Typename
-typeName = Typename . Txt.pack $ srcModuleName ++ ':' : tyConName tyCon
+typeName = Typename . Txt.pack . toNewGHCIntegerModuleName $ srcModuleName ++ ':' : tyConName tyCon
   where
     srcModuleName = toNewLedgerModuleName $ tyConModule tyCon
     tyCon = typeRepTyCon $ typeRep @a
@@ -53,6 +53,11 @@ toNewLedgerModuleName (splitAt oldLedgerModuleNameLen -> (!prefx, !sufx))
         then "" -- The Plutus.Vx.Ledger.Api module got renamed to just PlutusLedgerApi.Vx
         else sufx
   | otherwise = prefx ++ sufx
+
+-- Older GHCs export 'Integer' at "GHC.Num.Integer", but older ones have it at "GHC.Integer.Type"
+toNewGHCIntegerModuleName :: String -> String
+toNewGHCIntegerModuleName "GHC.Integer.Type:Integer" = "GHC.Num.Integer:Integer"
+toNewGHCIntegerModuleName x = x
 
 oldLedgerModuleNameLen :: Int
 oldLedgerModuleNameLen = length oldLedgerV1ModuleName
