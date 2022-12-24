@@ -1,7 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE BangPatterns #-}
 
-module Ply.Core.Typename (Typename, typeName) where
+module Ply.Core.Typename (Typename (Typename), typeName) where
 
 import Control.Monad (when)
 import Data.Aeson (FromJSON (parseJSON), ToJSON, Value (String))

@@ -1,10 +1,18 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Ply.Core.TypedReader (TypedReader, readTypedScript, mkTypedScript) where
+module Ply.Core.TypedReader (
+  TypedReader,
+  readTypedScript,
+  readTypedScriptWith,
+  -- mkTypedScript,
+  -- mkTypedScriptWith,
+) where
 
 import Control.Exception (throwIO)
 import Control.Monad (unless)
+import Data.Coerce (coerce)
 import Data.Proxy (Proxy (Proxy))
+import Data.Text (Text)
 
 import Ply.Core.Deserialize (readEnvelope)
 import Ply.Core.Internal.Reify
@@ -12,7 +20,7 @@ import Ply.Core.Types (
   ScriptReaderException (ScriptRoleError, ScriptTypeError),
   ScriptRole (ValidatorRole),
   TypedScript (TypedScriptConstr),
-  TypedScriptEnvelope (TypedScriptEnvelope),
+  TypedScriptEnvelope (TypedScriptEnvelope), Typename(Typename),
  )
 
 {- | Class of 'TypedScript' parameters that are supported and can be read.
@@ -24,16 +32,17 @@ type TypedReader rl params =
   , ReifyTypenames params
   )
 
--- | Pure function to parse a 'TypedScript' from a 'TypedScriptEnvelope'.
-mkTypedScript ::
+mkTypedScriptWith ::
   forall rl params.
   TypedReader rl params =>
+  (Text -> Text) ->
   TypedScriptEnvelope ->
   Either ScriptReaderException (TypedScript rl params)
-mkTypedScript (TypedScriptEnvelope ver rol params _ prog) = do
+mkTypedScriptWith mapping (TypedScriptEnvelope ver rol params _ prog) = do
   unless (rol == reifyRole (Proxy @rl)) . Left $ ScriptRoleError ValidatorRole rol
   let expectedParams = reifyTypenames $ Proxy @params
-  unless (expectedParams == params) . Left $ ScriptTypeError expectedParams params
+  let actualParams = coerce mapping <$> params
+  unless (expectedParams == actualParams) . Left $ ScriptTypeError expectedParams actualParams
   pure $ TypedScriptConstr ver prog
 
 {- | Read and verify a 'TypedScript' from given filepath.
@@ -47,4 +56,15 @@ readTypedScript ::
   -- | File path where the typed script file is located.
   FilePath ->
   IO (TypedScript r params)
-readTypedScript p = readEnvelope p >>= either throwIO pure . mkTypedScript
+readTypedScript = readTypedScriptWith id
+
+readTypedScriptWith ::
+  TypedReader r params =>
+  -- | Mapping for type named of script parameters. Useful if your script were serialized with
+  -- older version of ply, which would write type constructor name, or using old-style ledger types.
+  -- Mapping applies to Typename's coming in the envelop.
+  (Text -> Text) ->
+  -- | File path where the typed script file is located.
+  FilePath ->
+  IO (TypedScript r params)
+readTypedScriptWith mapping p = readEnvelope p >>= either throwIO pure . mkTypedScriptWith mapping
