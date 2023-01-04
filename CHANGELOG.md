@@ -1,3 +1,12 @@
+# 0.4.0 -  Direct 'TypedScript' access and usage, and add Rational instances
+
+- Add `Ply.Core.Unsafe` to the public API, which allows direct access to `TypedScript`.
+- Add `Ply.Plutarch.toTypedScript` to obtain a `TypedScript` from Plutarch term directly.
+
+  See README for the motivation.
+- Add `Ply.Core.TypedReader.typedScriptToEnvelope` to obtain a `TypedScriptEnvelope` from `TypedScript`.
+- Add `PlyArg` and `PlyArgOf` instance for `PlutusTx.Ratio.Rational` and `Plutarch.Extra.PRationalData.PRationalData`.
+
 # 0.3.1 - Hotfix for Integer parameters
 
 - Older GHCs export 'Integer' at "GHC.Num.Integer", but older ones have it at "GHC.Integer.Type". So two GHC version discrepancy between onchain and offchain where one of the typed scripts used integers broke everything.

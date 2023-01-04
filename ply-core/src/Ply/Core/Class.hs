@@ -29,6 +29,7 @@ import PlutusLedgerApi.V1.Time as LedgerCommon (
 import PlutusLedgerApi.V1.Value as LedgerCommon (
   AssetClass (AssetClass),
  )
+import qualified PlutusTx.Ratio as PlutusTx
 
 type BottomConstraint s t = 'Text s ~ ShowType t
 
@@ -110,6 +111,14 @@ instance PlyArg a => PlyArg [a] where
   type ToDataConstraint [a] = ToDataConstraint a
   toBuiltinArg = map toBuiltinArg
   toBuiltinArgData l = List $ map toBuiltinArgData l
+
+instance PlyArg PlutusTx.Rational where
+  type UPLCRep PlutusTx.Rational = Data
+  toBuiltinArg r = Constr 0 [toBuiltinArgData $ PlutusTx.numerator r, denData]
+    where
+      den = PlutusTx.denominator r
+      denData = if den /= 0 then toBuiltinArgData den else error "toBuiltinArg(PlutusTx.Rational): Expected positive denominator"
+  toBuiltinArgData = toBuiltinArg
 
 instance (PlyArg a, ToDataConstraint a) => PlyArg (Maybe a) where
   type UPLCRep (Maybe a) = Data
