@@ -1,9 +1,11 @@
+{-# LANGUAGE UnboxedTuples #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Ply.Core.TypedReader (
   TypedReader,
   readTypedScript,
   readTypedScriptWith,
+  typedScriptToEnvelope,
 ) where
 
 import Control.Exception (throwIO)
@@ -18,9 +20,10 @@ import Ply.Core.Types (
   ScriptReaderException (ScriptRoleError, ScriptTypeError),
   ScriptRole (ValidatorRole),
   TypedScript (TypedScriptConstr),
-  TypedScriptEnvelope (TypedScriptEnvelope),
+  TypedScriptEnvelope (..),
   Typename (Typename),
  )
+import Ply.Core.Unsafe (unsafeUnTypedScript)
 
 {- | Class of 'TypedScript' parameters that are supported and can be read.
 
@@ -71,3 +74,19 @@ readTypedScriptWith ::
   FilePath ->
   IO (TypedScript r params)
 readTypedScriptWith mapping p = readEnvelope p >>= either throwIO pure . mkTypedScriptWith mapping
+
+-- | Converting a 'TypedScript' into a 'TypedScriptEnvelope', given the description and the script.
+typedScriptToEnvelope ::
+  forall rl params.
+  TypedReader rl params =>
+  Text ->
+  TypedScript rl params ->
+  TypedScriptEnvelope
+typedScriptToEnvelope descr (unsafeUnTypedScript -> (# ver, scrpt #)) =
+  TypedScriptEnvelope
+    { tsVersion = ver
+    , tsRole = reifyRole $ Proxy @rl
+    , tsParamTypes = reifyTypenames $ Proxy @params
+    , tsDescription = descr
+    , tsScript = scrpt
+    }

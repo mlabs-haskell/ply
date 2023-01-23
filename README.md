@@ -159,10 +159,7 @@ main = do
 
 ### Mapping for Typename
 
-The way `ply` stores scipts parameters type names has changed. Previously `Typename` was stored without
-package qualifiers, so if you need to load scripts serialized quite a while ago, you might need a away
-to convert type names. Use `readTypedScriptWith`, which takes an additional mapping. A sample mapping
-to use with newer Plutus types might be as following:
+The way `ply` stores scripts parameters type names has changed at some point. Previously `Typename` was stored without package qualifiers, so if you need to load scripts serialized quite a while ago, you might need a way to convert type names upon doing that. Use `readTypedScriptWith`, which takes an additional mapping like as following:
 
 ```haskell
 paramMapping :: Text -> Text
@@ -175,6 +172,12 @@ paramMapping = \case
   "Integer" -> "GHC.Num.Integer:Integer"
   others -> others
 ```
+
+## Building a TypedScript directly from Plutarch
+
+`Ply.Plutarch.writeTypedScript` is essentially a wrapper around `Ply.Plutarch.mkEnvelope`, which is then a wrapper around `Ply.Plutarch.toTypedScript`.
+
+Indeed, you can use `toTypedScript` on your Plutarch term to directly obtain a well typed `TypedScript`. This is useful when your offchain code is on the same project and can directly import `TypedScript`. The benefit of this over applying Plutarch arguments to Plutarch term, and then compiling in the end, is simple: the UPLC compilation (which is potentially a hefty task) is done only once. The arguments applied later are done by lightweight UPLC AST modifications.
 
 # Custom Types as Script Parameters
 

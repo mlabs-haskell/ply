@@ -7,9 +7,11 @@ import Data.Text (Text)
 
 import Plutarch.Api.V1 as PLedgerV1
 import Plutarch.Api.V1.Scripts (PScriptHash)
+import Plutarch.Extra.RationalData (PRationalData)
 import Plutarch.Prelude
 import PlutusLedgerApi.V1 as LedgerV1
 import qualified PlutusTx.AssocMap as PlutusMap
+import qualified PlutusTx.Ratio as PlutusTx
 
 -- TODO: How to handle 'PAsData'?
 
@@ -32,6 +34,8 @@ type instance PlyArgOf PData = Data
 type instance PlyArgOf (PBuiltinPair a b) = (PlyArgOf a, PlyArgOf b)
 
 type instance PlyArgOf (PBuiltinList a) = [PlyArgOf a]
+
+type instance PlyArgOf PRationalData = PlutusTx.Rational
 
 type instance PlyArgOf (PMaybeData a) = Maybe (PlyArgOf a)
 
