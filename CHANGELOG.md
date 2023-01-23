@@ -1,3 +1,8 @@
+# 0.4.1 - Mapping for Typename on loading
+
+`readTypedScriptWith` allows one to load scripts, which have been serialized with an older version of `ply`
+to be loaded, see README.md for example.
+
 # 0.3.0 - Plutus update, Plutarch 1.3, API changes
 
 There is no `Script` type in upstream Plutus anymore. As a result, `TypedScript` holds the UPLC program itself.

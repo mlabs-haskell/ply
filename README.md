@@ -157,6 +157,25 @@ main = do
 
 > Aside: Notice how I didn't use type applications, it got inferred from the surrounding context!
 
+### Mapping for Typename
+
+The way `ply` stores scipts parameters type names has changed. Previously `Typename` was stored without
+package qualifiers, so if you need to load scripts serialized quite a while ago, you might need a away
+to convert type names. Use `readTypedScriptWith`, which takes an additional mapping. A sample mapping
+to use with newer Plutus types might be as following:
+
+```haskell
+paramMapping :: Text -> Text
+paramMapping = \case
+  "Address" -> "PlutusLedgerApi.V1.Address:Address"
+  "Credential" -> "PlutusLedgerApi.V1.Credential:Credential"
+  "CurrencySymbol" -> "PlutusLedgerApi.V1.Value:CurrencySymbol"
+  "ValidatorHash" -> "PlutusLedgerApi.V1.Scripts:ScriptHash"
+  "TokenName" -> "PlutusLedgerApi.V1.Value:TokenName"
+  "Integer" -> "GHC.Num.Integer:Integer"
+  others -> others
+```
+
 # Custom Types as Script Parameters
 
 By default, Ply supports most `plutus-ledger-api` types and you can use any of them as your script parameters.
