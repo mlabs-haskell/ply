@@ -1,3 +1,7 @@
+# 0.4.1 - Mapping for Typename on loading
+
+Add `readTypedScriptWith`, which allows to load scripts having been written with an older version of `ply`, see _Mapping for Typename_ section in README.md for example.
+
 # 0.4.0 -  Direct 'TypedScript' access and usage, and add Rational instances
 
 - Add `Ply.Core.Unsafe` to the public API, which allows direct access to `TypedScript`.

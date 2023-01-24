@@ -6,7 +6,7 @@ module Ply.Core.Types (
   ScriptRole (..),
   ScriptReaderException (..),
   TypedScriptEnvelope (..),
-  Typename,
+  Typename (Typename),
   UPLCProgram,
 ) where
 
@@ -36,7 +36,7 @@ import PlutusLedgerApi.Common (deserialiseUPLC, serialiseUPLC)
 import UntypedPlutusCore (DeBruijn, DefaultFun, DefaultUni, Program)
 
 import Ply.Core.Serialize.Script (serializeScriptCbor)
-import Ply.Core.Typename (Typename)
+import Ply.Core.Typename (Typename (Typename))
 
 type UPLCProgram = Program DeBruijn DefaultUni DefaultFun ()
 

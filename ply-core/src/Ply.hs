@@ -8,6 +8,7 @@ module Ply (
   typeName,
   PlyArg,
   readTypedScript,
+  readTypedScriptWith,
   getPlutusVersion,
   (#),
   (#$),
@@ -17,7 +18,7 @@ module Ply (
 
 import Ply.Core.Apply ((#), (#!), (#$), (#$!))
 import Ply.Core.Class (PlyArg)
-import Ply.Core.TypedReader (readTypedScript)
+import Ply.Core.TypedReader (readTypedScript, readTypedScriptWith)
 import Ply.Core.Typename (typeName)
 import Ply.Core.Types (
   ScriptReaderException (..),

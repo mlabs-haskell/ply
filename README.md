@@ -157,6 +157,22 @@ main = do
 
 > Aside: Notice how I didn't use type applications, it got inferred from the surrounding context!
 
+### Mapping for Typename
+
+The way `ply` stores scripts parameters type names has changed at some point. Previously `Typename` was stored without package qualifiers, so if you need to load scripts serialized quite a while ago, you might need a way to convert type names upon doing that. Use `readTypedScriptWith`, which takes an additional mapping like as following:
+
+```haskell
+paramMapping :: Text -> Text
+paramMapping = \case
+  "Address" -> "PlutusLedgerApi.V1.Address:Address"
+  "Credential" -> "PlutusLedgerApi.V1.Credential:Credential"
+  "CurrencySymbol" -> "PlutusLedgerApi.V1.Value:CurrencySymbol"
+  "ValidatorHash" -> "PlutusLedgerApi.V1.Scripts:ScriptHash"
+  "TokenName" -> "PlutusLedgerApi.V1.Value:TokenName"
+  "Integer" -> "GHC.Num.Integer:Integer"
+  others -> others
+```
+
 ## Building a TypedScript directly from Plutarch
 
 `Ply.Plutarch.writeTypedScript` is essentially a wrapper around `Ply.Plutarch.mkEnvelope`, which is then a wrapper around `Ply.Plutarch.toTypedScript`.

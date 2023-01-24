@@ -1,10 +1,16 @@
 {-# LANGUAGE UnboxedTuples #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Ply.Core.TypedReader (TypedReader, readTypedScript, mkTypedScript, typedScriptToEnvelope) where
+module Ply.Core.TypedReader (
+  TypedReader,
+  readTypedScript,
+  readTypedScriptWith,
+  typedScriptToEnvelope,
+) where
 
 import Control.Exception (throwIO)
 import Control.Monad (unless)
+import Data.Coerce (coerce)
 import Data.Proxy (Proxy (Proxy))
 import Data.Text (Text)
 
@@ -15,6 +21,7 @@ import Ply.Core.Types (
   ScriptRole (ValidatorRole),
   TypedScript (TypedScriptConstr),
   TypedScriptEnvelope (..),
+  Typename (Typename),
  )
 import Ply.Core.Unsafe (unsafeUnTypedScript)
 
@@ -27,19 +34,21 @@ type TypedReader rl params =
   , ReifyTypenames params
   )
 
--- | Pure function to parse a 'TypedScript' from a 'TypedScriptEnvelope'.
-mkTypedScript ::
+mkTypedScriptWith ::
   forall rl params.
   TypedReader rl params =>
+  (Text -> Text) ->
   TypedScriptEnvelope ->
   Either ScriptReaderException (TypedScript rl params)
-mkTypedScript (TypedScriptEnvelope ver rol params _ prog) = do
+mkTypedScriptWith mapping (TypedScriptEnvelope ver rol params _ prog) = do
   unless (rol == reifyRole (Proxy @rl)) . Left $ ScriptRoleError ValidatorRole rol
   let expectedParams = reifyTypenames $ Proxy @params
-  unless (expectedParams == params) . Left $ ScriptTypeError expectedParams params
+  let actualParams = coerce mapping <$> params
+  unless (expectedParams == actualParams) . Left $ ScriptTypeError expectedParams actualParams
   pure $ TypedScriptConstr ver prog
 
-{- | Read and verify a 'TypedScript' from given filepath.
+{- | Read and verify a 'TypedScript' from given filepath. If you need to adjust type names use
+'readTypedScriptWith' instead.
 
 The user is responsible for choosing the "correct" 'ScriptRole' and script parameters, probably
 with type applications. The reader will then use this information to parse the file and verify
@@ -50,7 +59,21 @@ readTypedScript ::
   -- | File path where the typed script file is located.
   FilePath ->
   IO (TypedScript r params)
-readTypedScript p = readEnvelope p >>= either throwIO pure . mkTypedScript
+readTypedScript = readTypedScriptWith id
+
+{- | Like 'readTypedScript', but takes a mapper @(Text -> Text) @ for type names of a script
+parameters. It might be useful if your script have been serialized with an older version of
+@ply@, which would write type constructor name, or using old-style ledger types. Mapping
+applies to @Typename@'s coming in the envelop.
+-}
+readTypedScriptWith ::
+  TypedReader r params =>
+  -- | Mapping for type names of script parameters.
+  (Text -> Text) ->
+  -- | File path where the typed script file is located.
+  FilePath ->
+  IO (TypedScript r params)
+readTypedScriptWith mapping p = readEnvelope p >>= either throwIO pure . mkTypedScriptWith mapping
 
 -- | Converting a 'TypedScript' into a 'TypedScriptEnvelope', given the description and the script.
 typedScriptToEnvelope ::
