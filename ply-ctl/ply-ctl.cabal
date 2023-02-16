@@ -1,7 +1,7 @@
 cabal-version: 3.0
-name:          ply-core
+name:          ply-ctl
 version:       0.4.0
-author:        Chase <chase@mlabs.city>
+author:        Seungheon <Seungheon@mlabs.city>
 license:       MIT
 
 -- Common sections
@@ -20,17 +20,13 @@ common common-ghc-opts
 
 common common-deps
   build-depends:
-    , aeson
-    , aeson-pretty
     , base
-    , base16-bytestring
     , bytestring
-    , cardano-binary
-    , containers
+    , plutarch
     , plutus-core
     , plutus-ledger-api
     , plutus-tx
-    , serialise
+    , ply-core
     , text
 
 common common-lang
@@ -86,38 +82,10 @@ common common-lang
     TypeOperators
     ViewPatterns
 
--- Build targets
-
-library
-  import:          common-lang
-  import:          common-configs
-  import:          common-deps
-  import:          common-ghc-opts
-  exposed-modules:
-    Ply
-    Ply.Core.Apply
-    Ply.Core.Class
-    Ply.Core.Deserialize
-    Ply.Core.Internal.Reify
-    Ply.Core.Serialize
-    Ply.Core.Serialize.Script
-    Ply.Core.TypedReader
-    Ply.Core.Typename
-    Ply.Core.Unsafe
-
-  other-modules:
-    Ply.Core.Types
-    Ply.Core.UPLC
-
-  hs-source-dirs:  src
-
-test-suite ply-core-test
+executable genPurs
   import:         common-lang
   import:         common-configs
   import:         common-deps
   import:         common-ghc-opts
-  type:           exitcode-stdio-1.0
-  main-is:        Spec.hs
-  build-depends:  ply-core
-  hs-source-dirs: test
-  ghc-options:    -threaded -rtsopts -with-rtsopts=-N
+  hs-source-dirs: genPurs
+  main-is:        Main.hs
