@@ -1,7 +1,6 @@
 module Main where
 
-import Prelude
-
+import Contract.Prim.ByteArray
 import Contract.Prelude
 import Contract.Value
 import Aeson as Aeson
@@ -10,34 +9,39 @@ import Ply.Typename
 import Ply.Reify
 import Ply.Types
 import Type.Proxy
-import Contract.Transaction (TransactionHash,TransactionInput,TransactionOutput)
+import Contract.Transaction
 import Ply.TypeList
-
+import Ply.Apply as PA
+import Data.BigInt (BigInt)
+import Data.BigInt as BigInt
+import Data.UInt as UInt
 import Node.FS.Sync
-import Node.Encoding (Encoding (UTF8))
-
+import Node.Encoding
 
 main :: Effect Unit
 main = do
   sample <- readTextFile UTF8 "/home/sho/Documents/ply/example/compiled/nftMp.plutus"
-
-  log sample
 
   t :: TypedScriptEnvelope <- Aeson.parseJsonStringToAeson sample
     # fromRightEff
     >>= Aeson.decodeAeson
     >>> fromRightEff
 
-  log $ show t
+  txid <- hexToByteArray "2be7c999fda3c9d4c3540bc9f4f28b78f8aacf9662b4489d8000bcdc18131268" # fromJustEff "txid"
+  tokenName <- byteArrayFromAscii "A" >>= mkTokenName # fromJustEff "tkname"
 
-  log $ show $ reifyParams (Proxy :: Proxy (Cons Boolean (Cons TransactionHash Nil)))
+  let
+    ts :: TypedScript MintingPolicyRole (Cons TransactionInput (Cons TokenName Nil))
+    ts = reifyTypedScript t
 
-  log $ show $ reifyRole (Proxy :: Proxy ValidatorRole)
+    arg1 =
+      wrap
+      { index: UInt.fromInt 1
+      , transactionId: wrap txid
+      }
 
-  ts :: TypedScript MintingPolicyRole (Cons TransactionInput (Cons TokenName Nil)) <- reifyTypedScript t # fromRightEff
+    arg2 = adaToken
 
-  log $ plyTypeName (Proxy :: Proxy Boolean)
-  log $ plyTypeName (Proxy :: Proxy TransactionHash)
-  log $ plyTypeName (Proxy :: Proxy TransactionInput)
-  log $ plyTypeName (Proxy :: Proxy TransactionOutput)
-  log "hello world"
+  applied <- ts PA.# arg1 PA.# arg2 # toPlutusScript # fromRightEff
+
+  log $ show applied

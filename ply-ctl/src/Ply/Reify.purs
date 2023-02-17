@@ -1,15 +1,28 @@
-module Ply.Reify where
+module Ply.Reify (
+  class ReifyParams,
+  reifyParams,
+  class ReifyRole,
+  reifyRole,
+  reifyTypedScript
+  ) where
 
 import Prelude
 
 import Data.Show.Generic (genericShow)
 import Data.Generic.Rep (class Generic)
-import Data.Either
+import Data.Either (Either(..))
 import Data.Array ((:))
-import Ply.Typename
-import Type.Proxy
+import Ply.Typename (class PlyTypeName, plyTypeName)
+import Type.Proxy (Proxy (..))
 import Ply.Types
-import Ply.TypeList
+  ( ScriptRole (..)
+  , MintingPolicyRole
+  , ValidatorRole
+  , TypedScriptEnvelope (..)
+  , TypedScript (..)
+  , PlyError (..)
+  )
+import Ply.TypeList (TyList, Cons, Nil)
 
 class ReifyParams :: TyList Type -> Constraint
 class ReifyParams params where
@@ -32,20 +45,13 @@ instance ReifyRole ValidatorRole where
 instance ReifyRole MintingPolicyRole where
   reifyRole _ = MintingPolicyRole
 
-data ReificationError
-  = RoleMismatch {expected :: ScriptRole, actual :: ScriptRole}
-  | ParamsMismatch {expected :: Array String, actual :: Array String}
-
-derive instance Generic ReificationError _
-instance Show ReificationError where show = genericShow
-
 reifyTypedScript
   :: forall (role :: ScriptRole) (params :: TyList Type)
    . ReifyRole role
   => ReifyParams params
   => TypedScriptEnvelope
-  -> Either ReificationError (TypedScript role params)
-reifyTypedScript (TypedScriptEnvelope tse) = do
+  -> TypedScript role params
+reifyTypedScript (TypedScriptEnvelope tse) = TypedScriptConstr $ do
   let expRole = reifyRole (Proxy :: Proxy role)
       expParams = reifyParams (Proxy :: Proxy params)
 
@@ -55,4 +61,4 @@ reifyTypedScript (TypedScriptEnvelope tse) = do
   when (expParams /= tse.params) $
     Left (ParamsMismatch {expected: expParams, actual: tse.params})
 
-  pure $ TypedScriptConstr tse.script
+  pure $ tse.script

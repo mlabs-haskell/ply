@@ -1,7 +1,6 @@
 { name = "ply-ctl"
 , dependencies =
-  [ "console"
-  , "effect"
+  [ "effect"
   , "prelude"
   , "cardano-transaction-lib"
   , "bigints"
@@ -11,6 +10,8 @@
   , "node-buffer"
   , "node-fs"
   , "tuples"
+  , "arrays"
+  , "uint"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "Main.purs" ]

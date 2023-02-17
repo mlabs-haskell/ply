@@ -1,4 +1,4 @@
-module Ply.TypeList where
+module Ply.TypeList (TyList, Cons, Nil) where
 
 data TyList :: forall k. k -> Type
 data TyList k

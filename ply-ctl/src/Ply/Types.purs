@@ -1,4 +1,16 @@
-module Ply.Types where
+module Ply.Types
+  ( TypedScript (..)
+  , toPlutusScript
+  , TypedScriptEnvelope (..)
+  , ScriptRole(..)
+  , ValidatorRole
+  , MintingPolicyRole
+  , ScriptVersion
+  , fromLanguage
+  , toLanguage
+  , PlyError (..)
+  , PlyError (..)
+  ) where
 
 import Prelude
 
@@ -12,23 +24,32 @@ import Aeson
   , caseAesonString
   )
 
+import Contract.Scripts (ApplyArgsError)
 import Ctl.Internal.Types.Scripts (Language (..))
 import Contract.Address (ByteArray)
-import Data.Tuple.Nested (type (/\), (/\))
-import Data.Either
-import Data.Newtype
+import Data.Tuple.Nested ((/\))
+import Data.Either (Either (..))
+import Data.Newtype (class Newtype, wrap)
 import Data.Show.Generic (genericShow)
 import Data.Generic.Rep (class Generic)
-import Contract.Scripts
-import Ply.TypeList
+import Contract.Scripts (PlutusScript)
+import Ply.TypeList (TyList)
 
--- | Equivalent to `TypedScript` in `ply-core`
+-- | Equivalent to `TypedScript` in `ply-core` except
+-- | this Purescript version handles error as well
 data TypedScript :: ScriptRole -> TyList Type -> Type
-data TypedScript role params = TypedScriptConstr PlutusScript
+data TypedScript role params = TypedScriptConstr (Either PlyError PlutusScript)
 type role TypedScript nominal nominal
 
 derive instance Generic (TypedScript role params) _
 instance Show (TypedScript role params) where show = genericShow
+
+-- | Aquire `PlutusScript` from `TypedScript`. Forgets all type information.
+toPlutusScript
+  :: forall role params
+   . TypedScript role params
+  -> Either PlyError PlutusScript
+toPlutusScript (TypedScriptConstr ts) = ts
 
 -- | Equivalent to `TypedScriptEnvelope` in `ply-core`
 newtype TypedScriptEnvelope =
@@ -126,3 +147,11 @@ toLanguage ScriptV2 = PlutusV2
 fromLanguage :: Language -> ScriptVersion
 fromLanguage PlutusV1 = ScriptV1
 fromLanguage PlutusV2 = ScriptV2
+
+data PlyError
+  = RoleMismatch {expected :: ScriptRole, actual :: ScriptRole}
+  | ParamsMismatch {expected :: Array String, actual :: Array String}
+  | ApplicationError ApplyArgsError
+
+derive instance Generic PlyError _
+instance Show PlyError where show = genericShow
