@@ -22,6 +22,7 @@ common common-deps
   build-depends:
     , base
     , bytestring
+    , containers
     , plutarch
     , plutus-core
     , plutus-ledger-api

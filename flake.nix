@@ -35,6 +35,7 @@
             hlint.enable = true;
           };
         };
+
         pkgs = import nixpkgs {
           inherit system;
           overlays = [
@@ -66,6 +67,39 @@
           ];
           inherit (haskellNix) config;
         };
+
+        nodejs = pkgs.nodejs-14_x;
+
+        mkNodeEnv = { withDevDeps ? true }: import
+          (pkgs.runCommand "node-packages-ply-ctl"
+            {
+              buildInputs = [ pkgs.nodePackages.node2nix ];
+            } ''
+            mkdir $out
+            cd $out
+            cp ${./ply-ctl/package-lock.json} ./package-lock.json
+            cp ${./ply-ctl/package.json} ./package.json
+            node2nix ${pkgs.lib.optionalString withDevDeps "--development" } \
+              --lock ./package-lock.json -i ./package.json
+          '')
+          { inherit pkgs nodejs system; };
+
+        mkNodeModules = { withDevDeps ? true }:
+          let
+            nodeEnv = mkNodeEnv { inherit withDevDeps; };
+            modules = pkgs.callPackage
+              (_:
+                nodeEnv // {
+                  shell = nodeEnv.shell.override {
+                    # see https://github.com/svanderburg/node2nix/issues/198
+                    buildInputs = [ pkgs.nodePackages.node-gyp-build ];
+                  };
+                });
+          in
+          (modules { }).shell.nodeDependencies;
+
+        nodeModules = mkNodeModules { };
+
         ply = pkgs.haskell-nix.cabalProject' {
           src = ./.;
           compiler-nix-name = "ghc925";
@@ -78,12 +112,14 @@
             };
             # Non-Haskell shell tools go here
             buildInputs = with pkgs; [
+              nodeModules
               nixpkgs-fmt
               fd
               git
               gnumake
               easy-ps.purs-0_14_9
-              nodejs-14_x
+              nodejs
+              node2nix
               easy-ps.purs-tidy
               easy-ps.spago
               easy-ps.pscid
@@ -92,6 +128,8 @@
             ];
             shellHook = pre-commit-check.shellHook +
               ''
+                export NODE_PATH="${nodeModules}/lib/node_modules"
+                export PATH="${nodeModules}/bin:$PATH"
                 echo $name
               '';
           };
