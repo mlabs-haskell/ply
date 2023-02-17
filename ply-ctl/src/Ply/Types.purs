@@ -24,7 +24,7 @@ import Ply.TypeList
 
 -- | Equivalent to `TypedScript` in `ply-core`
 data TypedScript :: ScriptRole -> TyList Type -> Type
-data TypedScript role params = TypedScriptConstr ScriptVersion ByteArray
+data TypedScript role params = TypedScriptConstr PlutusScript
 type role TypedScript nominal nominal
 
 derive instance Generic (TypedScript role params) _
@@ -33,8 +33,7 @@ instance Show (TypedScript role params) where show = genericShow
 -- | Equivalent to `TypedScriptEnvelope` in `ply-core`
 newtype TypedScriptEnvelope =
   TypedScriptEnvelope
-  { script :: ByteArray
-  , version :: ScriptVersion
+  { script :: PlutusScript
   , role :: ScriptRole
   , params :: Array String
   , description :: String
@@ -57,15 +56,13 @@ instance DecodeAeson TypedScriptEnvelope where
            , description :: String
            , params :: Array String
            }
-        -> { script :: ByteArray
-           , version :: ScriptVersion
+        -> { script :: PlutusScript
            , role :: ScriptRole
            , description :: String
            , params :: Array String
            }
       modifyFields mp =
-        { script: mp.rawHex
-        , version: mp.version
+        { script: wrap (mp.rawHex /\ toLanguage mp.version)
         , role: mp.role
         , description: mp.description
         , params: mp.params
@@ -125,3 +122,7 @@ instance EncodeAeson ScriptVersion where
 toLanguage :: ScriptVersion -> Language
 toLanguage ScriptV1 = PlutusV1
 toLanguage ScriptV2 = PlutusV2
+
+fromLanguage :: Language -> ScriptVersion
+fromLanguage PlutusV1 = ScriptV1
+fromLanguage PlutusV2 = ScriptV2

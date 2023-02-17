@@ -55,4 +55,4 @@ reifyTypedScript (TypedScriptEnvelope tse) = do
   when (expParams /= tse.params) $
     Left (ParamsMismatch {expected: expParams, actual: tse.params})
 
-  pure $ TypedScriptConstr tse.version tse.script
+  pure $ TypedScriptConstr tse.script
