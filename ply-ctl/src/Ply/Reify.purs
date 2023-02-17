@@ -1,9 +1,9 @@
-module Ply.Reify (
-  class ReifyParams,
-  reifyParams,
-  class ReifyRole,
-  reifyRole,
-  reifyTypedScript
+module Ply.Reify
+  ( class ReifyParams
+  , reifyParams
+  , class ReifyRole
+  , reifyRole
+  , reifyTypedScript
   ) where
 
 import Prelude
@@ -13,14 +13,14 @@ import Data.Generic.Rep (class Generic)
 import Data.Either (Either(..))
 import Data.Array ((:))
 import Ply.Typename (class PlyTypeName, plyTypeName)
-import Type.Proxy (Proxy (..))
+import Type.Proxy (Proxy(..))
 import Ply.Types
-  ( ScriptRole (..)
+  ( ScriptRole(..)
   , MintingPolicyRole
   , ValidatorRole
-  , TypedScriptEnvelope (..)
-  , TypedScript (..)
-  , PlyError (..)
+  , TypedScriptEnvelope(..)
+  , TypedScript(..)
+  , PlyError(..)
   )
 import Ply.TypeList (TyList, Cons, Nil)
 
@@ -52,13 +52,14 @@ reifyTypedScript
   => TypedScriptEnvelope
   -> TypedScript role params
 reifyTypedScript (TypedScriptEnvelope tse) = TypedScriptConstr $ do
-  let expRole = reifyRole (Proxy :: Proxy role)
-      expParams = reifyParams (Proxy :: Proxy params)
+  let
+    expRole = reifyRole (Proxy :: Proxy role)
+    expParams = reifyParams (Proxy :: Proxy params)
 
   when (expRole /= tse.role) $
-    Left (RoleMismatch {expected: expRole, actual: tse.role})
+    Left (RoleMismatch { expected: expRole, actual: tse.role })
 
   when (expParams /= tse.params) $
-    Left (ParamsMismatch {expected: expParams, actual: tse.params})
+    Left (ParamsMismatch { expected: expParams, actual: tse.params })
 
   pure $ tse.script

@@ -33,6 +33,7 @@
             cabal-fmt.enable = true;
             fourmolu.enable = true;
             hlint.enable = true;
+            purs-tidy.enable = true;
           };
         };
 
