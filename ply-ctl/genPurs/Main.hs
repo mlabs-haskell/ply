@@ -11,7 +11,7 @@ import Type.Reflection (Typeable)
 
 import qualified Data.Map as Map
 import qualified PlutusLedgerApi.V2 as V2
-import Ply.Core.Typename (Typename (Typename), typeName)
+import Ply.Core.Typename (Typename (Typename), plyTypeName)
 
 data CTLEquivalent = forall a. Typeable a => CTLEquivalent Text Text (Proxy a)
 
@@ -47,7 +47,7 @@ ctlEquivalents =
 
 genInstance :: CTLEquivalent -> Text
 genInstance (CTLEquivalent _ n (_ :: Proxy a)) =
-  let (Typename tName) = typeName @a
+  let (Typename tName) = plyTypeName @a
    in "instance PlyTypeName " <> n <> " where plyTypeName _ = \"" <> tName <> "\""
 
 genInstances :: [CTLEquivalent] -> Text

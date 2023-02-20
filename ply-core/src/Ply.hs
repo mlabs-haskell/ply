@@ -5,7 +5,7 @@ module Ply (
   TypedScriptEnvelope (..),
   ScriptVersion (..),
   Typename,
-  typeName,
+  plyTypeName,
   PlyArg,
   readTypedScript,
   getPlutusVersion,
@@ -18,7 +18,7 @@ module Ply (
 import Ply.Core.Apply ((#), (#!), (#$), (#$!))
 import Ply.Core.Class (PlyArg)
 import Ply.Core.TypedReader (readTypedScript)
-import Ply.Core.Typename (typeName)
+import Ply.Core.Typename (plyTypeName)
 import Ply.Core.Types (
   ScriptReaderException (..),
   ScriptRole (MintingPolicyRole, ValidatorRole),

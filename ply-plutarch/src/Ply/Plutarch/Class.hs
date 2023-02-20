@@ -12,8 +12,7 @@ import Plutarch.Prelude
 import PlutusLedgerApi.V1 as LedgerV1
 import qualified PlutusTx.AssocMap as PlutusMap
 import qualified PlutusTx.Ratio as PlutusTx
-
--- TODO: How to handle 'PAsData'?
+import Ply.Core.Typename (AsData)
 
 -- | 'PlyArgOf' yields the corresponding Haskell type for a given Plutarch type.
 type PlyArgOf :: PType -> Type
@@ -90,3 +89,5 @@ type instance PlyArgOf PRedeemer = Redeemer
 type instance PlyArgOf PDatumHash = DatumHash
 
 type instance PlyArgOf PRedeemerHash = RedeemerHash
+
+type instance PlyArgOf (PAsData a) = AsData (PlyArgOf a)

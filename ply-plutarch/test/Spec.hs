@@ -20,7 +20,7 @@ import Ply (
   ScriptVersion (ScriptV1, ScriptV2),
   TypedScriptEnvelope (TypedScriptEnvelope),
   Typename,
-  typeName,
+  plyTypeName,
  )
 import Ply.Plutarch.TypedWriter (TypedWriter, mkEnvelope)
 
@@ -68,12 +68,12 @@ tests =
     "mkEnvelope works as expected"
     [ testCase "@PValidator/@PMintingPolicy" baselineTest
     , testCase "@(PBool :--> _)" $
-        testHelper @'[PBool] [typeName @Bool]
+        testHelper @'[PBool] [plyTypeName @Bool]
     , testCase "@(PInteger :--> PUnit :--> PByteString :--> _)" $
         testHelper @'[PBool, PUnit, PByteString]
-          [ typeName @Bool
-          , typeName @()
-          , typeName @ByteString
+          [ plyTypeName @Bool
+          , plyTypeName @()
+          , plyTypeName @ByteString
           ]
     , testCase
         ( "@(PBuiltinPair PValue PCredential "
@@ -85,10 +85,10 @@ tests =
             , PPOSIXTime
             , PInterval PInteger
             ]
-          [ typeName @(Value, Credential)
-          , typeName @CurrencySymbol
-          , typeName @POSIXTime
-          , typeName @(Interval Integer)
+          [ plyTypeName @(Value, Credential)
+          , plyTypeName @CurrencySymbol
+          , plyTypeName @POSIXTime
+          , plyTypeName @(Interval Integer)
           ]
     , testCase
         ( "@(PBuiltinList PTxInInfo "
@@ -103,12 +103,12 @@ tests =
             , PMaybeData PByteString
             , PMap Sorted PDatumHash PDatum
             ]
-          [ typeName @[TxInInfo]
-          , typeName @TxOutRef
-          , typeName @(Extended Integer)
-          , typeName @PubKeyHash
-          , typeName @(Maybe ByteString)
-          , typeName @(PlutusMap.Map DatumHash Datum)
+          [ plyTypeName @[TxInInfo]
+          , plyTypeName @TxOutRef
+          , plyTypeName @(Extended Integer)
+          , plyTypeName @PubKeyHash
+          , plyTypeName @(Maybe ByteString)
+          , plyTypeName @(PlutusMap.Map DatumHash Datum)
           ]
     ]
 

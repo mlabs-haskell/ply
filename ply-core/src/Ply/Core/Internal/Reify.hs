@@ -1,10 +1,11 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Ply.Core.Internal.Reify (ReifyVersion (reifyVersion), ReifyRole (reifyRole), ReifyTypenames (reifyTypenames)) where
 
 import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy (Proxy))
-import Type.Reflection (Typeable)
 
-import Ply.Core.Typename (typeName)
+import Ply.Core.Typename (PlyTypeName, plyTypeName)
 import Ply.Core.Types
 
 type ReifyVersion :: ScriptVersion -> Constraint
@@ -34,5 +35,5 @@ instance ReifyRole MintingPolicyRole where
 instance ReifyTypenames '[] where
   reifyTypenames _ = []
 
-instance (Typeable x, ReifyTypenames xs) => ReifyTypenames (x : xs) where
-  reifyTypenames _ = typeName @x : reifyTypenames (Proxy @xs)
+instance (PlyTypeName x, ReifyTypenames xs) => ReifyTypenames (x : xs) where
+  reifyTypenames _ = plyTypeName @x : reifyTypenames (Proxy @xs)
