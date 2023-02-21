@@ -1,0 +1,11 @@
+{
+    "cborHex": "484701000022224981",
+    "description": "SampleB",
+    "params": [
+        "Ply.Core.Types:AsData#GHC.Num.Integer:Integer",
+        "Ply.Core.Types:AsData#PlutusLedgerApi.V1.Tx:TxOutRef"
+    ],
+    "rawHex": "4701000022224981",
+    "role": "MintingPolicyRole",
+    "version": "ScriptV1"
+}
