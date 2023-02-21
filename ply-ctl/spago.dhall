@@ -12,7 +12,9 @@
   , "tuples"
   , "arrays"
   , "uint"
+  , "node-process"
+  , "integers"
   ]
 , packages = ./packages.dhall
-, sources = [ "src/**/*.purs", "Main.purs" ]
+, sources = [ "src/**/*.purs", "application-test/*.purs"]
 }

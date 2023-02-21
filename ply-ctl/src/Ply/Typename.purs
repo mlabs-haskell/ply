@@ -4,7 +4,9 @@ names used by `ply-core`, which uses GHC's `Typeable`.
 -}
 module Ply.Typename (class PlyTypeName, plyTypeName) where
 
-import Type.Proxy (Proxy)
+import Ply.Types (AsData)
+import Prelude ((<>))
+import Type.Proxy (Proxy(Proxy))
 
 import Contract.Address (Address, PubKeyHash)
 import Contract.Time (POSIXTime)
@@ -23,6 +25,9 @@ import Data.Unit (Unit)
 class PlyTypeName :: forall k. k -> Constraint
 class PlyTypeName a where
   plyTypeName :: Proxy a -> String
+
+instance PlyTypeName AsData where
+  plyTypeName _ = "Ply.Core.Types:AsData"
 
 instance PlyTypeName Boolean where
   plyTypeName _ = "GHC.Types:Bool"
@@ -83,3 +88,7 @@ instance PlyTypeName DataHash where
 
 instance PlyTypeName RedeemerHash where
   plyTypeName _ = "PlutusLedgerApi.V1.Scripts:RedeemerHash"
+
+-- Instance for Algebric Data Types
+instance (PlyTypeName a, PlyTypeName b) => PlyTypeName (a b) where
+  plyTypeName _ = plyTypeName (Proxy :: Proxy a) <> "#" <> plyTypeName (Proxy :: Proxy b)

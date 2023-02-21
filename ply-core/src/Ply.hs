@@ -9,6 +9,7 @@ module Ply (
   PlyArg,
   readTypedScript,
   getPlutusVersion,
+  AsData (..),
   (#),
   (#$),
   (#!),
@@ -20,6 +21,7 @@ import Ply.Core.Class (PlyArg)
 import Ply.Core.TypedReader (readTypedScript)
 import Ply.Core.Typename (plyTypeName)
 import Ply.Core.Types (
+  AsData (..),
   ScriptReaderException (..),
   ScriptRole (MintingPolicyRole, ValidatorRole),
   ScriptVersion (..),

@@ -90,3 +90,22 @@ executable genPurs
   import:         common-ghc-opts
   hs-source-dirs: genPurs
   main-is:        Main.hs
+
+test-suite application
+  import:         common-lang
+  import:         common-configs
+  import:         common-deps
+  import:         common-ghc-opts
+  type:           exitcode-stdio-1.0
+  build-depends:
+    , base16-bytestring
+    , data-default
+    , filepath
+    , ply-plutarch
+    , process
+    , QuickCheck
+    , tasty
+    , tasty-quickcheck
+
+  hs-source-dirs: application-test
+  main-is:        Main.hs  

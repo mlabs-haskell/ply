@@ -7,17 +7,19 @@ import Data.ByteString (ByteString)
 import Data.Proxy (Proxy (Proxy))
 import Data.Text (Text)
 import qualified Data.Text as T
-import Type.Reflection (Typeable)
+import qualified Data.Text.IO as T
 
 import qualified Data.Map as Map
 import qualified PlutusLedgerApi.V2 as V2
-import Ply.Core.Typename (Typename (Typename), plyTypeName)
+import Ply (AsData)
+import Ply.Core.Typename (PlyTypeName, Typename (Typename), plyTypeName)
 
-data CTLEquivalent = forall a. Typeable a => CTLEquivalent Text Text (Proxy a)
+data CTLEquivalent = forall a. PlyTypeName a => CTLEquivalent Text Text (Proxy a)
 
 ctlEquivalents :: [CTLEquivalent]
 ctlEquivalents =
-  [ CTLEquivalent "" "Boolean" (Proxy @Bool)
+  [ CTLEquivalent "" "AsData" (Proxy @AsData)
+  , CTLEquivalent "" "Boolean" (Proxy @Bool)
   , CTLEquivalent "Data.BigInt" "BigInt" (Proxy @Integer)
   , CTLEquivalent "Data.Unit" "Unit" (Proxy @())
   , CTLEquivalent "Ctl.Internal.Types.RawBytes" "RawBytes" (Proxy @V2.BuiltinByteString)
@@ -76,7 +78,11 @@ gen c =
     , "-}"
     , "module Ply.Typename (class PlyTypeName, plyTypeName) where"
     , " "
-    , genImports [("Type.Proxy", "Proxy")]
+    , genImports
+        [ ("Type.Proxy", "Proxy (Proxy)")
+        , ("Prelude", "(<>)")
+        , ("Ply.Types", "AsData")
+        ]
     , " "
     , genCTLImports c
     , " "
@@ -85,8 +91,16 @@ gen c =
     , "  plyTypeName :: Proxy a -> String  "
     , " "
     , genInstances ctlEquivalents
+    , " "
+    , "-- Instance for Algebric Data Types"
+    , "instance (PlyTypeName a, PlyTypeName b) => PlyTypeName (a b) where"
+    , "  plyTypeName _ = plyTypeName (Proxy :: Proxy a) <> \"#\" <> plyTypeName (Proxy :: Proxy b)"
     ]
 
 main :: IO ()
 main = do
   putStrLn $ T.unpack $ gen ctlEquivalents
+
+  T.writeFile "./src/Ply/Typename.purs" $ gen ctlEquivalents
+
+-- $> main

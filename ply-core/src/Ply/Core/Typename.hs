@@ -9,7 +9,6 @@ module Ply.Core.Typename (
   plyTypeName',
   plyTypeName,
   Typename (Typename),
-  AsData (AsData),
 ) where
 
 import Control.Monad (when)
@@ -20,8 +19,6 @@ import Data.Text (Text)
 import qualified Data.Text as Txt
 import GHC.TypeLits
 import Type.Reflection (Typeable, tyConModule, tyConName, typeRep, typeRepTyCon)
-
-data AsData a = AsData a
 
 type NumTyArgs :: k -> Nat
 type family NumTyArgs a where

@@ -12,7 +12,7 @@ import Plutarch.Prelude
 import PlutusLedgerApi.V1 as LedgerV1
 import qualified PlutusTx.AssocMap as PlutusMap
 import qualified PlutusTx.Ratio as PlutusTx
-import Ply.Core.Typename (AsData)
+import Ply (AsData)
 
 -- | 'PlyArgOf' yields the corresponding Haskell type for a given Plutarch type.
 type PlyArgOf :: PType -> Type

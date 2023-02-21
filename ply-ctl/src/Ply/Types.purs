@@ -10,6 +10,7 @@ module Ply.Types
   , toLanguage
   , PlyError(..)
   , PlyError(..)
+  , AsData(..)
   ) where
 
 import Prelude
@@ -34,6 +35,8 @@ import Data.Show.Generic (genericShow)
 import Data.Generic.Rep (class Generic)
 import Contract.Scripts (PlutusScript)
 import Ply.TypeList (TyList)
+
+data AsData a = AsData a
 
 -- | Equivalent to `TypedScript` in `ply-core` except
 -- | this Purescript version handles error as well
