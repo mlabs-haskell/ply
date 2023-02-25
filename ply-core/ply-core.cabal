@@ -31,6 +31,7 @@ common common-deps
     , plutus-ledger-api
     , plutus-tx
     , serialise
+    , tagged
     , text
 
 common common-lang

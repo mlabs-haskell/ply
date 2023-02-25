@@ -15,6 +15,6 @@
   , "node-process"
   , "integers"
   ]
-, packages = ./packages.dhall
-, sources = [ "src/**/*.purs", "application-test/*.purs"]
+, packages = ./ply-ctl/packages.dhall
+, sources = [ "ply-ctl/src/**/*.purs", "ply-ctl/application-test/*.purs"]
 }
