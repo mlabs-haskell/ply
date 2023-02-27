@@ -173,23 +173,6 @@
         "type": "github"
       }
     },
-    "easy-purescript-nix": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1666686938,
-        "narHash": "sha256-/UOLRdnEhIOcxcm5ouOipOiSgHRzJde0ccAx4xB1dnU=",
-        "owner": "justinwoo",
-        "repo": "easy-purescript-nix",
-        "rev": "da7acb2662961fd355f0a01a25bd32bf33577fa8",
-        "type": "github"
-      },
-      "original": {
-        "owner": "justinwoo",
-        "repo": "easy-purescript-nix",
-        "rev": "da7acb2662961fd355f0a01a25bd32bf33577fa8",
-        "type": "github"
-      }
-    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -819,7 +802,6 @@
     "root": {
       "inputs": {
         "CHaP": "CHaP",
-        "easy-purescript-nix": "easy-purescript-nix",
         "flake-utils": "flake-utils",
         "haskellNix": "haskellNix",
         "nixpkgs": [

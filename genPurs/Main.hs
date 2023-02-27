@@ -7,7 +7,6 @@ import Data.ByteString (ByteString)
 import Data.Proxy (Proxy (Proxy))
 import Data.Text (Text)
 import qualified Data.Text as T
-import qualified Data.Text.IO as T
 
 import qualified Data.Map as Map
 import qualified PlutusLedgerApi.V2 as V2
@@ -100,7 +99,3 @@ gen c =
 main :: IO ()
 main = do
   putStrLn $ T.unpack $ gen ctlEquivalents
-
-  T.writeFile "./src/Ply/Typename.purs" $ gen ctlEquivalents
-
--- $> main
