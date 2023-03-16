@@ -39,7 +39,8 @@ import UntypedPlutusCore (DeBruijn, DefaultFun, DefaultUni, Program)
 import Ply.Core.Serialize.Script (serializeScriptCbor)
 import Ply.Core.Typename (Typename)
 
-data AsData a = AsData a
+-- | Wrapper for anytypes that is data encoded.
+newtype AsData a = AsData a
 
 type UPLCProgram = Program DeBruijn DefaultUni DefaultFun ()
 
