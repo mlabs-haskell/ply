@@ -157,6 +157,15 @@ main = do
 
 > Aside: Notice how I didn't use type applications, it got inferred from the surrounding context!
 
+## Offchain Projects in CTL
+
+[CTL](https://github.com/plutonomicon/cardano-transaction-lib) is a popular alternative to PlutusTx with it being
+directly compiled into Javascript. For projects using CTL to write offchain contracts, Ply typed envelopes can be 
+imported via [ply-ctl](https://github.com/mlabs-haskell/ply-ctl) with full type safety. For more information, 
+check README on ply-ctl.
+
+Note, ply-ctl will only work with scripts exported with Ply version `v0.5.0` or later.
+
 ## Building a TypedScript directly from Plutarch
 
 `Ply.Plutarch.writeTypedScript` is essentially a wrapper around `Ply.Plutarch.mkEnvelope`, which is then a wrapper around `Ply.Plutarch.toTypedScript`.
@@ -189,11 +198,10 @@ For this reason, Ply handles this case specially - you can read more on it [in t
 
 You can find a full example demonstrating the usage of Ply on a simple nft minting contract inside [example](./example/).
 
+Also, [Agora](https://github.com/liqwid-labs/agora) uses Ply for all of its script exportation.
+
 # Shortcomings/Pitfalls
 
-- No `PAsData` support yet. As a result, you can use, e.g `PCurrencySymbol` as an extra parameter, but not `PAsData PCurrencySymbol`.
-
-  `PData` as an extra parameter _is_ still supported though.
 - Does not support applying a function (pre-compiled) as an argument yet.
 - Several, more sophisticated optimizations are currently missing.
 - No support for PlutusTx.
