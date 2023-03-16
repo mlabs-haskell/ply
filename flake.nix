@@ -12,8 +12,15 @@
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
   };
 
-  outputs = inputs@{ self, nixpkgs, flake-utils, haskellNix, CHaP, pre-commit-hooks, ... }:
-    flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
+  outputs = { nixpkgs, flake-utils, haskellNix, CHaP, pre-commit-hooks, ... }:
+    let
+      # NOTE: nix flake (show | check) --allow-import-from-derivation --impure
+      systems =
+        if builtins.hasAttr "currentSystem" builtins
+        then [ builtins.currentSystem ]
+        else nixpkgs.lib.systems.flakeExposed;
+    in
+    flake-utils.lib.eachSystem systems (system:
       let
         pre-commit-check = pre-commit-hooks.lib.${system}.run {
           src = ./.;
@@ -29,6 +36,8 @@
             cabal-fmt.enable = true;
             fourmolu.enable = true;
             hlint.enable = true;
+            statix.enable = true;
+            deadnix.enable = true;
           };
         };
 
@@ -51,7 +60,7 @@
               haskell-language-server = { };
             };
             # Non-Haskell shell tools go here
-            buildInputs = with pkgs; [
+            nativeBuildInputs = with pkgs; [
               nixpkgs-fmt
               fd
               git
