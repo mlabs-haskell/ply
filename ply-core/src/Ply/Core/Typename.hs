@@ -1,30 +1,61 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE UndecidableInstances #-}
 
-module Ply.Core.Typename (Typename, typeName) where
+module Ply.Core.Typename (
+  NumTyArgs,
+  PlyTypeName',
+  PlyTypeName,
+  plyTypeName',
+  plyTypeName,
+  Typename (Typename),
+) where
 
 import Control.Monad (when)
 import Data.Aeson (FromJSON (parseJSON), ToJSON, Value (String))
 import Data.Aeson.Types (unexpected)
+import Data.Kind (Constraint)
 import Data.Text (Text)
 import qualified Data.Text as Txt
+import GHC.TypeLits
 import Type.Reflection (Typeable, tyConModule, tyConName, typeRep, typeRepTyCon)
+
+type NumTyArgs :: k -> Nat
+type family NumTyArgs a where
+  NumTyArgs (f x) = 1 + NumTyArgs f
+  NumTyArgs _ = 0
+
+type PlyTypeName :: k -> Constraint
+type PlyTypeName a = PlyTypeName' (NumTyArgs a) a
+
+class PlyTypeName' numArgs a where
+  plyTypeName' :: Typename
+
+instance Typeable a => PlyTypeName' 0 a where
+  plyTypeName' =
+    Typename
+      . Txt.pack
+      . toNewGHCIntegerModuleName
+      $ srcModuleName ++ ':' : tyConName tyCon
+    where
+      srcModuleName = toNewLedgerModuleName $ tyConModule tyCon
+      tyCon = typeRepTyCon $ typeRep @a
+
+instance (PlyTypeName a, PlyTypeName b) => PlyTypeName' c (a b) where
+  plyTypeName' = plyTypeName @a <> Typename "#" <> plyTypeName @b
 
 -- | Fully qualified type names.
 newtype Typename = Typename Text
   deriving stock (Eq, Show)
-  deriving newtype (ToJSON)
+  deriving newtype (Semigroup, Monoid, ToJSON)
 
 {- | Obtain the 'Typename' for a given type.
 
 No specific guarantees are given as per the representation of the 'Typename', as it is an internal detail.
 However, typenames of 2 different types (different module) won't be the same.
 -}
-typeName :: forall a. Typeable a => Typename
-typeName = Typename . Txt.pack . toNewGHCIntegerModuleName $ srcModuleName ++ ':' : tyConName tyCon
-  where
-    srcModuleName = toNewLedgerModuleName $ tyConModule tyCon
-    tyCon = typeRepTyCon $ typeRep @a
+plyTypeName :: forall a. PlyTypeName a => Typename
+plyTypeName = plyTypeName' @(NumTyArgs a) @a
 
 -- FIXME: Must have stricter parsing rules.
 instance FromJSON Typename where

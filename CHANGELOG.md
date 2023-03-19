@@ -1,3 +1,15 @@
+# 0.5.0 - More detailed parameter type encoding that supports data encoded parameters.
+
+- Add `PlyTypeName` and `plyTypeName` that replaces old `typeName` function. This provides mode detailed
+  type reflections: type applications, typelits, and modules name. 
+- Add `AsData`, an identity type that represents data encoded parameters. Parallels `PAsData` in Plutarch.
+- Add proper instances for `AsData` to make it work with `plyTypeName` and `applyTerm`. 
+- Add `unsafeUnTypedScript'`, same as `unsafeUnTypedScript` but using unboxed tuple.
+
+- Due to the changes made in `Ply.Core.Typename` module, scripts exported after v0.5.0 __will not__ be compatible
+  with scripts earlier versions of Ply. Users simply need to bump Ply version to make it compatible as there are
+  no API changes made
+
 # 0.4.0 -  Direct 'TypedScript' access and usage, and add Rational instances
 
 - Add `Ply.Core.Unsafe` to the public API, which allows direct access to `TypedScript`.

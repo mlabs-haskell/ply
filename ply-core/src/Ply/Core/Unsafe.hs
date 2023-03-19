@@ -1,6 +1,10 @@
 {-# LANGUAGE UnboxedTuples #-}
 
-module Ply.Core.Unsafe (unsafeTypedScript, unsafeUnTypedScript) where
+module Ply.Core.Unsafe (
+  unsafeTypedScript,
+  unsafeUnTypedScript,
+  unsafeUnTypedScript',
+) where
 
 import Ply.Core.Types
 
@@ -11,3 +15,7 @@ unsafeTypedScript = TypedScriptConstr
 -- | Unconditionally extract from 'TypedScript', thereby forgetting all its type information.
 unsafeUnTypedScript :: TypedScript r a -> (# ScriptVersion, UPLCProgram #)
 unsafeUnTypedScript (TypedScriptConstr ver scrpt) = (# ver, scrpt #)
+
+-- | Unconditionally extract from 'TypedScript', thereby forgetting all its type information.
+unsafeUnTypedScript' :: TypedScript r a -> (ScriptVersion, UPLCProgram)
+unsafeUnTypedScript' (TypedScriptConstr ver scrpt) = (ver, scrpt)

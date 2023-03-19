@@ -40,6 +40,7 @@
             deadnix.enable = true;
           };
         };
+
         pkgs = import nixpkgs {
           inherit system;
           overlays = [
@@ -47,6 +48,7 @@
           ];
           inherit (haskellNix) config;
         };
+
         ply = pkgs.haskell-nix.cabalProject' {
           src = ./.;
           compiler-nix-name = "ghc925";

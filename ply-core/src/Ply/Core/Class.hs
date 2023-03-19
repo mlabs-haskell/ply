@@ -11,6 +11,7 @@ import Data.Kind (Constraint, Type)
 import qualified Data.Map.Strict as M
 import Data.Text (Text)
 import GHC.TypeLits (ErrorMessage (ShowType, Text))
+import Ply.Core.Types (AsData (AsData))
 
 import PlutusCore (DefaultUni, Includes, Some, ValueOf)
 import qualified PlutusCore as PLC
@@ -401,3 +402,8 @@ instance PlyArg RedeemerHash where
     where
       bs = fromBuiltin x
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
+
+instance (PlyArg a, ToDataConstraint a) => PlyArg (AsData a) where
+  type UPLCRep (AsData a) = Data
+  toBuiltinArg (AsData x) = toBuiltinArgData x
+  toBuiltinArgData = toBuiltinArg
