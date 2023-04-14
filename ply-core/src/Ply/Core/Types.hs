@@ -11,6 +11,7 @@ module Ply.Core.Types (
   AsData (..),
 ) where
 
+import Control.Applicative ((<|>))
 import Control.Exception (Exception)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as Base16
@@ -90,12 +91,17 @@ cborToScript x = deserialiseUPLC <$> CBOR.decodeFull' x
 instance FromJSON TypedScriptEnvelope where
   parseJSON (Object v) =
     TypedScriptEnvelope
-      <$> v .: "version"
+      <$> version
       <*> v .: "role"
       <*> v .: "params"
       <*> v .: "description"
       <*> (parseAndDeserialize =<< v .: "cborHex")
     where
+      version = v .: "version" <|> (parseType =<< v .: "type")
+      parseType "PlutusScriptV1" = pure ScriptV1
+      parseType "PlutusScriptV2" = pure ScriptV2
+      parseType s = fail $ s <> " is not a valid ScriptVersion"
+
       parseAndDeserialize v =
         parseJSON v
           >>= either fail (either (fail . show) pure . cborToScript)
@@ -111,6 +117,7 @@ instance ToJSON TypedScriptEnvelope where
     toJSON $
       object
         [ "version" .= ver
+        , "type" .= versionStr
         , "role" .= rol
         , "params" .= params
         , "description" .= desc
@@ -121,3 +128,4 @@ instance ToJSON TypedScriptEnvelope where
       serializedScript = serialiseUPLC script
       cborHex = serializeScriptCbor serializedScript
       rawHex = SBS.fromShort serializedScript
+      versionStr = "Plutus" <> show ver
