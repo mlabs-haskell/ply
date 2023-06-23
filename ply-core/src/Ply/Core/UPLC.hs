@@ -1,8 +1,6 @@
 -- | $module UPLC helpers.
 module Ply.Core.UPLC (applyConstant, applyConstant') where
 
-import Data.String (IsString)
-
 import PlutusCore (Some (Some), ValueOf (ValueOf))
 import qualified PlutusCore as PLC
 import UntypedPlutusCore (
@@ -11,15 +9,15 @@ import UntypedPlutusCore (
   DefaultUni,
   Index,
   Program (Program),
-  Term (Apply, Builtin, Constant, Delay, Error, Force, LamAbs, Var),
+  Term (Apply, Constant, Delay, Force, LamAbs, Var),
   Version,
  )
 
-pattern DefaultVersion :: Version ()
+pattern DefaultVersion :: Version
 pattern DefaultVersion <-
-  ((== PLC.defaultVersion ()) -> True)
+  ((== PLC.latestVersion) -> True)
   where
-    DefaultVersion = PLC.defaultVersion ()
+    DefaultVersion = PLC.latestVersion
 
 {- | Apply a 'DefaultUni' constant to given UPLC program, inlining if necessary.
  TODO: Subst optimizations when 'Apply'ing over non 'LamAbs' stuff as well, e.g chain of 'Apply'ies.
@@ -52,17 +50,6 @@ applyConstant' (Program () v _) _ =
       ++ show DefaultVersion
       ++ "\nactual version: "
       ++ show v
-
--- | Name of UPLC terms, for usage in friendly error messages.
-_termIdOf :: IsString p => Term name uni fun () -> p
-_termIdOf (Constant () _) = "Constant"
-_termIdOf (Builtin () _) = "Builtin"
-_termIdOf (Error ()) = "Error"
-_termIdOf (Var () _) = "Var"
-_termIdOf (Apply () _ _) = "Apply"
-_termIdOf (LamAbs () _ _) = "LamAbs"
-_termIdOf (Delay () _) = "Delay"
-_termIdOf (Force () _) = "Force"
 
 isSmallConstant :: Some (ValueOf DefaultUni) -> Bool
 isSmallConstant c = case c of
