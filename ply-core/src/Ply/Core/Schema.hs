@@ -138,18 +138,14 @@ class PLC.DefaultUni `PLC.HasTermLevel` DefaultUniTarget a => ToPLCDefaultUni a 
   type DefaultUniTarget a :: Type
   type DefaultUniTarget a = SchemaInstanceOf a
   toPLCDefaultUni :: SchemaInstanceOf a -> DefaultUniTarget a
-
-instance ToPLCDefaultUni PlyInt where
+  default toPLCDefaultUni :: SchemaInstanceOf a ~ DefaultUniTarget a => SchemaInstanceOf a -> DefaultUniTarget a
   toPLCDefaultUni = id
 
-instance ToPLCDefaultUni PlyByteStr where
-  toPLCDefaultUni = id
-
-instance ToPLCDefaultUni PlyStr where
-  toPLCDefaultUni = id
-
-instance ToPLCDefaultUni PlyUnit where
-  toPLCDefaultUni = id
+instance ToPLCDefaultUni PlyInt
+instance ToPLCDefaultUni PlyByteStr
+instance ToPLCDefaultUni PlyStr
+instance ToPLCDefaultUni PlyUnit
+instance ToPLCDefaultUni PlyBool
 
 instance ToPLCDefaultUni a => ToPLCDefaultUni (PlyListOf a) where
   type DefaultUniTarget (PlyListOf a) = [DefaultUniTarget a]
@@ -158,9 +154,6 @@ instance ToPLCDefaultUni a => ToPLCDefaultUni (PlyListOf a) where
 instance (ToPLCDefaultUni a, ToPLCDefaultUni b) => ToPLCDefaultUni (PlyPairOf a b) where
   type DefaultUniTarget (PlyPairOf a b) = (DefaultUniTarget a, DefaultUniTarget b)
   toPLCDefaultUni = bimap toPLCDefaultUni toPLCDefaultUni
-
-instance ToPLCDefaultUni PlyBool where
-  toPLCDefaultUni = id
 
 instance ToPLCDefaultUni (PlyD PlyDI) where
   type DefaultUniTarget (PlyD PlyDI) = PlutusData.Data

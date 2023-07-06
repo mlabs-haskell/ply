@@ -43,6 +43,7 @@ common common-lang
     ConstrainedClassMethods
     ConstraintKinds
     DataKinds
+    DefaultSignatures
     DeriveAnyClass
     DeriveDataTypeable
     DeriveFoldable
