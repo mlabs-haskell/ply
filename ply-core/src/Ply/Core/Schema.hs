@@ -20,9 +20,9 @@ import Data.ByteString (ByteString)
 import Data.Kind (Constraint, Type)
 import Data.Text (Text)
 
-import Data.SOP (All, All2, Compose, NS (..), Proxy (Proxy), SOP (..))
+import Data.SOP (All, All2, Compose, Proxy (Proxy), SOP (..))
 import Data.SOP.BasicFunctors (K (K))
-import Data.SOP.NP (NP, cmap_NP, collapse_NP)
+import Data.SOP.NP (cmap_NP, collapse_NP)
 import Data.SOP.NS (ccata_NS, index_NS)
 
 import qualified PlutusCore as PLC
@@ -93,8 +93,8 @@ wrapDataByteStr = DataSchemaInstanceOf . DataByteStr
 wrapDataList :: [DataSchemaInstanceOf a] -> DataSchemaInstanceOf ( 'PlyDL a)
 wrapDataList = DataSchemaInstanceOf . DataList
 
-wrapDataSum :: NS (NP DataSchemaInstanceOf) xss -> DataSchemaInstanceOf ( 'PlyDS xss)
-wrapDataSum = DataSchemaInstanceOf . DataSum . SOP
+wrapDataSum :: SOP DataSchemaInstanceOf xss -> DataSchemaInstanceOf ( 'PlyDS xss)
+wrapDataSum = DataSchemaInstanceOf . DataSum
 
 type HasSchemaInstance :: PlySchema -> Constraint
 class HasSchemaInstance a where

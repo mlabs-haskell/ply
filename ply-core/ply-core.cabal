@@ -27,6 +27,7 @@ common common-deps
     , bytestring
     , cardano-binary
     , containers
+    , generics-sop
     , plutus-core
     , plutus-ledger-api
     , plutus-tx
