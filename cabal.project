@@ -9,7 +9,7 @@ repository cardano-haskell-packages
     c00aae8461a256275598500ea0e187588c35a5d5d7454fb57eac18d9edb86a56
     d4a35cd3121aa00d18544bb0ac01c3e1691d618f462c46129271bccf39f7e8ee
 
--- repeating the index-state for hackage to work around hackage.nix parsing limitation
+-- Repeating the index-state for hackage to work around hackage.nix parsing limitation.
 index-state: 2023-06-06T00:00:00Z
 
 index-state:
@@ -17,10 +17,10 @@ index-state:
   , cardano-haskell-packages 2023-06-05T06:39:32Z
 
 packages:
-  ./ply-plutarch
+--  ./ply-plutarch
   ./ply-core
-  ./genPurs
-  ./example
+--  ./genPurs
+--  ./example
 
 test-show-details: direct
 
