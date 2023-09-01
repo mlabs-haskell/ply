@@ -34,7 +34,7 @@ import Data.Aeson.Types (
 import Cardano.Binary as CBOR (DecoderError)
 import qualified Cardano.Binary as CBOR
 
-import PlutusLedgerApi.Common (deserialiseUPLC, serialiseUPLC)
+import PlutusLedgerApi.Common (uncheckedDeserialiseUPLC, serialiseUPLC)
 import UntypedPlutusCore (DeBruijn, DefaultFun, DefaultUni, Program)
 
 import Ply.Core.Serialize.Script (serializeScriptCbor)
@@ -86,7 +86,7 @@ data TypedScriptEnvelope = TypedScriptEnvelope
   deriving stock (Eq, Show)
 
 cborToScript :: ByteString -> Either DecoderError UPLCProgram
-cborToScript x = deserialiseUPLC <$> CBOR.decodeFull' x
+cborToScript x = uncheckedDeserialiseUPLC <$> CBOR.decodeFull' x
 
 instance FromJSON TypedScriptEnvelope where
   parseJSON (Object v) =
