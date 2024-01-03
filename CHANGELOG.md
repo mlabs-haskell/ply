@@ -1,3 +1,5 @@
+# 0.6.0 - Bump plutus version to 1.7.0.0
+
 # 0.5.0 - More detailed parameter type encoding that supports data encoded parameters.
 
 - Add `PlyTypeName` and `plyTypeName` that replaces old `typeName` function. This provides mode detailed
