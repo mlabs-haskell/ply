@@ -51,7 +51,7 @@
 
         ply = pkgs.haskell-nix.cabalProject' {
           src = ./.;
-          compiler-nix-name = "ghc925";
+          compiler-nix-name = "ghc963";
           shell = {
             # This is used by `nix develop .` to open a shell for use with
             # `cabal`, `hlint` and `haskell-language-server` etc

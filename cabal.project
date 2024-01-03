@@ -1,4 +1,8 @@
-index-state: 2022-10-31T00:00:00Z
+packages:
+  ./ply-plutarch
+  ./ply-core
+  ./genPurs
+  ./example
 
 repository cardano-haskell-packages
   url: https://input-output-hk.github.io/cardano-haskell-packages
@@ -11,28 +15,20 @@ repository cardano-haskell-packages
     c00aae8461a256275598500ea0e187588c35a5d5d7454fb57eac18d9edb86a56
     d4a35cd3121aa00d18544bb0ac01c3e1691d618f462c46129271bccf39f7e8ee
 
-index-state: cardano-haskell-packages 2022-10-31T00:00:00Z
-
-packages:
-  ./ply-plutarch
-  ./ply-core
-  ./genPurs
-  ./example
+source-repository-package
+  type: git
+  --sha256: sha256-aeaZMW5Y3r5GdSyrfrrKOuGahcL5MVkDUNggunbmtv0=
+  location: https://github.com/Plutonomicon/plutarch-plutus.git
+  tag: 288d9140468ae98abe1c9a4c0bb1c19a82eb7cd6
+  subdir:
+    .
+    plutarch-extra
 
 write-ghc-environment-files: never
 
 tests: true
 
 test-show-details: direct
-
-source-repository-package
-  type: git
-  --sha256: sha256-K4FNHQUpq4V0XkP1AUfnwFtOc2BMK007dv9aAgFStVs=
-  location: https://github.com/Plutonomicon/plutarch-plutus.git
-  tag: 95e40b42a1190191d0a07e3e4e938b72e6f75268
-  subdir:
-    .
-    plutarch-extra
 
 constraints:
   dependent-sum >= 0.7.1.0
