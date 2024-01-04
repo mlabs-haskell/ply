@@ -5,6 +5,7 @@ import Data.String (IsString)
 
 import PlutusCore (Some (Some), ValueOf (ValueOf))
 import qualified PlutusCore as PLC
+import PlutusCore.Version (plcVersion100)
 import UntypedPlutusCore (
   DeBruijn (DeBruijn),
   DefaultFun,
@@ -17,9 +18,9 @@ import UntypedPlutusCore (
 
 pattern DefaultVersion :: Version
 pattern DefaultVersion <-
-  ((== PLC.latestVersion) -> True)
+  ((== plcVersion100) -> True)
   where
-    DefaultVersion = PLC.latestVersion
+    DefaultVersion = plcVersion100
 
 {- | Apply a 'DefaultUni' constant to given UPLC program, inlining if necessary.
  TODO: Subst optimizations when 'Apply'ing over non 'LamAbs' stuff as well, e.g chain of 'Apply'ies.
