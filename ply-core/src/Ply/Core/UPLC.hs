@@ -5,21 +5,22 @@ import Data.String (IsString)
 
 import PlutusCore (Some (Some), ValueOf (ValueOf))
 import qualified PlutusCore as PLC
+import PlutusCore.Version (plcVersion100)
 import UntypedPlutusCore (
   DeBruijn (DeBruijn),
   DefaultFun,
   DefaultUni,
   Index,
   Program (Program),
-  Term (Apply, Builtin, Constant, Delay, Error, Force, LamAbs, Var),
+  Term (Apply, Builtin, Case, Constant, Constr, Delay, Error, Force, LamAbs, Var),
   Version,
  )
 
-pattern DefaultVersion :: Version ()
+pattern DefaultVersion :: Version
 pattern DefaultVersion <-
-  ((== PLC.defaultVersion ()) -> True)
+  ((== plcVersion100) -> True)
   where
-    DefaultVersion = PLC.defaultVersion ()
+    DefaultVersion = plcVersion100
 
 {- | Apply a 'DefaultUni' constant to given UPLC program, inlining if necessary.
  TODO: Subst optimizations when 'Apply'ing over non 'LamAbs' stuff as well, e.g chain of 'Apply'ies.
@@ -63,6 +64,8 @@ _termIdOf (Apply () _ _) = "Apply"
 _termIdOf (LamAbs () _ _) = "LamAbs"
 _termIdOf (Delay () _) = "Delay"
 _termIdOf (Force () _) = "Force"
+_termIdOf (Constr () _ _) = "Constr"
+_termIdOf (Case () _ _) = "Case"
 
 isSmallConstant :: Some (ValueOf DefaultUni) -> Bool
 isSmallConstant c = case c of
