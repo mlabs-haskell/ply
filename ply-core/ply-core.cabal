@@ -27,10 +27,12 @@ common common-deps
     , bytestring
     , cardano-binary
     , containers
+    , generics-sop
     , plutus-core
     , plutus-ledger-api
     , plutus-tx
     , serialise
+    , sop-core
     , tagged
     , text
 
@@ -42,6 +44,7 @@ common common-lang
     ConstrainedClassMethods
     ConstraintKinds
     DataKinds
+    DefaultSignatures
     DeriveAnyClass
     DeriveDataTypeable
     DeriveFoldable
@@ -100,6 +103,7 @@ library
     Ply.Core.Class
     Ply.Core.Deserialize
     Ply.Core.Internal.Reify
+    Ply.Core.Schema
     Ply.Core.Serialize
     Ply.Core.Serialize.Script
     Ply.Core.TypedReader
