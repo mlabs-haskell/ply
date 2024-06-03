@@ -6,7 +6,7 @@ import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Short as SBS
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
-import PlutusLedgerApi.V1
+import PlutusLedgerApi.V2
 import Ply
 import UntypedPlutusCore
 

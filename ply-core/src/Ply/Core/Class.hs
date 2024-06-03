@@ -13,7 +13,7 @@ import Data.Text (Text)
 import GHC.TypeLits (ErrorMessage (ShowType, Text))
 import Ply.Core.Types (AsData (AsData))
 
-import PlutusCore (DefaultUni, Includes, Some, ValueOf)
+import PlutusCore (DefaultUni, HasTermLevel, Some, ValueOf)
 import qualified PlutusCore as PLC
 import qualified PlutusTx.AssocMap as PlutusMap
 
@@ -53,7 +53,7 @@ As a result, 'toBuiltinArg' is partial for types that don't hold their invariant
 
  4. 'toBuiltinArgData' implementation must perform the same validations/normalizations as 'toBuiltinArg'.
 -}
-class DefaultUni `Includes` UPLCRep a => PlyArg a where
+class DefaultUni `HasTermLevel` UPLCRep a => PlyArg a where
   type UPLCRep a :: Type
   type ToDataConstraint a :: Constraint
   type ToDataConstraint a = ()
