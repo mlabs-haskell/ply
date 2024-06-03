@@ -1,3 +1,8 @@
+# 0.7.0 - Bump plutus version to 1.23.0.0
+
+- Renamed `ValidatorRole` and `MintingPolicyRole` to `ThreeArgumentScript` and `TwoArgumentScript`.
+- Dropped V1 support for `Ply.Plutarch`.
+
 # 0.6.0 - Bump plutus version to 1.7.0.0
 
 # 0.5.0 - More detailed parameter type encoding that supports data encoded parameters.

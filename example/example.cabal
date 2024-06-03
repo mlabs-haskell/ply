@@ -35,6 +35,7 @@ common common-deps
   build-depends:
     , base
     , plutarch
+    , plutarch-ledger-api
     , plutus-core
     , plutus-ledger-api
     , plutus-tx

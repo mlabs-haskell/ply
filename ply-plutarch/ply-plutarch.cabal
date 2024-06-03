@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name:          ply-plutarch
-version:       0.6.0
+version:       0.7.0
 author:        Chase <chase@mlabs.city>
 license:       MIT
 
@@ -24,6 +24,7 @@ common common-deps
     , bytestring
     , plutarch
     , plutarch-extra
+    , plutarch-ledger-api
     , plutus-ledger-api
     , plutus-tx
     , ply-core

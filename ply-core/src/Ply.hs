@@ -23,7 +23,7 @@ import Ply.Core.Typename (plyTypeName)
 import Ply.Core.Types (
   AsData (..),
   ScriptReaderException (..),
-  ScriptRole (MintingPolicyRole, ValidatorRole),
+  ScriptRole (ThreeArgumentScript, TwoArgumentScript),
   ScriptVersion (..),
   TypedScript (TypedScriptConstr),
   TypedScriptEnvelope (..),
@@ -47,7 +47,7 @@ For example, if using 'plutus-apps' - you can create a function that determines 
 `plutusV1OtherScript` or `plutusV2OtherScript` in your script lookups:
 
 @
-unifiedOtherScript :: TypedScript ValidatorRole '[] -> ScriptLookups a
+unifiedOtherScript :: TypedScript ThreeArgumentScript '[] -> ScriptLookups a
 unifiedOtherScript (TypedScript ver s) = (if ver == ScriptV1 then plutusV1OtherScript else plutusV2OtherScript) vald
   where
     ver = Ply.getPlutusVersion ts
