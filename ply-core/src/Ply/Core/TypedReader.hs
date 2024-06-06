@@ -12,7 +12,7 @@ import Ply.Core.Deserialize (readEnvelope)
 import Ply.Core.Internal.Reify
 import Ply.Core.Types (
   ScriptReaderException (ScriptRoleError, ScriptTypeError),
-  ScriptRole (ValidatorRole),
+  ScriptRole (ThreeArgumentScript),
   TypedScript (TypedScriptConstr),
   TypedScriptEnvelope (..),
  )
@@ -34,7 +34,7 @@ mkTypedScript ::
   TypedScriptEnvelope ->
   Either ScriptReaderException (TypedScript rl params)
 mkTypedScript (TypedScriptEnvelope ver rol params _ prog) = do
-  unless (rol == reifyRole (Proxy @rl)) . Left $ ScriptRoleError ValidatorRole rol
+  unless (rol == reifyRole (Proxy @rl)) . Left $ ScriptRoleError ThreeArgumentScript rol
   let expectedParams = reifyTypenames $ Proxy @params
   unless (expectedParams == params) . Left $ ScriptTypeError expectedParams params
   pure $ TypedScriptConstr ver prog

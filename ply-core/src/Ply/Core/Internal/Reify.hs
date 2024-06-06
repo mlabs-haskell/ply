@@ -26,11 +26,11 @@ instance ReifyVersion ScriptV1 where
 instance ReifyVersion ScriptV2 where
   reifyVersion _ = ScriptV2
 
-instance ReifyRole ValidatorRole where
-  reifyRole _ = ValidatorRole
+instance ReifyRole ThreeArgumentScript where
+  reifyRole _ = ThreeArgumentScript
 
-instance ReifyRole MintingPolicyRole where
-  reifyRole _ = MintingPolicyRole
+instance ReifyRole TwoArgumentScript where
+  reifyRole _ = TwoArgumentScript
 
 instance ReifyTypenames '[] where
   reifyTypenames _ = []

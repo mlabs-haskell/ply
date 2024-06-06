@@ -53,7 +53,7 @@ data TypedScript r a = TypedScriptConstr !ScriptVersion !UPLCProgram
   deriving stock (Show)
 
 -- | Script role: either a validator or a minting policy.
-data ScriptRole = ValidatorRole | MintingPolicyRole
+data ScriptRole = ThreeArgumentScript | TwoArgumentScript
   deriving stock (Bounded, Enum, Eq, Ord, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 

@@ -10,9 +10,10 @@
       flake = false;
     };
     pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
+    iohk-nix.url = "github:input-output-hk/iohk-nix";
   };
 
-  outputs = { nixpkgs, flake-utils, haskellNix, CHaP, pre-commit-hooks, ... }:
+  outputs = { nixpkgs, flake-utils, haskellNix, CHaP, pre-commit-hooks, iohk-nix, ... }:
     let
       # NOTE: nix flake (show | check) --allow-import-from-derivation --impure
       systems =
@@ -45,13 +46,15 @@
           inherit system;
           overlays = [
             haskellNix.overlay
+            iohk-nix.overlays.crypto
+            iohk-nix.overlays.haskell-nix-crypto
           ];
           inherit (haskellNix) config;
         };
 
         ply = pkgs.haskell-nix.cabalProject' {
           src = ./.;
-          compiler-nix-name = "ghc963";
+          compiler-nix-name = "ghc96";
           shell = {
             # This is used by `nix develop .` to open a shell for use with
             # `cabal`, `hlint` and `haskell-language-server` etc
