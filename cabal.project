@@ -33,7 +33,6 @@ test-show-details: direct
 
 constraints:
   , dependent-sum >= 0.7.1.0
-  , plutus-core == 1.23.0.0
 
 package nothunks
   flags: +vector
