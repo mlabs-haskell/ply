@@ -4,9 +4,8 @@ module Ply.Plutarch.Class (PlyArgOf) where
 
 import Data.ByteString (ByteString)
 import Data.Text (Text)
-
-import Plutarch.Extra.RationalData (PRationalData)
-import Plutarch.LedgerApi
+import Plutarch.LedgerApi.Utils (PMaybeData, PRationalData)
+import Plutarch.LedgerApi.V2
 import Plutarch.Prelude
 import PlutusLedgerApi.V2 as LedgerV2
 import qualified PlutusTx.AssocMap as PlutusMap

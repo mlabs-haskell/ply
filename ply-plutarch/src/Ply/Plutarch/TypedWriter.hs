@@ -18,7 +18,7 @@ import qualified Data.Text as Txt
 import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 
 import Plutarch (Config, compile)
-import Plutarch.LedgerApi (PScriptContext)
+import Plutarch.LedgerApi.V2 (PScriptContext)
 import Plutarch.Prelude
 import Plutarch.Script (unScript)
 
