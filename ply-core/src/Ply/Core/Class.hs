@@ -153,7 +153,7 @@ instance PlyArg Value where
       ( \(cs, tkMap) ->
           ( toBuiltinArgData cs
           , toBuiltinArgData
-              . PlutusMap.fromList
+              . PlutusMap.unsafeFromList
               $ map (bimap toBuiltinArg toBuiltinArg) tkMap
           )
       )

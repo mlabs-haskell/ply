@@ -4,15 +4,15 @@ module Main (main) where
 
 import Data.ByteString (ByteString)
 
-import Test.Tasty
-import Test.Tasty.HUnit
-
 import Plutarch (Config (Tracing), LogLevel (LogInfo), TracingMode (DetTracing))
-import Plutarch.LedgerApi
+import Plutarch.LedgerApi.Utils (PMaybeData)
+import Plutarch.LedgerApi.V2
 import Plutarch.Prelude
 import Plutarch.Unsafe (punsafeCoerce)
 import PlutusLedgerApi.V2
 import qualified PlutusTx.AssocMap as PlutusMap
+import Test.Tasty
+import Test.Tasty.HUnit
 
 import Ply (
   ScriptRole (ThreeArgumentScript, TwoArgumentScript),
