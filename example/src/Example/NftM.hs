@@ -1,6 +1,6 @@
 module Example.NftM (nftMp) where
 
-import Plutarch.LedgerApi
+import Plutarch.LedgerApi.V2
 import qualified Plutarch.LedgerApi.Value as PValue
 import Plutarch.Prelude
 
