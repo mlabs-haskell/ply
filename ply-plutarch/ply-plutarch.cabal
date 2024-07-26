@@ -21,6 +21,7 @@ common common-ghc-opts
 common common-deps
   build-depends:
     , base
+    , base16-bytestring
     , bytestring
     , plutarch
     , plutarch-extra
