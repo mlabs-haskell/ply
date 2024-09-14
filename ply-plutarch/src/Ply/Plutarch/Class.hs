@@ -4,12 +4,10 @@ module Ply.Plutarch.Class (PlyArgOf) where
 
 import Data.ByteString (ByteString)
 import Data.Text (Text)
-
-import Plutarch.Api.V1 as PLedgerV1
-import Plutarch.Api.V1.Scripts (PScriptHash)
-import Plutarch.Extra.RationalData (PRationalData)
+import Plutarch.LedgerApi.Utils (PMaybeData, PRationalData)
+import Plutarch.LedgerApi.V2
 import Plutarch.Prelude
-import PlutusLedgerApi.V1 as LedgerV1
+import PlutusLedgerApi.V2 as LedgerV2
 import qualified PlutusTx.AssocMap as PlutusMap
 import qualified PlutusTx.Ratio as PlutusTx
 import Ply (AsData)
@@ -56,7 +54,7 @@ type instance PlyArgOf PPubKeyHash = PubKeyHash
 
 type instance PlyArgOf PScriptHash = ScriptHash
 
-type instance PlyArgOf PPOSIXTime = POSIXTime
+type instance PlyArgOf PPosixTime = POSIXTime
 
 type instance PlyArgOf (PExtended a) = Extended (PlyArgOf a)
 
@@ -72,15 +70,15 @@ type instance PlyArgOf PTxId = TxId
 
 type instance PlyArgOf PTxOutRef = TxOutRef
 
-type instance PlyArgOf PLedgerV1.PTxOut = LedgerV1.TxOut
+type instance PlyArgOf PTxOut = LedgerV2.TxOut
 
-type instance PlyArgOf PLedgerV1.PTxInInfo = LedgerV1.TxInInfo
+type instance PlyArgOf PTxInInfo = LedgerV2.TxInInfo
 
-type instance PlyArgOf PLedgerV1.PTxInfo = LedgerV1.TxInfo
+type instance PlyArgOf PTxInfo = LedgerV2.TxInfo
 
 type instance PlyArgOf PScriptPurpose = ScriptPurpose
 
-type instance PlyArgOf PLedgerV1.PScriptContext = LedgerV1.ScriptContext
+type instance PlyArgOf PScriptContext = LedgerV2.ScriptContext
 
 type instance PlyArgOf PDatum = Datum
 

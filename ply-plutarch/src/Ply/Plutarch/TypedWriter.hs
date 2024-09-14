@@ -12,20 +12,19 @@ module Ply.Plutarch.TypedWriter (
 ) where
 
 import Control.Exception (throwIO)
-import Data.Kind (Type)
 import Data.Proxy (Proxy (Proxy))
 import Data.Text (Text)
 import qualified Data.Text as Txt
 import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 
-import Plutarch (ClosedTerm, Config, PType, compile, type (:-->))
-import qualified Plutarch.Api.V1 as PLedgerV1 (PMintingPolicy, PValidator)
-import qualified Plutarch.Api.V2 as PLedgerV2 (PMintingPolicy, PValidator)
+import Plutarch (Config, compile)
+import Plutarch.LedgerApi.V2 (PScriptContext)
+import Plutarch.Prelude
 import Plutarch.Script (unScript)
 
 import Ply (
   ScriptRole (MintingPolicyRole, ValidatorRole),
-  ScriptVersion (ScriptV1, ScriptV2),
+  ScriptVersion (ScriptV2),
   TypedScript,
   TypedScriptEnvelope (..),
  )
@@ -101,7 +100,9 @@ toTypedScript conf pterm = unsafeTypedScript ver <$> scrptEith
     scrptEith = unScript <$> compile conf pterm
     ver = reifyVersion $ Proxy @(VersionOf ptype)
 
-{- | Given a Plutarch function type ending in 'PValidator' or 'PMintingPolicy', determine its extra parameters.
+{- | Given a Plutarch function type ending in
+  'PData :--> PData :--> PScriptContext :--> POpaque' or
+  'PData :--> PScriptContext :--> POpaque', determine its extra parameters.
 
 >>> :k! ParamsOf (PData :--> PData :--> PScriptContext :--> POpaque)
 []
@@ -121,21 +122,19 @@ Currently, the Validator choice is given precedence. If you wanted to use the al
 -}
 type ParamsOf :: PType -> [PType]
 type family ParamsOf a where
-  ParamsOf PLedgerV1.PValidator = '[]
-  ParamsOf PLedgerV1.PMintingPolicy = '[]
-  ParamsOf PLedgerV2.PValidator = '[]
-  ParamsOf PLedgerV2.PMintingPolicy = '[]
+  ParamsOf (PData :--> PData :--> PScriptContext :--> POpaque) = '[]
+  ParamsOf (PData :--> PScriptContext :--> POpaque) = '[]
   ParamsOf (a :--> rest) = a : ParamsOf rest
   ParamsOf wrong =
     TypeError
-      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType PLedgerV1.PValidator
-          :$$: 'Text "Or with: " :<>: ShowType PLedgerV1.PMintingPolicy
-          :$$: 'Text "Or with: " :<>: ShowType PLedgerV2.PValidator
-          :$$: 'Text "Or with: " :<>: ShowType PLedgerV2.PMintingPolicy
+      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType (PData :--> PData :--> PScriptContext :--> POpaque)
+          :$$: 'Text "Or with: " :<>: ShowType (PData :--> PScriptContext :--> POpaque)
           :$$: 'Text "But reached: " :<>: ShowType wrong
       )
 
-{- | Given a Plutarch function type ending in 'PValidator' or 'PMintingPolicy', determine its 'ScriptRole'.
+{- | Given a Plutarch function type ending in
+  'PData :--> PData :--> PScriptContext :--> POpaque' or
+  'PData :--> PScriptContext :--> POpaque', determine its 'ScriptRole'.
 
 >>> :k! RoleOf (PData :--> PData :--> PScriptContext :--> POpaque)
 ValidatorRole
@@ -155,45 +154,29 @@ Currently, the Validator choice is given precedence. If you wanted to use the al
 -}
 type RoleOf :: PType -> ScriptRole
 type family RoleOf a where
-  RoleOf PLedgerV1.PValidator = ValidatorRole
-  RoleOf PLedgerV1.PMintingPolicy = MintingPolicyRole
-  RoleOf PLedgerV2.PValidator = ValidatorRole
-  RoleOf PLedgerV2.PMintingPolicy = MintingPolicyRole
+  RoleOf (PData :--> PData :--> PScriptContext :--> POpaque) = ValidatorRole
+  RoleOf (PData :--> PScriptContext :--> POpaque) = MintingPolicyRole
   RoleOf (_ :--> rest) = RoleOf rest
   RoleOf wrong =
     TypeError
-      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType PLedgerV1.PValidator
-          :$$: 'Text "Or with: " :<>: ShowType PLedgerV1.PMintingPolicy
-          :$$: 'Text "Or with: " :<>: ShowType PLedgerV2.PValidator
-          :$$: 'Text "Or with: " :<>: ShowType PLedgerV2.PMintingPolicy
+      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType (PData :--> PData :--> PScriptContext :--> POpaque)
+          :$$: 'Text "Or with: " :<>: ShowType (PData :--> PScriptContext :--> POpaque)
           :$$: 'Text "But reached: " :<>: ShowType wrong
       )
 
-{- | Given a Plutarch function type ending in 'PValidator' or 'PMintingPolicy' (from either V1 or V2)
-, determine its 'ScriptVersion'.
-
->>> :k! VersionOf (PData :--> PData :--> PLedgerV1.PScriptContext :--> POpaque)
-ScriptV1
-
->>> :k! VersionOf (PData :--> PData :--> PLedgerV2.PScriptContext :--> POpaque)
-ScriptV2
-
->>> :k! VersionOf (PData :--> PLedgerV2.PScriptContext :--> POpaque)
-ScriptV2
+{- | Given a Plutarch function type ending in
+  'PData :--> PData :--> PScriptContext :--> POpaque' or
+  'PData :--> PScriptContext :--> POpaque'
 -}
 type VersionOf :: PType -> ScriptVersion
 type family VersionOf a where
-  VersionOf PLedgerV1.PValidator = ScriptV1
-  VersionOf PLedgerV1.PMintingPolicy = ScriptV1
-  VersionOf PLedgerV2.PValidator = ScriptV2
-  VersionOf PLedgerV2.PMintingPolicy = ScriptV2
+  VersionOf (PData :--> PData :--> PScriptContext :--> POpaque) = ScriptV2
+  VersionOf (PData :--> PScriptContext :--> POpaque) = ScriptV2
   VersionOf (_ :--> rest) = VersionOf rest
   VersionOf wrong =
     TypeError
-      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType PLedgerV1.PValidator
-          :$$: 'Text "Or with: " :<>: ShowType PLedgerV1.PMintingPolicy
-          :$$: 'Text "Or with: " :<>: ShowType PLedgerV2.PValidator
-          :$$: 'Text "Or with: " :<>: ShowType PLedgerV2.PMintingPolicy
+      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType (PData :--> PData :--> PScriptContext :--> POpaque)
+          :$$: 'Text "Or with: " :<>: ShowType (PData :--> PScriptContext :--> POpaque)
           :$$: 'Text "But reached: " :<>: ShowType wrong
       )
 
