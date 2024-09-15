@@ -32,7 +32,7 @@ applyConstant ::
 applyConstant (Program () DefaultVersion f@(LamAbs () _ body)) c =
   Program () DefaultVersion $
     let arg = Constant () c
-     in if isSmallConstant c then subst 1 (const body) f else Apply () f arg
+     in if isSmallConstant c then subst 1 (const arg) body else Apply () f arg
 applyConstant (Program () DefaultVersion f) c = Program () DefaultVersion . Apply () f $ Constant () c
 applyConstant (Program () v _) _ =
   error $
