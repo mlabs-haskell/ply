@@ -1,3 +1,10 @@
+# 0.7.1 - BUG FIX
+
+- Fix function application producing absurd code when applying small constants (unit, bool, integer).
+
+  Thanks [@sourabhxyz](https://github.com/sourabhxyz) for [finding the bug](https://github.com/mlabs-haskell/ply/issues/54)!
+- Fix `ScriptRoleError` being thrown with the wrong `expectedRole` field.
+
 # 0.7.0 - Bump plutus version to 1.30.0.0
 
 - Dropped V1 support for `Ply.Plutarch`.
