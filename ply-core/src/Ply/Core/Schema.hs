@@ -76,6 +76,9 @@ newtype DataByteStr = DataByteStr ByteString
 type DataList :: PlyDataSchema -> Type
 newtype DataList a = DataList [DataSchemaInstanceOf a]
 
+type DataMap :: PlyDataSchema -> PlyDataSchema -> Type
+newtype DataMap k v = DataMap [(DataSchemaInstanceOf k, DataSchemaInstanceOf v)]
+
 type DataSum :: [[PlyDataSchema]] -> Type
 newtype DataSum xss = DataSum (SOP DataSchemaInstanceOf xss)
 
@@ -130,6 +133,9 @@ instance HasSchemaInstance (PlyD PlyDB) where
 instance HasSchemaInstance (PlyD a) => HasSchemaInstance (PlyD (PlyDL a)) where
   type SchemaInstanceOf (PlyD (PlyDL a)) = DataList a
 
+instance (HasSchemaInstance (PlyD k), HasSchemaInstance (PlyD v)) => HasSchemaInstance (PlyD (PlyDM k v)) where
+  type SchemaInstanceOf (PlyD (PlyDM k v)) = DataMap k v
+
 instance All2 (Compose HasSchemaInstance PlyD) a => HasSchemaInstance (PlyD (PlyDS a)) where
   type SchemaInstanceOf (PlyD (PlyDS a)) = DataSum a
 
@@ -166,6 +172,10 @@ instance ToPLCDefaultUni (PlyD PlyDB) where
 instance (ToPLCDefaultUni (PlyD a), DefaultUniTarget (PlyD a) ~ PlutusData.Data) => ToPLCDefaultUni (PlyD (PlyDL a)) where
   type DefaultUniTarget (PlyD (PlyDL a)) = PlutusData.Data
   toPLCDefaultUni (DataList x) = PlutusData.List $ map (toPLCDefaultUni . getDataSchemaInstanceOf) x
+
+instance (ToPLCDefaultUni (PlyD k), DefaultUniTarget (PlyD k) ~ PlutusData.Data, ToPLCDefaultUni (PlyD v), DefaultUniTarget (PlyD v) ~ PlutusData.Data) => ToPLCDefaultUni (PlyD (PlyDM k v)) where
+  type DefaultUniTarget (PlyD (PlyDM k v)) = PlutusData.Data
+  toPLCDefaultUni (DataMap kvs) = PlutusData.Map $ map (\(k, v) -> (toPLCDefaultUni $ getDataSchemaInstanceOf k, toPLCDefaultUni $ getDataSchemaInstanceOf v)) kvs
 
 instance All2 (Compose PlutusData.ToData DataSchemaInstanceOf) xss => ToPLCDefaultUni (PlyD (PlyDS xss)) where
   type DefaultUniTarget (PlyD (PlyDS xss)) = PlutusData.Data
