@@ -24,7 +24,6 @@ common common-deps
     , base16-bytestring
     , bytestring
     , plutarch
-    , plutarch-extra
     , plutarch-ledger-api
     , plutus-ledger-api
     , plutus-tx

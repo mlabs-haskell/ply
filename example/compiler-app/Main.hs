@@ -2,7 +2,7 @@ module Main (main) where
 
 import System.FilePath ((</>))
 
-import Plutarch (Config (Tracing), LogLevel (LogInfo), TracingMode (DoTracing))
+import Plutarch.Internal.Term (Config (Tracing), LogLevel (LogInfo), TracingMode (DoTracing))
 import Ply.Plutarch
 
 import Example.NftM (nftMp)

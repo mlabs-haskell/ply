@@ -3,13 +3,16 @@
 module Ply.Plutarch.Class (PlyArgOf) where
 
 import Data.ByteString (ByteString)
+import Data.Kind (Type)
 import Data.Text (Text)
-import Plutarch.LedgerApi.Utils (PMaybeData, PRationalData)
+
+import Plutarch.Internal.Term (PType)
 import Plutarch.LedgerApi.V2
 import Plutarch.Prelude
 import PlutusLedgerApi.V2 as LedgerV2
 import qualified PlutusTx.AssocMap as PlutusMap
 import qualified PlutusTx.Ratio as PlutusTx
+
 import Ply (AsData)
 
 -- | 'PlyArgOf' yields the corresponding Haskell type for a given Plutarch type.

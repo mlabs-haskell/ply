@@ -4,8 +4,7 @@ module Main (main) where
 
 import Data.ByteString (ByteString)
 
-import Plutarch (Config (Tracing), LogLevel (LogInfo), TracingMode (DetTracing))
-import Plutarch.LedgerApi.Utils (PMaybeData)
+import Plutarch.Internal.Term (Config (Tracing), LogLevel (LogInfo), PType, TracingMode (DetTracing))
 import Plutarch.LedgerApi.V2
 import Plutarch.Prelude
 import Plutarch.Unsafe (punsafeCoerce)

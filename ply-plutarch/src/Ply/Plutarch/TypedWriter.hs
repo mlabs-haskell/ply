@@ -17,16 +17,17 @@ import Data.Text (Text)
 import qualified Data.Text as Txt
 import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 
-import Plutarch (Config, compile)
+import Plutarch.Internal.Term (Config, PType, compile)
 import Plutarch.LedgerApi.V2 (PScriptContext)
 import Plutarch.Prelude
 import Plutarch.Script (unScript)
 
+import Data.Kind (Type)
 import Ply (
   ScriptRole (MintingPolicyRole, ValidatorRole),
   ScriptVersion (ScriptV2),
   TypedScript,
-  TypedScriptEnvelope (..),
+  TypedScriptEnvelope,
  )
 import Ply.Core.Internal.Reify (
   ReifyRole,
