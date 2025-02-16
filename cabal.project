@@ -1,7 +1,7 @@
 packages:
   ./ply-plutarch
   ./ply-core
-  ./genPurs
+  ./ply-ctl
   ./example
 
 repository cardano-haskell-packages
