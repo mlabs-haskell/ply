@@ -5,14 +5,15 @@
 module Ply.Core.Class (PlyArg (..), type ToDataConstraint, someBuiltinArg, someBuiltinArgData) where
 
 import Data.ByteString (ByteString)
+import qualified Data.ByteString as BS
 import Data.Kind (Constraint, Type)
 import Data.Text (Text)
-import qualified GHC.TypeLits as TLits
 import qualified GHC.Generics as GHC
-import qualified Data.ByteString as BS
+import qualified GHC.TypeLits as TLits
 
-import Data.SOP.NS (trans_SOP)
 import Data.SOP
+import Data.SOP.NS (trans_SOP)
+import qualified Generics.SOP.GGP as GGP
 import PlutusCore (DefaultUni, Some, ValueOf)
 import qualified PlutusCore as PLC
 import PlutusLedgerApi.V1 as LedgerCommon hiding (
@@ -21,11 +22,10 @@ import PlutusLedgerApi.V1 as LedgerCommon hiding (
   TxInfo (..),
   TxOut,
  )
+import PlutusLedgerApi.V1.Time (DiffMilliSeconds (DiffMilliSeconds))
+import PlutusLedgerApi.V1.Value (AssetClass (AssetClass))
 import qualified PlutusTx.Builtins as PlutusTx
 import qualified PlutusTx.Ratio as PlutusTx
-import qualified Generics.SOP.GGP as GGP
-import PlutusLedgerApi.V1.Value (AssetClass (AssetClass))
-import PlutusLedgerApi.V1.Time (DiffMilliSeconds (DiffMilliSeconds))
 
 import Ply.Core.Schema
 
@@ -166,11 +166,11 @@ instance (PlyArg a, ToDataConstraint a, HasSchemaInstance (PlyD (UPLCDataSchema 
   toBuiltinArgData (Just x) = wrapDataSum . SOP . Z $ toBuiltinArgData x :* Nil
 
 -- | This verifies the underlying bytestring is exactly 28 bytes.
-instance PlyArg Credential where
+instance PlyArg Credential
 
-instance PlyArg StakingCredential where
+instance PlyArg StakingCredential
 
-instance PlyArg Address where
+instance PlyArg Address
 
 -- | This verifies the underlying bytestring is exactly 0 (for adaSymbol) or 28 bytes.
 instance PlyArg CurrencySymbol where
@@ -224,26 +224,26 @@ instance PlyArg ScriptHash where
       bs = fromBuiltin x
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
 
--- | This verifies the underlying bytestring is exactly 28 bytes.
+-- | This verifies the underlying bytestring is exactly 32 bytes.
 instance PlyArg DatumHash where
   type UPLCSchema DatumHash = PlyByteStr
   type UPLCDataSchema DatumHash = PlyDB
   toBuiltinArg (DatumHash x) =
-    if BS.length bs == 28
+    if BS.length bs == 32
       then bs
-      else error "toBuiltinArg(DatumHash): Expected 28 bytes"
+      else error "toBuiltinArg(DatumHash): Expected 32 bytes"
     where
       bs = fromBuiltin x
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
 
--- | This verifies the underlying bytestring is exactly 28 bytes.
+-- | This verifies the underlying bytestring is exactly 32 bytes.
 instance PlyArg RedeemerHash where
   type UPLCSchema RedeemerHash = PlyByteStr
   type UPLCDataSchema RedeemerHash = PlyDB
   toBuiltinArg (RedeemerHash x) =
-    if BS.length bs == 28
+    if BS.length bs == 32
       then bs
-      else error "toBuiltinArg(RedeemerHash): Expected 28 bytes"
+      else error "toBuiltinArg(RedeemerHash): Expected 32 bytes"
     where
       bs = fromBuiltin x
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
@@ -268,20 +268,20 @@ instance PlyArg DiffMilliSeconds where
       else error "toBuiltinArg(DiffMilliSeconds): Expected non-negative"
   toBuiltinArgData = toBuiltinArgData . toBuiltinArg
 
-instance (PlyArg a, ToDataConstraint a, HasSchemaInstance (PlyD (UPLCDataSchema a))) => PlyArg (Extended a) where
+instance (PlyArg a, ToDataConstraint a, HasSchemaInstance (PlyD (UPLCDataSchema a))) => PlyArg (Extended a)
 
-instance (PlyArg a, ToDataConstraint a, HasSchemaInstance (PlyD (UPLCDataSchema a))) => PlyArg (UpperBound a) where
+instance (PlyArg a, ToDataConstraint a, HasSchemaInstance (PlyD (UPLCDataSchema a))) => PlyArg (UpperBound a)
 
-instance (PlyArg a, ToDataConstraint a, HasSchemaInstance (PlyD (UPLCDataSchema a))) => PlyArg (LowerBound a) where
+instance (PlyArg a, ToDataConstraint a, HasSchemaInstance (PlyD (UPLCDataSchema a))) => PlyArg (LowerBound a)
 
-instance (PlyArg a, ToDataConstraint a, HasSchemaInstance (PlyD (UPLCDataSchema a))) => PlyArg (Interval a) where
+instance (PlyArg a, ToDataConstraint a, HasSchemaInstance (PlyD (UPLCDataSchema a))) => PlyArg (Interval a)
 
-instance PlyArg DCert where
+instance PlyArg DCert
 
 -- | This verifies the underlying bytestring is exactly 32 bytes.
 instance PlyArg TxId where
   -- TxId is a Constr data instead of just a bytestring, for some reason.
-  type UPLCDataSchema TxId = PlyDS '[ '[PlyDB] ]
+  type UPLCDataSchema TxId = PlyDS '[ '[PlyDB]]
   toBuiltinArgData (TxId x) =
     if BS.length bs == 32
       then wrapDataSum . SOP . Z $ toBuiltinArgData x :* Nil
@@ -291,13 +291,13 @@ instance PlyArg TxId where
 
 -- | This verifies the txIdx is non-negative.
 instance PlyArg TxOutRef where
-  type UPLCDataSchema TxOutRef = PlyDS '[ '[UPLCDataSchema TxId, PlyDI] ]
+  type UPLCDataSchema TxOutRef = PlyDS '[ '[UPLCDataSchema TxId, PlyDI]]
   toBuiltinArgData (TxOutRef txId txIdx) =
     if txIdx >= 0
       then wrapDataSum . SOP . Z $ toBuiltinArgData txId :* toBuiltinArgData txIdx :* Nil
       else error "toBuiltinArg(TxOutRef): Expected non-negative idx"
 
-instance PlyArg ScriptPurpose where
+instance PlyArg ScriptPurpose
 
 --------------------------------------
 -- Utilities for generic derivation --
