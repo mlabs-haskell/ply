@@ -155,8 +155,9 @@ instance PlyArg a => PlyArg [a] where
 
 instance PlyArg PlutusTx.Rational where
   type UPLCDataSchema PlutusTx.Rational = PlyDS '[ [PlyDI, PlyDI]]
-  toBuiltinArgData r = wrapDataSum . SOP . Z $ denData :* denData :* Nil
+  toBuiltinArgData r = wrapDataSum . SOP . Z $ numerator :* denData :* Nil
     where
+      numerator = toBuiltinArgData $ PlutusTx.numerator r
       den = PlutusTx.denominator r
       denData = if den /= 0 then toBuiltinArgData den else error "toBuiltinArg(PlutusTx.Rational): Expected positive denominator"
 
