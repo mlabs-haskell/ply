@@ -8,11 +8,12 @@ module Ply.Core.Schema (
   HasSchemaInstance (..),
   DataSchemaInstanceOf (..),
   ToPLCDefaultUni (..),
+  HasSchemaDescription (..),
   wrapDataInt,
   wrapDataByteStr,
   wrapDataList,
   wrapDataSum,
-  schemaDescrOf,
+  schemaDescrOf',
 ) where
 
 import Data.Bifunctor (bimap)
@@ -30,44 +31,8 @@ import qualified PlutusCore.Data as PlutusData
 import qualified PlutusLedgerApi.V1 as PlutusTx
 import qualified PlutusTx.IsData as PlutusData
 
-data PlySchema
-  = PlyInt
-  | PlyByteStr
-  | PlyStr
-  | PlyUnit
-  | PlyBool
-  | PlyListOf PlySchema
-  | PlyPairOf PlySchema PlySchema
-  | PlyD PlyDataSchema
-
-data PlyDataSchema
-  = PlyDS [[PlyDataSchema]]
-  | PlyDM PlyDataSchema PlyDataSchema
-  | PlyDL PlyDataSchema
-  | PlyDI
-  | PlyDB
-
-data SchemaDescription
-  = SimpleType String
-  | ListType SchemaDescription
-  | PairType SchemaDescription SchemaDescription
-  | DataListType SchemaDescription
-  | MapType SchemaDescription SchemaDescription
-  | ConstrType [[SchemaDescription]]
-
-schemaDescrOf :: PlySchema -> SchemaDescription
-schemaDescrOf PlyInt = SimpleType "#integer"
-schemaDescrOf PlyByteStr = SimpleType "#bytes"
-schemaDescrOf PlyStr = SimpleType "#string"
-schemaDescrOf PlyUnit = SimpleType "#unit"
-schemaDescrOf PlyBool = SimpleType "#boolean"
-schemaDescrOf (PlyListOf a) = ListType $ schemaDescrOf a
-schemaDescrOf (PlyPairOf a b) = PairType (schemaDescrOf a) (schemaDescrOf b)
-schemaDescrOf (PlyD (PlyDS xss)) = ConstrType $ map (schemaDescrOf . PlyD) <$> xss
-schemaDescrOf (PlyD (PlyDM a b)) = MapType (schemaDescrOf $ PlyD a) (schemaDescrOf $ PlyD b)
-schemaDescrOf (PlyD (PlyDL a)) = DataListType $ schemaDescrOf (PlyD a)
-schemaDescrOf (PlyD PlyDI) = SimpleType "integer"
-schemaDescrOf (PlyD PlyDB) = SimpleType "bytes"
+import Ply.Core.Schema.Description
+import Ply.Core.Schema.Types
 
 newtype DataInt = DataInt Integer
 
