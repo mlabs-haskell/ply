@@ -1,7 +1,6 @@
 packages:
   ./ply-plutarch
   ./ply-core
-  ./ply-ctl
   ./example
 
 repository cardano-haskell-packages
@@ -21,7 +20,7 @@ source-repository-package
   type: git
   --sha256: sha256-lU2JF9KYvzEPfVLHdLkrM1hTTuc9NYi2hQPFnLDm2d8=
   location: https://github.com/Plutonomicon/plutarch-plutus.git
-  tag: v1.10.0
+  tag: v1.10.1
   subdir:
     .
     plutarch-ledger-api
