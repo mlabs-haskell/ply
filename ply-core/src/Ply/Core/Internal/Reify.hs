@@ -1,11 +1,12 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Ply.Core.Internal.Reify (ReifyVersion (reifyVersion), ReifyRole (reifyRole), ReifyTypenames (reifyTypenames)) where
+module Ply.Core.Internal.Reify (ReifyVersion (reifyVersion), ReifyRole (reifyRole), ReifySchemas (reifySchemas)) where
 
 import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy (Proxy))
 
-import Ply.Core.Typename (PlyTypeName, plyTypeName)
+import Ply.Core.Class (PlyArg (UPLCDataSchema), ToDataConstraint)
+import Ply.Core.Schema (HasDataSchemaDescription, PlySchema (PlyD), schemaDescrOf')
 import Ply.Core.Types
 
 type ReifyVersion :: ScriptVersion -> Constraint
@@ -16,9 +17,9 @@ type ReifyRole :: ScriptRole -> Constraint
 class ReifyRole s where
   reifyRole :: Proxy s -> ScriptRole
 
-type ReifyTypenames :: [Type] -> Constraint
-class ReifyTypenames ts where
-  reifyTypenames :: Proxy ts -> [Typename]
+type ReifySchemas :: [Type] -> Constraint
+class ReifySchemas ts where
+  reifySchemas :: Proxy ts -> [SchemaDescription]
 
 instance ReifyVersion ScriptV1 where
   reifyVersion _ = ScriptV1
@@ -32,8 +33,8 @@ instance ReifyRole ValidatorRole where
 instance ReifyRole MintingPolicyRole where
   reifyRole _ = MintingPolicyRole
 
-instance ReifyTypenames '[] where
-  reifyTypenames _ = []
+instance ReifySchemas '[] where
+  reifySchemas _ = []
 
-instance (PlyTypeName x, ReifyTypenames xs) => ReifyTypenames (x : xs) where
-  reifyTypenames _ = plyTypeName @x : reifyTypenames (Proxy @xs)
+instance (PlyArg x, ToDataConstraint x, HasDataSchemaDescription (UPLCDataSchema x), ReifySchemas xs) => ReifySchemas (x : xs) where
+  reifySchemas _ = schemaDescrOf' @(PlyD (UPLCDataSchema x)) : reifySchemas (Proxy @xs)

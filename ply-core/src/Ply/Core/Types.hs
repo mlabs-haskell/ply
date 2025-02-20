@@ -6,7 +6,7 @@ module Ply.Core.Types (
   ScriptRole (..),
   ScriptReaderException (..),
   TypedScriptEnvelope (..),
-  Typename,
+  SchemaDescription,
   UPLCProgram,
   AsData (..),
 ) where
@@ -37,8 +37,8 @@ import qualified Cardano.Binary as CBOR
 import PlutusLedgerApi.Common (serialiseUPLC, uncheckedDeserialiseUPLC)
 import UntypedPlutusCore (DeBruijn, DefaultFun, DefaultUni, Program)
 
+import Ply.Core.Schema (SchemaDescription)
 import Ply.Core.Serialize.Script (serializeScriptCbor)
-import Ply.Core.Typename (Typename)
 
 -- | Wrapper for anytypes that is data encoded.
 newtype AsData a = AsData a
@@ -66,8 +66,8 @@ data ScriptVersion = ScriptV1 | ScriptV2
 data ScriptReaderException
   = AesonDecodeError String
   | ScriptRoleError {expectedRole :: ScriptRole, actualRole :: ScriptRole}
-  | ScriptTypeError {expectedType :: [Typename], actualType :: [Typename]}
-  deriving stock (Eq, Show)
+  | ScriptTypeError {expectedType :: SchemaDescription, actualType :: SchemaDescription}
+  deriving stock (Show)
   deriving anyclass (Exception)
 
 -- | This is essentially a post-processed version of 'TypedScriptEnvelope''.
@@ -77,13 +77,13 @@ data TypedScriptEnvelope = TypedScriptEnvelope
   , -- | Plutus script role, either a validator or a minting policy.
     tsRole :: !ScriptRole
   , -- | List of extra parameter types to be applied before being treated as a validator/minting policy.
-    tsParamTypes :: [Typename]
+    tsParamTypes :: [SchemaDescription]
   , -- | Description of the script, not semantically relevant.
     tsDescription :: !Text
   , -- | The actual script.
     tsScript :: !UPLCProgram
   }
-  deriving stock (Eq, Show)
+  deriving stock (Show)
 
 cborToScript :: ByteString -> Either DecoderError UPLCProgram
 cborToScript x = uncheckedDeserialiseUPLC <$> CBOR.decodeFull' x

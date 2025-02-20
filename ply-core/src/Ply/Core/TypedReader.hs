@@ -8,6 +8,7 @@ import Control.Monad (unless)
 import Data.Proxy (Proxy (Proxy))
 import Data.Text (Text)
 
+import Data.Foldable (for_)
 import Ply.Core.Deserialize (readEnvelope)
 import Ply.Core.Internal.Reify
 import Ply.Core.Types (
@@ -23,7 +24,7 @@ See: 'mkTypedScript'.
 -}
 type TypedReader rl params =
   ( ReifyRole rl
-  , ReifyTypenames params
+  , ReifySchemas params
   )
 
 -- | Pure function to parse a 'TypedScript' from a 'TypedScriptEnvelope'.
@@ -35,8 +36,9 @@ mkTypedScript ::
 mkTypedScript (TypedScriptEnvelope ver rol params _ prog) = do
   let expectedRole = reifyRole $ Proxy @rl
   unless (rol == expectedRole) . Left $ ScriptRoleError expectedRole rol
-  let expectedParams = reifyTypenames $ Proxy @params
-  unless (expectedParams == params) . Left $ ScriptTypeError expectedParams params
+  let expectedParams = reifySchemas $ Proxy @params
+  for_ (zip expectedParams params) $ \(expectedParam, param) -> do
+    unless (expectedParam == param) . Left $ ScriptTypeError expectedParam param
   pure $ TypedScriptConstr ver prog
 
 {- | Read and verify a 'TypedScript' from given filepath.
@@ -63,7 +65,7 @@ typedScriptToEnvelope descr (unsafeUnTypedScript -> (# ver, scrpt #)) =
   TypedScriptEnvelope
     { tsVersion = ver
     , tsRole = reifyRole $ Proxy @rl
-    , tsParamTypes = reifyTypenames $ Proxy @params
+    , tsParamTypes = reifySchemas $ Proxy @params
     , tsDescription = descr
     , tsScript = scrpt
     }

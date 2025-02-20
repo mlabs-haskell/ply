@@ -31,7 +31,7 @@ import Ply (
  )
 import Ply.Core.Internal.Reify (
   ReifyRole,
-  ReifyTypenames,
+  ReifySchemas,
   ReifyVersion,
   reifyVersion,
  )
@@ -69,7 +69,7 @@ See: 'typedWriterInfo'.
 type TypedWriter ptype =
   ( ReifyVersion (VersionOf ptype)
   , ReifyRole (RoleOf ptype)
-  , ReifyTypenames (PlyParamsOf (ParamsOf ptype))
+  , ReifySchemas (PlyParamsOf (ParamsOf ptype))
   )
 
 -- | Wrapper around 'toTypedScript' that builds a 'TypedScriptEnvelope' to serialize into the file system.

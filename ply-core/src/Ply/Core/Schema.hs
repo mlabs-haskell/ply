@@ -9,6 +9,7 @@ module Ply.Core.Schema (
   DataSchemaInstanceOf (..),
   ToPLCDefaultUni (..),
   HasSchemaDescription (..),
+  HasDataSchemaDescription (..),
   wrapDataInt,
   wrapDataByteStr,
   wrapDataList,

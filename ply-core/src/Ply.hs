@@ -4,8 +4,6 @@ module Ply (
   ScriptReaderException (..),
   TypedScriptEnvelope (..),
   ScriptVersion (..),
-  Typename,
-  plyTypeName,
   PlyArg,
   readTypedScript,
   getPlutusVersion,
@@ -19,7 +17,6 @@ module Ply (
 import Ply.Core.Apply ((#), (#!), (#$), (#$!))
 import Ply.Core.Class (PlyArg)
 import Ply.Core.TypedReader (readTypedScript)
-import Ply.Core.Typename (plyTypeName)
 import Ply.Core.Types (
   AsData (..),
   ScriptReaderException (..),
@@ -27,7 +24,6 @@ import Ply.Core.Types (
   ScriptVersion (..),
   TypedScript (TypedScriptConstr),
   TypedScriptEnvelope (..),
-  Typename,
   UPLCProgram,
  )
 

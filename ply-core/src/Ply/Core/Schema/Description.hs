@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Ply.Core.Schema.Description (SchemaDescription (..), HasSchemaDescription (..), schemaDescrOf') where
+module Ply.Core.Schema.Description (SchemaDescription (..), HasSchemaDescription (..), HasDataSchemaDescription (..), schemaDescrOf') where
 
 import Control.Applicative ((<|>))
 import Data.Kind (Constraint)
@@ -35,6 +35,10 @@ data SchemaDescription
   | ConstrType [[SchemaDescription]]
   | -- This exists only because CIP-57 leaves certain types (e.g builtin list constituents) expressed as unknown data types.
     AnyDataType
+  deriving stock (Eq)
+
+instance Show SchemaDescription where
+  show = show . Aeson.encode
 
 -- TODO: Implement toEncoding
 instance ToJSON SchemaDescription where
