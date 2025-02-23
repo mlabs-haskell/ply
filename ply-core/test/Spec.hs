@@ -15,8 +15,13 @@ import qualified PlutusTx.Builtins.HasBuiltin as PlutusTx
 import qualified PlutusTx.IsData as PlutusTx
 import qualified PlutusTx.Ratio as PlutusTx
 
-import Ply.Core.Class
-import Ply.Core.Schema
+import Ply.Core.Class (
+  PlyArg (UPLCSchema, toBuiltinArg, toBuiltinArgData),
+  ToDataConstraint,
+ )
+import Ply.Core.Schema (HasSchemaInstance (SchemaInstanceOf))
+
+import qualified Unit.Schema
 
 prop_toData :: forall a. (PlyArg a, ToDataConstraint a, PlutusTx.FromData a, Eq a) => a -> Bool
 prop_toData x = PlutusTx.fromBuiltinData (PlutusTx.toBuiltinData $ toBuiltinArgData x) == Just x
@@ -66,3 +71,4 @@ main = do
   quickCheck $ prop_toData @PlutusV1.TxId
   quickCheck $ prop_toData @PlutusV1.DCert
   quickCheck $ prop_toData @PlutusV1.ScriptPurpose
+  Unit.Schema.test
