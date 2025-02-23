@@ -111,6 +111,7 @@ library
 
   other-modules:
     Ply.Core.Schema.Description
+    Ply.Core.Schema.Normalize
     Ply.Core.Schema.Types
     Ply.Core.Types
     Ply.Core.UPLC

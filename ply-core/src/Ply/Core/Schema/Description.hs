@@ -9,7 +9,7 @@ import Data.Kind (Constraint)
 import Data.Text (Text)
 import qualified Data.Text as Txt
 
-import Data.Aeson
+import Data.Aeson (FromJSON (parseJSON), KeyValue ((.=)), ToJSON (toJSON), Value)
 import qualified Data.Aeson as Aeson
 import Data.Aeson.KeyMap ((!?))
 import Data.Aeson.Types (Parser)
@@ -26,6 +26,9 @@ import Ply.Core.Schema.Types (
   PlySchema (PlyBool, PlyByteStr, PlyD, PlyInt, PlyListOf, PlyPairOf, PlyStr, PlyUnit),
  )
 
+refPrefix :: Text
+refPrefix = "#/definitions/"
+
 data SchemaDescription
   = SimpleType Text
   | ListType SchemaDescription
@@ -35,6 +38,8 @@ data SchemaDescription
   | ConstrType [[SchemaDescription]]
   | -- This exists only because CIP-57 leaves certain types (e.g builtin list constituents) expressed as unknown data types.
     AnyDataType
+  | -- Reference to a schema definition from the top-level `definitions` field.
+    SchemaRef Text
   deriving stock (Eq)
 
 instance Show SchemaDescription where
@@ -54,6 +59,7 @@ instance ToJSON SchemaDescription where
       constrDescr :: Int -> [SchemaDescription] -> Value
       constrDescr ix descrs = Aeson.object ["dataType" .= Txt.pack "constructor", "index" .= ix, "fields" .= map toJSON descrs]
   toJSON AnyDataType = error "absurd: Ply should never produce AnyDataType SchemaDescription"
+  toJSON (SchemaRef name) = Aeson.object ["$ref" .= (refPrefix <> name)]
 
 {- | Note: This instance ignores any extra keys that aren't necessary to parse a schema. As such, 'dataType' is the most important key.
 
@@ -62,10 +68,14 @@ then even if there are other keys that _shouldn't_ be there (such as 'items' key
 -}
 instance FromJSON SchemaDescription where
   parseJSON = Aeson.withObject "SchemaDescription" $ \obj ->
-    constrTypeParser obj <|> do
+    refParser obj <|> constrTypeParser obj <|> do
       res <- maybe (fail "Key 'dataType' not found") pure $ obj !? "dataType"
       Aeson.withText "Schema.dataType" (parseOtherSchema obj) res
     where
+      refParser :: Aeson.Object -> Parser SchemaDescription
+      refParser obj = assertKey obj "$ref" >>= Aeson.withText "Schema.$ref" parseRefName
+      parseRefName :: Text -> Parser SchemaDescription
+      parseRefName t = maybe (fail "Invalid Schema ref format") (pure . SchemaRef) $ Txt.stripPrefix refPrefix t
       constrTypeParser :: Aeson.Object -> Parser SchemaDescription
       constrTypeParser obj = assertKey obj "anyOf" >>= Aeson.withArray "Schema.anyOf" parseConstrVariants
       parseConstrVariants :: Aeson.Array -> Parser SchemaDescription
