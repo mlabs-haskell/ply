@@ -18,12 +18,12 @@ import Ply.Core.Apply ((#), (#!), (#$), (#$!))
 import Ply.Core.Class (PlyArg)
 import Ply.Core.TypedReader (readTypedScript)
 import Ply.Core.Types (
-  AsData (..),
-  ScriptReaderException (..),
+  AsData (AsData),
+  ScriptReaderException (AesonDecodeError, ScriptRoleError, ScriptTypeError, actualRole, actualType, expectedRole, expectedType),
   ScriptRole (MintingPolicyRole, ValidatorRole),
-  ScriptVersion (..),
+  ScriptVersion (ScriptV1, ScriptV2),
   TypedScript (TypedScriptConstr),
-  TypedScriptEnvelope (..),
+  TypedScriptEnvelope (TypedScriptEnvelope, tsDescription, tsParamTypes, tsRole, tsScript, tsVersion),
   UPLCProgram,
  )
 

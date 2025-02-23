@@ -6,8 +6,16 @@ import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy (Proxy))
 
 import Ply.Core.Class (PlyArg (UPLCDataSchema), ToDataConstraint)
-import Ply.Core.Schema (HasDataSchemaDescription, PlySchema (PlyD), schemaDescrOf')
-import Ply.Core.Types
+import Ply.Core.Schema.Description (
+  HasDataSchemaDescription,
+  schemaDescrOf',
+ )
+import Ply.Core.Schema.Types (PlySchema (PlyD))
+import Ply.Core.Types (
+  SchemaDescription,
+  ScriptRole (MintingPolicyRole, ValidatorRole),
+  ScriptVersion (ScriptV1, ScriptV2),
+ )
 
 type ReifyVersion :: ScriptVersion -> Constraint
 class ReifyVersion s where

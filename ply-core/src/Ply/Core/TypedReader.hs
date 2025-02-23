@@ -10,7 +10,7 @@ import Data.Text (Text)
 
 import Data.Foldable (for_)
 import Ply.Core.Deserialize (readEnvelope)
-import Ply.Core.Internal.Reify
+import Ply.Core.Internal.Reify (ReifyRole (reifyRole), ReifySchemas (reifySchemas))
 import Ply.Core.Types (
   ScriptReaderException (ScriptRoleError, ScriptTypeError),
   TypedScript (TypedScriptConstr),

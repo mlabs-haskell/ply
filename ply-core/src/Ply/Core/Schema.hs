@@ -10,6 +10,7 @@ module Ply.Core.Schema (
   ToPLCDefaultUni (..),
   HasSchemaDescription (..),
   HasDataSchemaDescription (..),
+  normalizeSchemaDescription,
   wrapDataInt,
   wrapDataByteStr,
   wrapDataList,
@@ -22,7 +23,7 @@ import Data.ByteString (ByteString)
 import Data.Kind (Constraint, Type)
 import Data.Text (Text)
 
-import Data.SOP (All, All2, Compose, Proxy (Proxy), SOP (..))
+import Data.SOP (All, All2, Compose, Proxy (Proxy), SOP (SOP))
 import Data.SOP.BasicFunctors (K (K))
 import Data.SOP.NP (cmap_NP, collapse_NP)
 import Data.SOP.NS (ccata_NS, index_NS)
@@ -32,8 +33,14 @@ import qualified PlutusCore.Data as PlutusData
 import qualified PlutusLedgerApi.V1 as PlutusTx
 import qualified PlutusTx.IsData as PlutusData
 
-import Ply.Core.Schema.Description
-import Ply.Core.Schema.Types
+import Ply.Core.Schema.Description (
+  HasDataSchemaDescription (dataSchemaDescrOf),
+  HasSchemaDescription (schemaDescrOf),
+  SchemaDescription (AnyDataType, ConstrType, DataListType, ListType, MapType, PairType, SchemaRef, SimpleType),
+  schemaDescrOf',
+ )
+import Ply.Core.Schema.Normalize (normalizeSchemaDescription)
+import Ply.Core.Schema.Types (PlyDataSchema (PlyDB, PlyDI, PlyDL, PlyDM, PlyDS), PlySchema (PlyBool, PlyByteStr, PlyD, PlyInt, PlyListOf, PlyPairOf, PlyStr, PlyUnit))
 
 newtype DataInt = DataInt Integer
 

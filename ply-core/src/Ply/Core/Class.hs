@@ -11,23 +11,58 @@ import Data.Text (Text)
 import qualified GHC.Generics as GHC
 import qualified GHC.TypeLits as TLits
 
-import Data.SOP
+import Data.SOP (
+  AllZip2,
+  NP (Nil, (:*)),
+  NS (S, Z),
+  Proxy (Proxy),
+  SOP (SOP),
+  unI,
+ )
 import Data.SOP.NS (trans_SOP)
 import qualified Generics.SOP.GGP as GGP
 import PlutusCore (DefaultUni, Some, ValueOf)
 import qualified PlutusCore as PLC
-import PlutusLedgerApi.V1 as LedgerCommon hiding (
-  ScriptContext (..),
-  TxInInfo (..),
-  TxInfo (..),
-  TxOut,
+import PlutusLedgerApi.V1 as LedgerCommon (
+  Address,
+  BuiltinByteString,
+  Credential,
+  CurrencySymbol (CurrencySymbol),
+  DCert,
+  Data,
+  DatumHash (DatumHash),
+  Extended,
+  Interval,
+  LowerBound,
+  POSIXTime (POSIXTime),
+  PubKeyHash (PubKeyHash),
+  RedeemerHash (RedeemerHash),
+  ScriptHash (ScriptHash),
+  ScriptPurpose,
+  StakingCredential,
+  TokenName (TokenName),
+  TxId (TxId),
+  TxOutRef (TxOutRef),
+  UpperBound,
+  adaSymbol,
+  fromBuiltin,
  )
 import PlutusLedgerApi.V1.Time (DiffMilliSeconds (DiffMilliSeconds))
 import PlutusLedgerApi.V1.Value (AssetClass (AssetClass))
 import qualified PlutusTx.Builtins as PlutusTx
 import qualified PlutusTx.Ratio as PlutusTx
 
-import Ply.Core.Schema
+import Ply.Core.Schema (
+  DataSchemaInstanceOf (getDataSchemaInstanceOf),
+  HasSchemaInstance (SchemaInstanceOf),
+  PlyDataSchema (PlyDB, PlyDI, PlyDL, PlyDS),
+  PlySchema (PlyBool, PlyByteStr, PlyD, PlyInt, PlyListOf, PlyPairOf, PlyStr, PlyUnit),
+  ToPLCDefaultUni (DefaultUniTarget, toPLCDefaultUni),
+  wrapDataByteStr,
+  wrapDataInt,
+  wrapDataList,
+  wrapDataSum,
+ )
 
 type BottomConstraint s t = 'TLits.Text s ~ TLits.ShowType t
 

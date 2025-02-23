@@ -6,7 +6,11 @@ module Ply.Core.Unsafe (
   unsafeUnTypedScript',
 ) where
 
-import Ply.Core.Types
+import Ply.Core.Types (
+  ScriptVersion,
+  TypedScript (TypedScriptConstr),
+  UPLCProgram,
+ )
 
 -- | Unconditionally build a 'TypedScript. It is up to the caller to verify the type parameters are correct.
 unsafeTypedScript :: ScriptVersion -> UPLCProgram -> TypedScript r a

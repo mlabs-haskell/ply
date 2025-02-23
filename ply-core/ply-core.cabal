@@ -14,7 +14,7 @@ common common-ghc-opts
     -Wall -Wcompat -Wincomplete-uni-patterns -Wno-unused-do-bind
     -Wno-partial-type-signatures -Wmissing-export-lists -Werror
     -Wincomplete-record-updates -Wmissing-deriving-strategies
-    -Wno-name-shadowing -Wunused-foralls
+    -Wno-name-shadowing -Wunused-foralls -Wmissing-import-lists
     -Wno-unticked-promoted-constructors -fprint-explicit-foralls
     -fprint-explicit-kinds
 
