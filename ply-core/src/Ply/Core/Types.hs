@@ -58,7 +58,7 @@ data ScriptRole = ValidatorRole | MintingPolicyRole
   deriving anyclass (ToJSON, FromJSON)
 
 -- | Version identifier for the Plutus script.
-data ScriptVersion = ScriptV1 | ScriptV2
+data ScriptVersion = ScriptV1 | ScriptV2 | ScriptV3
   deriving stock (Bounded, Enum, Eq, Ord, Show, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
@@ -100,6 +100,7 @@ instance FromJSON TypedScriptEnvelope where
       version = v .: "version" <|> (parseType =<< v .: "type")
       parseType "PlutusScriptV1" = pure ScriptV1
       parseType "PlutusScriptV2" = pure ScriptV2
+      parseType "PlutusScriptV3" = pure ScriptV3
       parseType s = fail $ s <> " is not a valid ScriptVersion"
 
       parseAndDeserialize v =

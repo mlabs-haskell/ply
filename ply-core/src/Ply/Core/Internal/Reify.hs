@@ -26,6 +26,9 @@ instance ReifyVersion ScriptV1 where
 instance ReifyVersion ScriptV2 where
   reifyVersion _ = ScriptV2
 
+instance ReifyVersion ScriptV3 where
+  reifyVersion _ = ScriptV3
+
 instance ReifyRole ValidatorRole where
   reifyRole _ = ValidatorRole
 
