@@ -7,7 +7,7 @@ license:       MIT
 -- Common sections
 
 common common-configs
-  default-language: Haskell2010
+  default-language: GHC2021
 
 common common-ghc-opts
   ghc-options:
@@ -15,80 +15,30 @@ common common-ghc-opts
     -Wno-partial-type-signatures -Wmissing-export-lists -Werror
     -Wincomplete-record-updates -Wmissing-deriving-strategies
     -Wno-name-shadowing -Wunused-foralls -Wmissing-import-lists
-    -Wno-unticked-promoted-constructors -fprint-explicit-foralls
-    -fprint-explicit-kinds
+    -Wunused-packages -Wno-unticked-promoted-constructors
+    -fprint-explicit-foralls -fprint-explicit-kinds
 
 common common-deps
   build-depends:
     , aeson
-    , aeson-pretty
     , base
-    , base16-bytestring
     , bytestring
-    , cardano-binary
     , containers
-    , generics-sop
-    , plutus-core
     , plutus-ledger-api
     , plutus-tx
-    , serialise
-    , sop-core
-    , tagged
     , text
 
 common common-lang
   default-extensions:
-    NoStarIsType
-    BangPatterns
-    BinaryLiterals
-    ConstrainedClassMethods
-    ConstraintKinds
     DataKinds
     DefaultSignatures
     DeriveAnyClass
-    DeriveDataTypeable
-    DeriveFoldable
-    DeriveFunctor
-    DeriveGeneric
-    DeriveLift
-    DeriveTraversable
     DerivingStrategies
-    DerivingVia
-    DoAndIfThenElse
-    EmptyCase
-    EmptyDataDecls
-    EmptyDataDeriving
-    ExistentialQuantification
-    ExplicitForAll
-    FlexibleContexts
-    FlexibleInstances
-    GADTSyntax
-    GeneralisedNewtypeDeriving
-    HexFloatLiterals
-    ImplicitPrelude
-    InstanceSigs
-    KindSignatures
-    LambdaCase
-    MonomorphismRestriction
-    MultiParamTypeClasses
     NamedFieldPuns
-    NumericUnderscores
     OverloadedStrings
-    PatternGuards
     PatternSynonyms
-    PolyKinds
-    PostfixOperators
-    RankNTypes
-    RelaxedPolyRec
     RoleAnnotations
-    ScopedTypeVariables
-    StandaloneDeriving
-    StandaloneKindSignatures
-    TraditionalRecordSyntax
-    TupleSections
-    TypeApplications
     TypeFamilyDependencies
-    TypeOperators
     ViewPatterns
 
 -- Build targets
@@ -98,6 +48,14 @@ library
   import:          common-configs
   import:          common-deps
   import:          common-ghc-opts
+  build-depends:
+    , aeson-pretty
+    , base16-bytestring
+    , cardano-binary
+    , generics-sop
+    , plutus-core
+    , sop-core
+
   exposed-modules:
     Ply
     Ply.Core.Apply
