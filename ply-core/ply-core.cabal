@@ -65,8 +65,6 @@ library
     Ply.Core.Deserialize
     Ply.Core.Internal.Reify
     Ply.Core.Schema
-    Ply.Core.Serialize
-    Ply.Core.Serialize.Script
     Ply.Core.TypedReader
     Ply.Core.Unsafe
 
