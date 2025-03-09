@@ -1,39 +1,96 @@
 {
-    "cborHex": "5901bd5901ba010100323232323232323232322222323232325980099b874800000a264b3001332300d2259800800c528454cc8cc0480045289801980a00089801180a800a020232323253322980080140062941014199119baf301730193754004602e60326ea8004c054008c0540044cdd7980a980b001180a980b000980b1baa00c30153754002602460286ea8004dd61808800c56600266e1ccc8a6002003480025300100ba400175b3756002806a0048060dd5980898091809180918090009bae30110024800a293454cc03d2411557726f6e67204e4654206d696e7420616d6f756e7400164039153300f491115554784f206e6f7420636f6e73756d65640016403860246ea8c0400122a6601c9201425061747465726e206d61746368206661696c75726520696e2027646f2720626c6f636b206174207372632f4578616d706c652f4e66744d2e68733a31313a352d3139001640346022004601a0026ea8c034c038004c038dd5000918011ba90012222330052259800800c40162b30013375e6016601800200d13004300e300c001898011806800a0124020002464600446600400400246004466004004002aae7d5cd2b9c5573aae855d12ab9e01",
-    "description": "NFT Minting Policy (DoTracing)",
-    "params": [
+  "$schema": "https://cips.cardano.org/cips/cip57/schemas/plutus-blueprint.json",
+  "$vocabulary": {
+    "https://cips.cardano.org/cips/cip57": true,
+    "https://json-schema.org/draft/2020-12/vocab/applicator": true,
+    "https://json-schema.org/draft/2020-12/vocab/core": true,
+    "https://json-schema.org/draft/2020-12/vocab/validation": true
+  },
+  "preamble": {
+    "title": "Example Contract",
+    "description": null,
+    "version": "1.0.0",
+    "plutusVersion": "v2",
+    "license": null
+  },
+  "validators": [
+    {
+      "title": "NftMP",
+      "redeemer": {
+        "purpose": {
+          "oneOf": [
+            "spend",
+            "mint"
+          ]
+        },
+        "schema": {
+          "$ref": "#/definitions/Unit"
+        }
+      },
+      "parameters": [
         {
-            "anyOf": [
-                {
-                    "dataType": "constructor",
-                    "fields": [
-                        {
-                            "anyOf": [
-                                {
-                                    "dataType": "constructor",
-                                    "fields": [
-                                        {
-                                            "dataType": "bytes"
-                                        }
-                                    ],
-                                    "index": 0
-                                }
-                            ]
-                        },
-                        {
-                            "dataType": "integer"
-                        }
-                    ],
-                    "index": 0
-                }
+          "purpose": {
+            "oneOf": [
+              "spend",
+              "mint"
             ]
+          },
+          "schema": {
+            "$ref": "#/definitions/TxOutRef"
+          }
         },
         {
-            "dataType": "bytes"
+          "purpose": {
+            "oneOf": [
+              "spend",
+              "mint"
+            ]
+          },
+          "schema": {
+            "$ref": "#/definitions/TokenName"
+          }
         }
-    ],
-    "rawHex": "5901ba010100323232323232323232322222323232325980099b874800000a264b3001332300d2259800800c528454cc8cc0480045289801980a00089801180a800a020232323253322980080140062941014199119baf301730193754004602e60326ea8004c054008c0540044cdd7980a980b001180a980b000980b1baa00c30153754002602460286ea8004dd61808800c56600266e1ccc8a6002003480025300100ba400175b3756002806a0048060dd5980898091809180918090009bae30110024800a293454cc03d2411557726f6e67204e4654206d696e7420616d6f756e7400164039153300f491115554784f206e6f7420636f6e73756d65640016403860246ea8c0400122a6601c9201425061747465726e206d61746368206661696c75726520696e2027646f2720626c6f636b206174207372632f4578616d706c652f4e66744d2e68733a31313a352d3139001640346022004601a0026ea8c034c038004c038dd5000918011ba90012222330052259800800c40162b30013375e6016601800200d13004300e300c001898011806800a0124020002464600446600400400246004466004004002aae7d5cd2b9c5573aae855d12ab9e01",
-    "role": "MintingPolicyRole",
-    "type": "PlutusScriptV2",
-    "version": "ScriptV2"
+      ],
+      "compiledCode": "5901bd5901ba010100323232323232323232322222323232325980099b874800000a264b3001332300d2259800800c528454cc8cc0480045289801980a00089801180a800a020232323253322980080140062941014199119baf301730193754004602e60326ea8004c054008c0540044cdd7980a980b001180a980b000980b1baa00c30153754002602460286ea8004dd61808800c56600266e1ccc8a6002003480025300100ba400175b3756002806a0048060dd5980898091809180918090009bae30110024800a293454cc03d2411557726f6e67204e4654206d696e7420616d6f756e7400164039153300f491115554784f206e6f7420636f6e73756d65640016403860246ea8c0400122a6601c9201425061747465726e206d61746368206661696c75726520696e2027646f2720626c6f636b206174207372632f4578616d706c652f4e66744d2e68733a31313a352d3139001640346022004601a0026ea8c034c038004c038dd5000918011ba90012222330052259800800c40162b30013375e6016601800200d13004300e300c001898011806800a0124020002464600446600400400246004466004004002aae7d5cd2b9c5573aae855d12ab9e01",
+      "hash": "db38807a3ed5fa25d368887e86b7995feee199b5dcaa03ff61a7fa4c"
+    }
+  ],
+  "definitions": {
+    "BuiltinByteString": {
+      "dataType": "bytes"
+    },
+    "Integer": {
+      "dataType": "integer"
+    },
+    "TokenName": {
+      "title": "TokenName",
+      "dataType": "bytes"
+    },
+    "TxId": {
+      "dataType": "constructor",
+      "fields": [
+        {
+          "$ref": "#/definitions/BuiltinByteString"
+        }
+      ],
+      "index": 0
+    },
+    "TxOutRef": {
+      "dataType": "constructor",
+      "fields": [
+        {
+          "$ref": "#/definitions/TxId"
+        },
+        {
+          "$ref": "#/definitions/Integer"
+        }
+      ],
+      "index": 0
+    },
+    "Unit": {
+      "dataType": "constructor",
+      "fields": [],
+      "index": 0
+    }
+  }
 }

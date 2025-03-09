@@ -29,7 +29,8 @@ usePolicy _ = putStrLn "Pretending to build and submit a transaction"
 
 main :: IO ()
 main = do
-  nftMp <- readTypedScript $ "compiled" </> "nftMp.plutus"
+  tb <- readBlueprint $ "compiled" </> "nftMp.plutus"
+  nftMp <- getTypedScript tb "NftMP"
 
   -- Print the Plutus ledger version used by the minting policy.
   putStr "NFT Minting Policy version: "
