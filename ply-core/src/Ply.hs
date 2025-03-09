@@ -2,10 +2,12 @@ module Ply (
   TypedScript (TypedScript),
   ScriptRole (..),
   ScriptReaderException (..),
-  TypedScriptEnvelope (..),
-  ScriptVersion (..),
+  TypedBlueprintPreamble (..),
+  TypedBlueprint (..),
+  TypedScriptBlueprint (..),
   PlyArg,
-  readTypedScript,
+  readBlueprint,
+  getTypedScript,
   getPlutusVersion,
   AsData (..),
   (#),
@@ -14,21 +16,25 @@ module Ply (
   (#$!),
 ) where
 
+import PlutusTx.Blueprint (PlutusVersion)
+
 import Ply.Core.Apply ((#), (#!), (#$), (#$!))
 import Ply.Core.Class (PlyArg)
-import Ply.Core.TypedReader (readTypedScript)
+import Ply.Core.Deserialize (readBlueprint)
+import Ply.Core.TypedReader (getTypedScript)
 import Ply.Core.Types (
   AsData (AsData),
-  ScriptReaderException (AesonDecodeError, ScriptRoleError, ScriptTypeError, actualRole, actualType, expectedRole, expectedType),
+  ScriptReaderException (AesonDecodeError, ScriptTypeError, UndefinedReference, UnsupportedSchema, actualType, definitionsMap, expectedType, referenceName, targetSchema),
   ScriptRole (MintingPolicyRole, ValidatorRole),
-  ScriptVersion (ScriptV1, ScriptV2),
+  TypedBlueprint (TypedBlueprint, tbDefinitions, tbPreamble, tbValidators),
+  TypedBlueprintPreamble (TypedBlueprintPreamble, tbpPlutusVersion),
   TypedScript (TypedScriptConstr),
-  TypedScriptEnvelope (TypedScriptEnvelope, tsDescription, tsParamTypes, tsRole, tsScript, tsVersion),
+  TypedScriptBlueprint (TypedScriptBlueprint, tsbCompiledCode, tsbTitle),
   UPLCProgram,
  )
 
 -- Note: Extraction of the inner script is only allowed once the 'TypedScript' is fully applied.
-pattern TypedScript :: ScriptVersion -> UPLCProgram -> TypedScript r '[]
+pattern TypedScript :: PlutusVersion -> UPLCProgram -> TypedScript r '[]
 pattern TypedScript ver s <- TypedScriptConstr ver s
 {-# COMPLETE TypedScript #-}
 
@@ -50,5 +56,5 @@ unifiedOtherScript (TypedScript ver s) = (if ver == ScriptV1 then plutusV1OtherS
     vald = Validator ts
 @
 -}
-getPlutusVersion :: TypedScript r params -> ScriptVersion
+getPlutusVersion :: TypedScript r params -> PlutusVersion
 getPlutusVersion (TypedScriptConstr ver _) = ver

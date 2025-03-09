@@ -1,44 +1,42 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Ply.Core.Types (
+  TypedBlueprint (..),
+  TypedBlueprintPreamble (..),
+  TypedScriptBlueprint (..),
+  TypedScriptBlueprintParameter (..),
   TypedScript (..),
-  ScriptVersion (..),
   ScriptRole (..),
   ScriptReaderException (..),
-  TypedScriptEnvelope (..),
   SchemaDescription,
   UPLCProgram,
+  UPLCProgramJSON (..),
+  PlutusVersionJSON (..),
   AsData (..),
 ) where
 
-import Control.Applicative ((<|>))
 import Control.Exception (Exception)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as Base16
-import qualified Data.ByteString.Short as SBS
 import Data.Kind (Type)
+import Data.Map.Strict (Map)
 import Data.Text (Text)
 import qualified Data.Text.Encoding as Text
 import GHC.Generics (Generic)
 
-import Data.Aeson (object, (.=))
-import Data.Aeson.Types (
-  FromJSON (parseJSON),
-  ToJSON (toJSON),
-  Value (Object),
-  prependFailure,
-  typeMismatch,
-  (.:),
- )
+import Data.Aeson (Options (fieldLabelModifier))
+import qualified Data.Aeson as Aeson
+import Data.Aeson.Extra (stripPrefix)
+import Data.Aeson.TH (defaultOptions, deriveFromJSON)
+import Data.Aeson.Types (FromJSON (parseJSON))
 
 import Cardano.Binary as CBOR (DecoderError)
 import qualified Cardano.Binary as CBOR
-
-import PlutusLedgerApi.Common (serialiseUPLC, uncheckedDeserialiseUPLC)
+import PlutusLedgerApi.Common (uncheckedDeserialiseUPLC)
+import PlutusTx.Blueprint (PlutusVersion (PlutusV1, PlutusV2, PlutusV3), Schema)
 import UntypedPlutusCore (DeBruijn, DefaultFun, DefaultUni, Program)
 
 import Ply.Core.Schema (SchemaDescription)
-import Ply.Core.Serialize.Script (serializeScriptCbor)
 
 -- | Wrapper for anytypes that is data encoded.
 newtype AsData a = AsData a
@@ -49,83 +47,70 @@ type UPLCProgram = Program DeBruijn DefaultUni DefaultFun ()
 type role TypedScript nominal nominal
 
 type TypedScript :: ScriptRole -> [Type] -> Type
-data TypedScript r a = TypedScriptConstr !ScriptVersion !UPLCProgram
+data TypedScript r a = TypedScriptConstr !PlutusVersion !UPLCProgram
   deriving stock (Show)
 
 -- | Script role: either a validator or a minting policy.
 data ScriptRole = ValidatorRole | MintingPolicyRole
   deriving stock (Bounded, Enum, Eq, Ord, Show, Generic)
-  deriving anyclass (ToJSON, FromJSON)
-
--- | Version identifier for the Plutus script.
-data ScriptVersion = ScriptV1 | ScriptV2
-  deriving stock (Bounded, Enum, Eq, Ord, Show, Generic)
-  deriving anyclass (ToJSON, FromJSON)
+  deriving anyclass (FromJSON)
 
 -- | Errors/Exceptions that may arise during Typed Script reading/parsing.
-data ScriptReaderException
-  = AesonDecodeError String
-  | ScriptRoleError {expectedRole :: ScriptRole, actualRole :: ScriptRole}
-  | ScriptTypeError {expectedType :: SchemaDescription, actualType :: SchemaDescription}
-  deriving stock (Show)
-  deriving anyclass (Exception)
+data ScriptReaderException where
+  AesonDecodeError :: String -> ScriptReaderException
+  UnsupportedSchema :: forall referencedTypes. Schema referencedTypes -> ScriptReaderException
+  UndefinedReference :: {referenceName :: Text, targetSchema :: SchemaDescription, definitionsMap :: Map Text SchemaDescription} -> ScriptReaderException
+  ScriptTypeError :: {expectedType :: SchemaDescription, actualType :: SchemaDescription} -> ScriptReaderException
 
--- | This is essentially a post-processed version of 'TypedScriptEnvelope''.
-data TypedScriptEnvelope = TypedScriptEnvelope
-  { -- | Plutus script version.
-    tsVersion :: !ScriptVersion
-  , -- | Plutus script role, either a validator or a minting policy.
-    tsRole :: !ScriptRole
-  , -- | List of extra parameter types to be applied before being treated as a validator/minting policy.
-    tsParamTypes :: [SchemaDescription]
-  , -- | Description of the script, not semantically relevant.
-    tsDescription :: !Text
-  , -- | The actual script.
-    tsScript :: !UPLCProgram
-  }
-  deriving stock (Show)
+deriving stock instance Show ScriptReaderException
+deriving anyclass instance Exception ScriptReaderException
+
+newtype PlutusVersionJSON = PlutusVersionJSON PlutusVersion
+
+instance FromJSON PlutusVersionJSON where
+  parseJSON = Aeson.withText "PlutusVersion" $ \case
+    "v1" -> pure $ PlutusVersionJSON PlutusV1
+    "v2" -> pure $ PlutusVersionJSON PlutusV2
+    "v3" -> pure $ PlutusVersionJSON PlutusV3
+    _ -> fail "Expected one of: v1, v2, v3"
+
+newtype UPLCProgramJSON = UPLCProgramJSON UPLCProgram
+
+instance FromJSON UPLCProgramJSON where
+  parseJSON v =
+    fmap UPLCProgramJSON $
+      parseJSON v
+        >>= either fail (either (fail . show) pure . cborToScript)
+          . Base16.decode
+          . Text.encodeUtf8
 
 cborToScript :: ByteString -> Either DecoderError UPLCProgram
 cborToScript x = uncheckedDeserialiseUPLC <$> CBOR.decodeFull' x
 
-instance FromJSON TypedScriptEnvelope where
-  parseJSON (Object v) =
-    TypedScriptEnvelope
-      <$> version
-      <*> v .: "role"
-      <*> v .: "params"
-      <*> v .: "description"
-      <*> (parseAndDeserialize =<< v .: "cborHex")
-    where
-      version = v .: "version" <|> (parseType =<< v .: "type")
-      parseType "PlutusScriptV1" = pure ScriptV1
-      parseType "PlutusScriptV2" = pure ScriptV2
-      parseType s = fail $ s <> " is not a valid ScriptVersion"
+data TypedScriptBlueprintParameter = TypedScriptBlueprintParameter
+  { tsbpSchema :: !SchemaDescription
+  }
+  deriving stock (Generic)
 
-      parseAndDeserialize v =
-        parseJSON v
-          >>= either fail (either (fail . show) pure . cborToScript)
-            . Base16.decode
-            . Text.encodeUtf8
-  parseJSON invalid =
-    prependFailure
-      "parsing TypedScriptEnvelope' failed, "
-      (typeMismatch "Object" invalid)
+data TypedScriptBlueprint = TypedScriptBlueprint
+  { tsbTitle :: !Text
+  , tsbParameters :: ![TypedScriptBlueprintParameter]
+  , tsbCompiledCode :: !UPLCProgramJSON
+  }
+  deriving stock (Generic)
 
-instance ToJSON TypedScriptEnvelope where
-  toJSON (TypedScriptEnvelope ver rol params desc script) =
-    toJSON $
-      object
-        [ "version" .= ver
-        , "type" .= versionStr
-        , "role" .= rol
-        , "params" .= params
-        , "description" .= desc
-        , "cborHex" .= Text.decodeUtf8 (Base16.encode cborHex)
-        , "rawHex" .= Text.decodeUtf8 (Base16.encode rawHex)
-        ]
-    where
-      serializedScript = serialiseUPLC script
-      cborHex = serializeScriptCbor serializedScript
-      rawHex = SBS.fromShort serializedScript
-      versionStr = "Plutus" <> show ver
+data TypedBlueprintPreamble = TypedBlueprintPreamble
+  { tbpPlutusVersion :: !PlutusVersionJSON
+  }
+  deriving stock (Generic)
+
+data TypedBlueprint = TypedBlueprint
+  { tbPreamble :: !TypedBlueprintPreamble
+  , tbValidators :: ![TypedScriptBlueprint]
+  , tbDefinitions :: !(Map Text SchemaDescription)
+  }
+
+$(deriveFromJSON defaultOptions {fieldLabelModifier = stripPrefix "tsbp"} ''TypedScriptBlueprintParameter)
+$(deriveFromJSON defaultOptions {fieldLabelModifier = stripPrefix "tsb"} ''TypedScriptBlueprint)
+$(deriveFromJSON defaultOptions {fieldLabelModifier = stripPrefix "tbp"} ''TypedBlueprintPreamble)
+$(deriveFromJSON defaultOptions {fieldLabelModifier = stripPrefix "tb"} ''TypedBlueprint)
