@@ -52,8 +52,36 @@ data SchemaDescription
     SchemaRef Text
   deriving stock (Eq)
 
+descriptionFromPlutus :: Schema referencedTypes -> Maybe SchemaDescription
+descriptionFromPlutus (SchemaBuiltInUnit _) = Just $ SimpleType "#unit"
+descriptionFromPlutus (SchemaBuiltInBoolean _) = Just $ SimpleType "#boolean"
+descriptionFromPlutus (SchemaBuiltInInteger _) = Just $ SimpleType "#integer"
+descriptionFromPlutus (SchemaBuiltInString _) = Just $ SimpleType "#string"
+descriptionFromPlutus (SchemaBuiltInBytes _) = Just $ SimpleType "#bytes"
+descriptionFromPlutus (SchemaInteger _ _) = Just $ SimpleType "integer"
+descriptionFromPlutus (SchemaBytes _ _) = Just $ SimpleType "bytes"
+descriptionFromPlutus (SchemaBuiltInList _ itemSchema) = ListType <$> descriptionFromPlutus itemSchema
+descriptionFromPlutus (SchemaBuiltInPair _ MkPairSchema {left, right}) = PairType <$> descriptionFromPlutus left <*> descriptionFromPlutus right
+descriptionFromPlutus (SchemaList _ MkListSchema {itemSchema}) = DataListType <$> descriptionFromPlutus itemSchema
+descriptionFromPlutus (SchemaMap _ MkMapSchema {keySchema, valueSchema}) = MapType <$> descriptionFromPlutus keySchema <*> descriptionFromPlutus valueSchema
+descriptionFromPlutus (SchemaConstructor _ MkConstructorSchema {fieldSchemas, index}) = if index /= 0 then Nothing else ConstrType . (:| []) <$> traverse descriptionFromPlutus fieldSchemas
+descriptionFromPlutus (SchemaAnyOf variants) = ConstrType <$> variantFromPlutus variants
+descriptionFromPlutus (SchemaOneOf variants) = ConstrType <$> variantFromPlutus variants
+descriptionFromPlutus (SchemaDefinitionRef defId) = Just . SchemaRef $ definitionIdToText defId
+descriptionFromPlutus _ = Nothing
+
+variantFromPlutus :: NonEmpty (Schema referencedTypes) -> Maybe (NonEmpty [SchemaDescription])
+variantFromPlutus variants
+  | Just processedVariants <- traverse assertConstructor variants =
+    let plutusFields = snd <$> sortOn fst (toList processedVariants)
+     in traverse (traverse descriptionFromPlutus) $ NE.fromList plutusFields
+  | otherwise = Nothing
+  where
+    assertConstructor (SchemaConstructor _ MkConstructorSchema {fieldSchemas, index}) = Just (index, fieldSchemas)
+    assertConstructor _ = Nothing
+
 instance Show SchemaDescription where
-  show = show . Aeson.encode
+  show = Txt.unpack . TxtEnc.decodeUtf8Lenient . LBS.toStrict . Aeson.encodePretty
 
 -- TODO: Implement toEncoding
 instance ToJSON SchemaDescription where
