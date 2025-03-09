@@ -29,5 +29,5 @@ test = do
   TestFile {schema, definitions} <- either (\e -> fail $ "Error: " ++ e) pure res
   let normalizeRes = normalizeSchemaDescription definitions schema
   let expected = ConstrType $ NE.singleton [ConstrType $ [] :| [[]], SimpleType "integer"]
-  unless (normalizeRes == Just expected) $
-    throwIO . AssertionFailed $ "Expected: " ++ show expected ++ "\nActual: " ++ show normalizeRes
+  unless (normalizeRes == Right expected) $
+    throwIO . AssertionFailed $ "\nExpected: " ++ show expected ++ "\nActual: " ++ show normalizeRes

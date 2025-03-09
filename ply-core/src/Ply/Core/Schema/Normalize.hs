@@ -11,10 +11,12 @@ import Ply.Core.Schema.Description (SchemaDescription (ConstrType, DataListType,
 References are recursively resolved. i.e If a schema retrieved from the definitions map is also a reference, it'll be
 resolved further.
 -}
-normalizeSchemaDescription :: Map Text SchemaDescription -> SchemaDescription -> Maybe SchemaDescription
-normalizeSchemaDescription refMap (SchemaRef t) = t `Map.lookup` refMap >>= normalizeSchemaDescription refMap
+normalizeSchemaDescription :: Map Text SchemaDescription -> SchemaDescription -> Either Text SchemaDescription
+normalizeSchemaDescription refMap (SchemaRef t) = case t `Map.lookup` refMap of
+  Nothing -> Left t
+  Just d -> normalizeSchemaDescription refMap d
 normalizeSchemaDescription refMap schema = case schema of
-  SimpleType t -> Just $ SimpleType t
+  SimpleType t -> Right $ SimpleType t
   ListType t -> ListType <$> f t
   PairType t1 t2 -> PairType <$> f t1 <*> f t2
   DataListType t -> DataListType <$> f t
