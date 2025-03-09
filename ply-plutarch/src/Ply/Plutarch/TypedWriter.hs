@@ -1,105 +1,85 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Ply.Plutarch.TypedWriter (
-  TypedWriter,
+  type TypedWriter,
+  type TypedWriter',
   type ParamsOf,
   type RoleOf,
   type VersionOf,
   type PlyParamsOf,
-  writeTypedScript,
-  toTypedScript,
-  mkEnvelope,
+  type ReferencedTypesOf,
+  type ReferencedTypesOf',
+  HasArgDefinition,
+  mkParamSchemas,
+  derivePlyDefinitions,
+  derivePlyDefinitions',
 ) where
 
-import Control.Exception (throwIO)
+import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy (Proxy))
-import Data.Text (Text)
-import qualified Data.Text as Txt
 import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 
-import Plutarch.Internal.Term (Config, PType, compile)
+import Plutarch.Internal.Term (PType)
 import Plutarch.LedgerApi.V2 (PScriptContext)
 import Plutarch.Prelude
-import Plutarch.Script (unScript)
+import PlutusTx.Blueprint (Definitions, DefinitionsFor, HasBlueprintDefinition, PlutusVersion (PlutusV2), Schema, UnrollAll, definitionRef)
 
-import Data.Kind (Type)
+import Generics.SOP (All, K (K), NP)
+import Generics.SOP.NP (collapse_NP, cpure_NP)
+import PlutusTx.Blueprint.Definition (deriveDefinitions)
 import Ply (
   ScriptRole (MintingPolicyRole, ValidatorRole),
-  ScriptVersion (ScriptV2),
-  TypedScript,
-  TypedScriptEnvelope,
  )
-import Ply.Core.Internal.Reify (
-  ReifyRole,
-  ReifySchemas,
-  ReifyVersion,
-  reifyVersion,
- )
-import Ply.Core.Serialize (writeEnvelope)
-import Ply.Core.TypedReader (typedScriptToEnvelope)
-import Ply.Core.Unsafe (unsafeTypedScript)
 import Ply.Plutarch.Class (PlyArgOf)
 
-{- | Write a parameterized Plutarch validator or minting policy into the filesystem.
+type ReferencedTypesOf datum redeemer ptype = UnrollAll (PlyArgOf datum : PlyArgOf redeemer : MapPlyArgOf (ParamsOf ptype))
 
-The result can be read by 'readTypedScript'.
+type ReferencedTypesOf' redeemer ptype = UnrollAll (PlyArgOf redeemer : MapPlyArgOf (ParamsOf ptype))
 
-Please also see: 'typedWriterInfo'.
+type TypedWriter datum redeemer ptype = (DefinitionsFor (ReferencedTypesOf datum redeemer ptype), All (HasArgDefinition (ReferencedTypesOf datum redeemer ptype)) (ParamsOf ptype))
+
+type TypedWriter' redeemer ptype = (HasBlueprintDefinition (PlyArgOf redeemer), DefinitionsFor (ReferencedTypesOf' redeemer ptype), All (HasArgDefinition (ReferencedTypesOf' redeemer ptype)) (ParamsOf ptype))
+
+type HasArgDefinition :: [Type] -> PType -> Constraint
+class HasArgDefinition referencedTypes ptype where
+  pdefinitionRef :: Schema referencedTypes
+
+-- We can't just use 'Compose HasBlueprintDefinition PlyArgOf' instead of this class
+-- because PlyArgOf is a type family and cannot be passed unapplied!
+instance HasBlueprintDefinition (PlyArgOf ptype) => HasArgDefinition referencedTypes ptype where
+  pdefinitionRef = definitionRef @(PlyArgOf ptype)
+
+{- | Given a list of Plutarch types, create the associated (as determined by 'PlyArgOf') Plutus blueprint
+ schemas in order. These schemas can then be attached to blueprint creation functions from "PlutusTx.Blueprint".
 -}
-writeTypedScript ::
-  TypedWriter pt =>
-  -- | Plutarch compiler configuration which will be used to compile the script.
-  Config ->
-  -- | Description to be associated with the compiled script file, semantically irrelevant.
-  Text ->
-  -- | File path to save the file to.
-  FilePath ->
-  -- | The parameterized Plutarch validator/minting policy.
-  ClosedTerm pt ->
-  IO ()
-writeTypedScript conf descr fp target =
-  either (throwIO . userError . Txt.unpack) (writeEnvelope fp) envelope
+mkParamSchemas :: forall (referencedTypes :: [Type]) (ptypes :: [PType]). All (HasArgDefinition referencedTypes) ptypes => [Schema referencedTypes]
+mkParamSchemas = collapse_NP np
   where
-    envelope = mkEnvelope conf descr target
+    np :: NP (K (Schema referencedTypes)) ptypes
+    np = cpure_NP (Proxy @(HasArgDefinition referencedTypes)) f
+    -- The 'a' type parameter has to be applied explicitly, so we can't just inline this in place of 'f' and expect 'a' to be inferred based on expected type.
+    f :: forall (a :: PType). HasArgDefinition referencedTypes a => K (Schema referencedTypes) a
+    f = K $ pdefinitionRef @referencedTypes @a
 
-{- | Class of Plutarch function types that can be written to the filesystem as 'TypedScript's.
+-- | Derive the schema definitions for the parameters, datum and redeemer of a script.
+derivePlyDefinitions ::
+  forall (datum :: PType) (redeemer :: PType) (ptypes :: [PType]).
+  (DefinitionsFor (UnrollAll (PlyArgOf datum : PlyArgOf redeemer : MapPlyArgOf ptypes))) =>
+  Definitions (UnrollAll (PlyArgOf datum : PlyArgOf redeemer : MapPlyArgOf ptypes))
+derivePlyDefinitions = deriveDefinitions @(PlyArgOf datum : PlyArgOf redeemer : MapPlyArgOf ptypes)
 
-See: 'typedWriterInfo'.
--}
-type TypedWriter ptype =
-  ( ReifyVersion (VersionOf ptype)
-  , ReifyRole (RoleOf ptype)
-  , ReifySchemas (PlyParamsOf (ParamsOf ptype))
-  )
+-- | Like 'derivePlyDefinitions' but for scripts without datum.
+derivePlyDefinitions' ::
+  forall (redeemer :: PType) (ptypes :: [PType]).
+  (DefinitionsFor (UnrollAll (PlyArgOf redeemer : MapPlyArgOf ptypes))) =>
+  Definitions (UnrollAll (PlyArgOf redeemer : MapPlyArgOf ptypes))
+derivePlyDefinitions' = deriveDefinitions @(PlyArgOf redeemer : MapPlyArgOf ptypes)
 
--- | Wrapper around 'toTypedScript' that builds a 'TypedScriptEnvelope' to serialize into the file system.
-mkEnvelope ::
-  forall ptype.
-  TypedWriter ptype =>
-  Config ->
-  Text ->
-  ClosedTerm ptype ->
-  Either Text TypedScriptEnvelope
-mkEnvelope conf descr pterm = typedScriptToEnvelope descr <$> toTypedScript conf pterm
-
-{- | The core `ply-plutarch` function: obtain all the necessary information about a Plutarch script, and turn it into 'TypedScript'.
-
-For a description of extra parameters are determined, see: 'PlyParamsOf' and 'ParamsOf' type families.
-
-For a description of 'ScriptVersion' is determined, see: 'VersionOf' type family.
-
-For a description of 'ScriptRole' is determined, see: 'RoleOf' type family.
--}
-toTypedScript ::
-  forall ptype.
-  TypedWriter ptype =>
-  Config ->
-  ClosedTerm ptype ->
-  Either Text (TypedScript (RoleOf ptype) (PlyParamsOf (ParamsOf ptype)))
-toTypedScript conf pterm = unsafeTypedScript ver <$> scrptEith
-  where
-    scrptEith = unScript <$> compile conf pterm
-    ver = reifyVersion $ Proxy @(VersionOf ptype)
+type MapPlyArgOf :: [PType] -> [Type]
+type family MapPlyArgOf xs where
+  MapPlyArgOf '[] = '[]
+  MapPlyArgOf (x ': xs) = PlyArgOf x ': MapPlyArgOf xs
 
 {- | Given a Plutarch function type ending in
   'PData :--> PData :--> PScriptContext :--> POpaque' or
@@ -169,10 +149,10 @@ type family RoleOf a where
   'PData :--> PData :--> PScriptContext :--> POpaque' or
   'PData :--> PScriptContext :--> POpaque'
 -}
-type VersionOf :: PType -> ScriptVersion
+type VersionOf :: PType -> PlutusVersion
 type family VersionOf a where
-  VersionOf (PData :--> PData :--> PScriptContext :--> POpaque) = ScriptV2
-  VersionOf (PData :--> PScriptContext :--> POpaque) = ScriptV2
+  VersionOf (PData :--> PData :--> PScriptContext :--> POpaque) = PlutusV2
+  VersionOf (PData :--> PScriptContext :--> POpaque) = PlutusV2
   VersionOf (_ :--> rest) = VersionOf rest
   VersionOf wrong =
     TypeError

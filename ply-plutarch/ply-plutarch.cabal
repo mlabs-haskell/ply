@@ -23,11 +23,14 @@ common common-deps
     , base
     , base16-bytestring
     , bytestring
+    , containers
+    , generics-sop
     , plutarch
     , plutarch-ledger-api
     , plutus-ledger-api
     , plutus-tx
     , ply-core
+    , template-haskell
     , text
 
 common common-lang
