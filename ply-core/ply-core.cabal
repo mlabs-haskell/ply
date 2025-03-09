@@ -34,6 +34,7 @@ common common-lang
     DefaultSignatures
     DeriveAnyClass
     DerivingStrategies
+    LambdaCase
     NamedFieldPuns
     OverloadedStrings
     PatternSynonyms
@@ -55,6 +56,7 @@ library
     , generics-sop
     , plutus-core
     , sop-core
+    , transformers
 
   exposed-modules:
     Ply

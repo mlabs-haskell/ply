@@ -4,7 +4,7 @@ import Data.Map.Strict (Map)
 import Data.Text (Text)
 
 import qualified Data.Map as Map
-import Ply.Core.Schema.Description (SchemaDescription (AnyDataType, ConstrType, DataListType, ListType, MapType, PairType, SchemaRef, SimpleType))
+import Ply.Core.Schema.Description (SchemaDescription (ConstrType, DataListType, ListType, MapType, PairType, SchemaRef, SimpleType))
 
 {- | Resolves all references within given schema (using the given definitions map) and returns the normalized schema.
 
@@ -20,7 +20,6 @@ normalizeSchemaDescription refMap schema = case schema of
   DataListType t -> DataListType <$> f t
   MapType t1 t2 -> MapType <$> f t1 <*> f t2
   ConstrType ts -> ConstrType <$> ttraverse f ts
-  AnyDataType -> Just AnyDataType
   where
     ttraverse f = traverse (traverse f)
     f = normalizeSchemaDescription refMap

@@ -2,25 +2,37 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Ply.Core.Schema.Description (SchemaDescription (..), HasSchemaDescription (..), HasDataSchemaDescription (..), schemaDescrOf') where
+module Ply.Core.Schema.Description (
+  SchemaDescription (..),
+  HasSchemaDescription (..),
+  HasDataSchemaDescription (..),
+  schemaDescrOf',
+  descriptionFromPlutus,
+) where
 
 import Control.Applicative ((<|>))
+import Control.Monad (unless)
+import qualified Data.ByteString.Lazy as LBS
+import Data.Foldable (Foldable (toList))
 import Data.Kind (Constraint)
+import Data.List (sortOn)
+import Data.List.NonEmpty (NonEmpty ((:|)))
+import qualified Data.List.NonEmpty as NE
 import Data.Text (Text)
 import qualified Data.Text as Txt
+import qualified Data.Text.Encoding as TxtEnc
+import Data.Traversable (for)
 
 import Data.Aeson (FromJSON (parseJSON), KeyValue ((.=)), ToJSON (toJSON), Value)
 import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.Encode.Pretty as Aeson
+import Data.Aeson.Key (toString)
 import Data.Aeson.KeyMap ((!?))
 import Data.Aeson.Types (Parser)
 import Data.SOP (All2, K (K), POP, Proxy (Proxy))
 import Data.SOP.NP (collapse_POP, cpure_POP)
+import PlutusTx.Blueprint (ConstructorSchema (MkConstructorSchema), DefinitionId (definitionIdToText), ListSchema (MkListSchema), MapSchema (MkMapSchema), PairSchema (MkPairSchema), Schema (SchemaAnyOf, SchemaBuiltInBoolean, SchemaBuiltInBytes, SchemaBuiltInInteger, SchemaBuiltInList, SchemaBuiltInPair, SchemaBuiltInString, SchemaBuiltInUnit, SchemaBytes, SchemaConstructor, SchemaDefinitionRef, SchemaInteger, SchemaList, SchemaMap, SchemaOneOf), fieldSchemas, index, itemSchema, keySchema, left, right, valueSchema)
 
-import Control.Monad (unless)
-import Data.Aeson.Key (toString)
-import Data.Foldable (Foldable (toList))
-import Data.List (sortOn)
-import Data.Traversable (for)
 import Ply.Core.Schema.Types (
   PlyDataSchema (PlyDB, PlyDI, PlyDL, PlyDM, PlyDS),
   PlySchema (PlyBool, PlyByteStr, PlyD, PlyInt, PlyListOf, PlyPairOf, PlyStr, PlyUnit),
@@ -35,9 +47,7 @@ data SchemaDescription
   | PairType SchemaDescription SchemaDescription
   | DataListType SchemaDescription
   | MapType SchemaDescription SchemaDescription
-  | ConstrType [[SchemaDescription]]
-  | -- This exists only because CIP-57 leaves certain types (e.g builtin list constituents) expressed as unknown data types.
-    AnyDataType
+  | ConstrType (NonEmpty [SchemaDescription])
   | -- Reference to a schema definition from the top-level `definitions` field.
     SchemaRef Text
   deriving stock (Eq)
@@ -49,16 +59,15 @@ instance Show SchemaDescription where
 instance ToJSON SchemaDescription where
   toJSON (SimpleType s) = Aeson.object ["dataType" .= s]
   -- CIP-57 essentially handicaps builtin lists and pairs. Their constituent types cannot be expressed.
-  toJSON (ListType _) = Aeson.object ["dataType" .= Txt.pack "#list"]
-  toJSON (PairType _ _) = Aeson.object ["dataType" .= Txt.pack "#pair"]
+  toJSON (ListType x) = Aeson.object ["dataType" .= Txt.pack "#list", "items" .= x]
+  toJSON (PairType l r) = Aeson.object ["dataType" .= Txt.pack "#pair", "left" .= l, "right" .= r]
   toJSON (DataListType descr) = Aeson.object ["dataType" .= Txt.pack "list", "items" .= toJSON descr]
   toJSON (MapType descr1 descr2) = Aeson.object ["dataType" .= Txt.pack "map", "keys" .= toJSON descr1, "values" .= toJSON descr2]
-  toJSON (ConstrType descrss) = Aeson.object ["anyOf" .= imap constrDescr descrss]
+  toJSON (ConstrType descrss) = Aeson.object ["oneOf" .= imap constrDescr (toList descrss)]
     where
       imap f = zipWith f [0 ..]
       constrDescr :: Int -> [SchemaDescription] -> Value
       constrDescr ix descrs = Aeson.object ["dataType" .= Txt.pack "constructor", "index" .= ix, "fields" .= map toJSON descrs]
-  toJSON AnyDataType = error "absurd: Ply should never produce AnyDataType SchemaDescription"
   toJSON (SchemaRef name) = Aeson.object ["$ref" .= (refPrefix <> name)]
 
 {- | Note: This instance ignores any extra keys that aren't necessary to parse a schema. As such, 'dataType' is the most important key.
@@ -68,7 +77,7 @@ then even if there are other keys that _shouldn't_ be there (such as 'items' key
 -}
 instance FromJSON SchemaDescription where
   parseJSON = Aeson.withObject "SchemaDescription" $ \obj ->
-    refParser obj <|> constrTypeParser obj <|> do
+    refParser obj <|> multiConstrTypeParser obj <|> do
       res <- maybe (fail "Key 'dataType' not found") pure $ obj !? "dataType"
       Aeson.withText "Schema.dataType" (parseOtherSchema obj) res
     where
@@ -76,45 +85,58 @@ instance FromJSON SchemaDescription where
       refParser obj = assertKey obj "$ref" >>= Aeson.withText "Schema.$ref" parseRefName
       parseRefName :: Text -> Parser SchemaDescription
       parseRefName t = maybe (fail "Invalid Schema ref format") (pure . SchemaRef) $ Txt.stripPrefix refPrefix t
-      constrTypeParser :: Aeson.Object -> Parser SchemaDescription
-      constrTypeParser obj = assertKey obj "anyOf" >>= Aeson.withArray "Schema.anyOf" parseConstrVariants
+      multiConstrTypeParser :: Aeson.Object -> Parser SchemaDescription
+      multiConstrTypeParser obj = assertAnyKey obj "oneOf" "anyOf" >>= Aeson.withArray "Schema.oneOf/anyOf" parseConstrVariants
       parseConstrVariants :: Aeson.Array -> Parser SchemaDescription
       parseConstrVariants (toList -> constrs) = do
         ivariants <-
           for constrs $
-            Aeson.withObject "Schema.anyOf[$]" parseConstrVariant
+            Aeson.withObject "Schema.oneOf/anyOf[$]" parseConstrVariant
         let sortedVariants = map snd $ sortOn fst ivariants
-        pure $ ConstrType sortedVariants
+        case NE.nonEmpty sortedVariants of
+          Nothing -> fail "oneOf/anyOf combinator must contain at least one schema in the list value"
+          Just x -> pure $ ConstrType x
       parseConstrVariant :: Aeson.Object -> Parser (Int, [SchemaDescription])
       parseConstrVariant obj = do
         res <- assertKey obj "dataType"
         let sanityF = Aeson.withText "Schema.dataType" $ \s ->
-              unless (s == "constructor") $ fail "Schema.anyOf[$].dataType must be constructor"
+              unless (s == "constructor") $ fail "Schema.oneOf/anyOf[$].dataType must be constructor"
         sanityF res
         ix <- assertKey obj "index" >>= parseJSON @Int
-        fields <- assertKey obj "fields" >>= Aeson.withArray "Schema.anyOf[$].fields" (traverse parseJSON)
+        fields <- assertKey obj "fields" >>= Aeson.withArray "Schema.constructor[$].fields" (traverse parseJSON)
         pure (ix, toList fields)
 
       parseOtherSchema :: Aeson.Object -> Text -> Parser SchemaDescription
       parseOtherSchema obj ident
         | ident `elem` simpleIdents = pure $ SimpleType ident
         | otherwise = case ident of
-          -- Unfortunately, builtin lists or pairs don't have their constituents expressed.
-          "#list" -> pure $ ListType AnyDataType
-          "#pair" -> pure $ PairType AnyDataType AnyDataType
-          "list" -> do
+          "#list" -> do
             res <- assertKey obj "items"
             ListType <$> parseJSON res
+          "#pair" -> do
+            res1 <- assertKey obj "left"
+            res2 <- assertKey obj "right"
+            PairType <$> parseJSON res1 <*> parseJSON res2
+          "list" -> do
+            res <- assertKey obj "items"
+            DataListType <$> parseJSON res
           "map" -> do
             res1 <- assertKey obj "keys"
             res2 <- assertKey obj "values"
             MapType <$> parseJSON res1 <*> parseJSON res2
+          "constructor" -> do
+            -- This is the single variant case.
+            fields <- assertKey obj "fields" >>= Aeson.withArray "Schema.constructor[$].fields" (traverse parseJSON)
+            pure $ ConstrType [toList fields]
           _ -> fail $ "Unrecognized dataType: " ++ Txt.unpack ident
 
       simpleIdents :: [Text]
       simpleIdents = ["#integer", "#bytes", "#string", "#unit", "#boolean", "integer", "bytes"]
       assertKey :: Aeson.Object -> Aeson.Key -> Parser Aeson.Value
       assertKey obj key = maybe (fail $ "Key '" ++ toString key ++ "' not found") pure $ obj !? key
+      assertAnyKey :: Aeson.Object -> Aeson.Key -> Aeson.Key -> Parser Aeson.Value
+      assertAnyKey obj key1 key2 = do
+        maybe (fail $ "Neither of the keys: '" ++ toString key1 ++ " or " ++ toString key2 ++ "' were found") pure $ (obj !? key1) <|> (obj !? key2)
 
 type HasSchemaDescription :: PlySchema -> Constraint
 class HasSchemaDescription a where
@@ -153,7 +175,7 @@ instance HasDataSchemaDescription a => HasDataSchemaDescription (PlyDL a) where
 instance (HasDataSchemaDescription a, HasDataSchemaDescription b) => HasDataSchemaDescription (PlyDM a b) where
   dataSchemaDescrOf _ = MapType (dataSchemaDescrOf' @a) (dataSchemaDescrOf' @b)
 instance (All2 HasDataSchemaDescription xss) => HasDataSchemaDescription (PlyDS xss) where
-  dataSchemaDescrOf _ = ConstrType $ collapse_POP pop
+  dataSchemaDescrOf _ = ConstrType . NE.fromList $ collapse_POP pop
     where
       pop :: POP (K SchemaDescription) xss
       pop = cpure_POP (Proxy @HasDataSchemaDescription) x

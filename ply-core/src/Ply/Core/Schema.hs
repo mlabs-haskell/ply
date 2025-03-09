@@ -36,7 +36,7 @@ import qualified PlutusTx.IsData as PlutusData
 import Ply.Core.Schema.Description (
   HasDataSchemaDescription (dataSchemaDescrOf),
   HasSchemaDescription (schemaDescrOf),
-  SchemaDescription (AnyDataType, ConstrType, DataListType, ListType, MapType, PairType, SchemaRef, SimpleType),
+  SchemaDescription (ConstrType, DataListType, ListType, MapType, PairType, SchemaRef, SimpleType),
   schemaDescrOf',
  )
 import Ply.Core.Schema.Normalize (normalizeSchemaDescription)
