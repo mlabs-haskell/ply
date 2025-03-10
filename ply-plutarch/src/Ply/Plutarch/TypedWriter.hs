@@ -10,10 +10,9 @@ module Ply.Plutarch.TypedWriter (
   type PlyParamsOf,
   type ReferencedTypesOf,
   type ReferencedTypesOf',
-  HasArgDefinition,
+  HasArgDefinition (pdefinitionRef),
   mkParamSchemas,
-  derivePlyDefinitions,
-  derivePlyDefinitions',
+  derivePDefinitions,
 ) where
 
 import Data.Kind (Constraint, Type)
@@ -63,18 +62,11 @@ mkParamSchemas = collapse_NP np
     f = K $ pdefinitionRef @referencedTypes @a
 
 -- | Derive the schema definitions for the parameters, datum and redeemer of a script.
-derivePlyDefinitions ::
-  forall (datum :: PType) (redeemer :: PType) (ptypes :: [PType]).
-  (DefinitionsFor (UnrollAll (PlyArgOf datum : PlyArgOf redeemer : MapPlyArgOf ptypes))) =>
-  Definitions (UnrollAll (PlyArgOf datum : PlyArgOf redeemer : MapPlyArgOf ptypes))
-derivePlyDefinitions = deriveDefinitions @(PlyArgOf datum : PlyArgOf redeemer : MapPlyArgOf ptypes)
-
--- | Like 'derivePlyDefinitions' but for scripts without datum.
-derivePlyDefinitions' ::
-  forall (redeemer :: PType) (ptypes :: [PType]).
-  (DefinitionsFor (UnrollAll (PlyArgOf redeemer : MapPlyArgOf ptypes))) =>
-  Definitions (UnrollAll (PlyArgOf redeemer : MapPlyArgOf ptypes))
-derivePlyDefinitions' = deriveDefinitions @(PlyArgOf redeemer : MapPlyArgOf ptypes)
+derivePDefinitions ::
+  forall (ptypes :: [PType]).
+  (DefinitionsFor (UnrollAll (MapPlyArgOf ptypes))) =>
+  Definitions (UnrollAll (MapPlyArgOf ptypes))
+derivePDefinitions = deriveDefinitions @(MapPlyArgOf ptypes)
 
 type MapPlyArgOf :: [PType] -> [Type]
 type family MapPlyArgOf xs where

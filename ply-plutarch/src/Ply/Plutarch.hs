@@ -1,4 +1,4 @@
-module Ply.Plutarch (PlyArgOf, type TypedWriter, type TypedWriter', HasArgDefinition, type ParamsOf, type ReferencedTypesOf, type ReferencedTypesOf', mkParamSchemas, derivePlyDefinitions, derivePlyDefinitions') where
+module Ply.Plutarch (PlyArgOf, type TypedWriter, type TypedWriter', HasArgDefinition, type ParamsOf, type ReferencedTypesOf, type ReferencedTypesOf', mkParamSchemas, derivePDefinitions) where
 
 import Ply.Plutarch.Class (PlyArgOf)
-import Ply.Plutarch.TypedWriter (HasArgDefinition, derivePlyDefinitions, derivePlyDefinitions', mkParamSchemas, type ParamsOf, type ReferencedTypesOf, type ReferencedTypesOf', type TypedWriter, type TypedWriter')
+import Ply.Plutarch.TypedWriter (HasArgDefinition, derivePDefinitions, mkParamSchemas, type ParamsOf, type ReferencedTypesOf, type ReferencedTypesOf', type TypedWriter, type TypedWriter')

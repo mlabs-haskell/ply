@@ -36,7 +36,7 @@ main =
             , preambleLicense = Nothing
             }
       , contractValidators = Set.singleton scriptBP
-      , contractDefinitions = derivePlyDefinitions' @PUnit @(ParamsOf (PTxOutRef :--> PTokenName :--> PData :--> PScriptContext :--> POpaque))
+      , contractDefinitions = derivePDefinitions @(PUnit : ParamsOf (PTxOutRef :--> PTokenName :--> PData :--> PScriptContext :--> POpaque))
       }
   where
     scriptBP =
