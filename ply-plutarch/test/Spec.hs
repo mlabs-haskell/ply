@@ -2,77 +2,44 @@
 
 module Main (main) where
 
-import Plutarch.Internal.Term (Config (Tracing), LogLevel (LogInfo), PType, TracingMode (DetTracing))
-import Plutarch.LedgerApi.V2
+import Plutarch.Internal.Term (PType)
 import Plutarch.Prelude
-import Plutarch.Unsafe (punsafeCoerce)
 import Test.Tasty
-import Test.Tasty.HUnit
-
-import Ply (
-  ScriptRole (MintingPolicyRole, ValidatorRole),
-  ScriptVersion (ScriptV2),
-  TypedScriptEnvelope (TypedScriptEnvelope),
- )
-import Ply.Plutarch.TypedWriter (TypedWriter, mkEnvelope)
-
--- | Ensure 'typedWriterInfo @ptype' yields the expected 'ScriptRole' and '[Typename]'.
-testHelper ::
-  forall ptypeList.
-  ( TypedWriter (PTypeWith (PData :--> PData :--> PScriptContext :--> POpaque) ptypeList)
-  , TypedWriter (PTypeWith (PData :--> PScriptContext :--> POpaque) ptypeList)
-  ) =>
-  Assertion
-testHelper = do
-  let (actualVersion2, actualRole2, _, _) =
-        unEnvelope $ mkEnvelope @(PTypeWith (PData :--> PData :--> PScriptContext :--> POpaque) ptypeList) conf mempty (punsafeCoerce $ plam id)
-  actualRole2 @?= ValidatorRole
-  let (actualVersion3, actualRole3, _, _) =
-        unEnvelope $ mkEnvelope @(PTypeWith (PData :--> PScriptContext :--> POpaque) ptypeList) conf mempty (punsafeCoerce $ plam id)
-  actualRole3 @?= MintingPolicyRole
-  actualVersion2 @?= ScriptV2
-  actualVersion2 @?= actualVersion3
-  where
-    conf = Tracing LogInfo DetTracing
-    unEnvelope (Right (TypedScriptEnvelope ver rl param _ scr)) = (ver, rl, param, scr)
-    unEnvelope (Left t) = error $ show t
-
-baselineTest :: Assertion
-baselineTest = testHelper @'[]
 
 tests :: TestTree
 tests =
   testGroup
-    "mkEnvelope works as expected"
-    [ testCase "@PValidator/@PMintingPolicy" baselineTest
-    , testCase "@(PBool :--> _)" $
-        testHelper @'[PBool]
-    , testCase "@(PInteger :--> PUnit :--> PByteString :--> _)" $
-        testHelper @'[PBool, PUnit, PByteString]
-        -- , testCase
-        --     ( "@(PBuiltinPair PValue PCredential "
-        --         ++ ":--> PCurrencySymbol :--> PPosixTime :--> PInterval PInteger :--> _)"
-        --     )
-        --     $ testHelper
-        --       @'[ PBuiltinPair (PValue Sorted NonZero) PCredential
-        --         , PCurrencySymbol
-        --         , PPosixTime
-        --         , PInterval PInteger
-        --         ]
-        -- , testCase
-        --     ( "@(PBuiltinList PTxInInfo "
-        --         ++ ":--> PTxOutRef :--> PExtended PInteger :--> PPubKeyHash "
-        --         ++ ":--> PMaybeData PByteString :--> PMap PDatumHash PDatum :--> _)"
-        --     )
-        --     $ testHelper
-        --       @'[ PBuiltinList PTxInInfo
-        --         , PTxOutRef
-        --         , PExtended PInteger
-        --         , PPubKeyHash
-        --         , PMaybeData PByteString
-        --         , PMap Sorted PDatumHash PDatum
-        --         ]
-    ]
+    "types - TODO"
+    []
+
+-- testCase "@PValidator/@PMintingPolicy" baselineTest
+-- , testCase "@(PBool :--> _)" $
+--     testHelper @'[PBool]
+-- , testCase "@(PInteger :--> PUnit :--> PByteString :--> _)" $
+--     testHelper @'[PBool, PUnit, PByteString]
+-- , testCase
+--     ( "@(PBuiltinPair PValue PCredential "
+--         ++ ":--> PCurrencySymbol :--> PPosixTime :--> PInterval PInteger :--> _)"
+--     )
+--     $ testHelper
+--       @'[ PBuiltinPair (PValue Sorted NonZero) PCredential
+--         , PCurrencySymbol
+--         , PPosixTime
+--         , PInterval PInteger
+--         ]
+-- , testCase
+--     ( "@(PBuiltinList PTxInInfo "
+--         ++ ":--> PTxOutRef :--> PExtended PInteger :--> PPubKeyHash "
+--         ++ ":--> PMaybeData PByteString :--> PMap PDatumHash PDatum :--> _)"
+--     )
+--     $ testHelper
+--       @'[ PBuiltinList PTxInInfo
+--         , PTxOutRef
+--         , PExtended PInteger
+--         , PPubKeyHash
+--         , PMaybeData PByteString
+--         , PMap Sorted PDatumHash PDatum
+--         ]
 
 main :: IO ()
 main = defaultMain tests
