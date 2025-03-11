@@ -7,16 +7,15 @@ import System.FilePath ((</>))
 
 import qualified Cardano.Binary as CBOR
 import Plutarch.Internal.Term (Config (Tracing), LogLevel (LogInfo), TracingMode (DoTracing), compile)
-import Plutarch.LedgerApi.V2 (PScriptContext, PTokenName, PTxOutRef)
+import Plutarch.LedgerApi.V3 (PScriptContext, PTokenName, PTxOutRef, scriptHash)
 import Plutarch.Prelude (PData, POpaque, PUnit, (:-->))
 import Plutarch.Script (serialiseScript)
+import PlutusLedgerApi.V3 (ScriptHash (..))
 import PlutusTx.Blueprint
 import Ply.Plutarch
 
 -- This is apparently the V2 script hash.
 -- https://github.com/Plutonomicon/plutarch-plutus/blob/75c06ef1e77742916574414975f76ddac59cce4a/plutarch-ledger-api/src/Plutarch/LedgerApi/V3.hs#L152C1-L152C11
-import Plutarch.LedgerApi.V3 (scriptHash)
-import PlutusLedgerApi.V3 (ScriptHash (..))
 import qualified PlutusTx.Builtins as PlutusTx
 
 import Example.NftM (nftMp)
@@ -32,7 +31,7 @@ main =
             { preambleTitle = "Example Contract"
             , preambleDescription = Nothing
             , preambleVersion = "1.0.0"
-            , preamblePlutusVersion = PlutusV2
+            , preamblePlutusVersion = PlutusV3
             , preambleLicense = Nothing
             }
       , contractValidators = Set.singleton scriptBP
@@ -70,4 +69,5 @@ main =
                 }
         }
     script = either (error . Txt.unpack) id $ compile (Tracing LogInfo DoTracing) nftMp
+    -- NOTE:
     ScriptHash hash = scriptHash script

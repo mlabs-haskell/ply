@@ -1,6 +1,6 @@
 module Example.NftM (nftMp) where
 
-import Plutarch.LedgerApi.V2
+import Plutarch.LedgerApi.V3
 import qualified Plutarch.LedgerApi.Value as PValue
 import Plutarch.Prelude
 
@@ -8,7 +8,7 @@ nftMp :: ClosedTerm (PTxOutRef :--> PTokenName :--> PData :--> PScriptContext :-
 nftMp = plam $ \ref tn _ ctx' -> popaque $
   unTermCont $ do
     ctx <- pmatchC ctx'
-    PMinting ownSym <- tcont $ pmatch $ pscriptContext'purpose ctx
+    PMintingScript ownSym <- tcont $ pmatch $ pscriptContext'scriptInfo ctx
     txInfo <- pmatchC $ pscriptContext'txInfo ctx
     pguardC "UTxO not consumed" $
       pany

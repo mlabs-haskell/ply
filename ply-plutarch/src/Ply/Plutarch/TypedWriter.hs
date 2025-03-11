@@ -20,7 +20,7 @@ import Data.Proxy (Proxy (Proxy))
 import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 
 import Plutarch.Internal.Term (PType)
-import Plutarch.LedgerApi.V2 (PScriptContext)
+import Plutarch.LedgerApi.V3 (PScriptContext)
 import Plutarch.Prelude
 import PlutusTx.Blueprint (Definitions, DefinitionsFor, HasBlueprintDefinition, PlutusVersion (PlutusV2), Schema, UnrollAll, definitionRef)
 
