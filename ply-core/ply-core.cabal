@@ -15,8 +15,8 @@ common common-ghc-opts
     -Wno-partial-type-signatures -Wmissing-export-lists -Werror
     -Wincomplete-record-updates -Wmissing-deriving-strategies
     -Wno-name-shadowing -Wunused-foralls -Wmissing-import-lists
-    -Wunused-packages -Wno-unticked-promoted-constructors
-    -fprint-explicit-foralls -fprint-explicit-kinds
+    -Wno-unticked-promoted-constructors -fprint-explicit-foralls
+    -fprint-explicit-kinds
 
 common common-deps
   build-depends:
@@ -53,7 +53,6 @@ library
     , aeson-pretty
     , base16-bytestring
     , cardano-binary
-    , generics-sop
     , plutus-core
     , sop-core
     , transformers

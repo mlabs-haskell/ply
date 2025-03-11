@@ -41,6 +41,9 @@ import Ply.Core.Schema.Types (
 refPrefix :: Text
 refPrefix = "#/definitions/"
 
+-- TODO: Support CIP-57 validation properties.
+
+-- | A condensed description of CIP57 schema catered around PlutusCore types.
 data SchemaDescription
   = SimpleType Text
   | ListType SchemaDescription
