@@ -7,23 +7,17 @@ import Control.Monad (unless)
 import Control.Monad.Trans.Except (runExcept, throwE)
 import Data.Foldable (find, for_)
 import Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
 import Data.Proxy (Proxy (Proxy))
 import Data.Text (Text)
 
 import PlutusTx.Blueprint (
-  Definition (MkDefinition),
-  DefinitionId (definitionIdToText),
-  Definitions (AddDefinition, NoDefinitions),
   DefinitionsFor,
   PlutusVersion,
-  Schema,
   UnrollAll,
-  deriveDefinitions,
  )
 
 import Ply.Core.Internal.Reify (ReifySchemas (reifySchemas))
-import Ply.Core.Schema (SchemaDescription, normalizeSchemaDescription)
+import Ply.Core.Schema (SchemaDescription, deriveSchemaDescriptions, normalizeSchemaDescription)
 import Ply.Core.Schema.Description (descriptionFromPlutus)
 import Ply.Core.Types (
   PlutusVersionJSON (PlutusVersionJSON),
@@ -56,7 +50,7 @@ mkTypedScript ::
 mkTypedScript refMap ver TypedScriptBlueprint {tsbParameters, tsbCompiledCode = UPLCProgramJSON script} = runExcept $ do
   let expectedPlutusParams = reifySchemas (Proxy @(UnrollAll params)) $ Proxy @params
   expectedParams <- traverse descriptionFromPlutus' expectedPlutusParams
-  expectedDefinitionsMap <- sequence . definitionsToMap' descriptionFromPlutus' $ deriveDefinitions @params
+  expectedDefinitionsMap <- deriveSchemaDescriptions @params (throwE . UnsupportedSchema)
 
   for_ (zip expectedParams tsbParameters) $ \(expectedParam, TypedScriptBlueprintParameter param) -> do
     normalizedExpected <- normalizeOrThrow expectedDefinitionsMap expectedParam
@@ -90,9 +84,3 @@ getTypedScript TypedBlueprint {tbValidators, tbPreamble = TypedBlueprintPreamble
     -- Using 'show' here to get the title quoted.
     Nothing -> throwIO . userError $ "Validator with title " ++ show title ++ " not found in blueprint"
     Just ts -> either throwIO pure $ mkTypedScript tbDefinitions ver ts
-
--- Modified version of upstream 'definitionsToMap' because that version forces higher ranked type even though Schema shouldn't need it.
-definitionsToMap' :: (Schema ts -> v) -> Definitions ts -> Map Text v
-definitionsToMap' _k NoDefinitions = Map.empty
-definitionsToMap' k (AddDefinition (MkDefinition defId v) s) =
-  Map.insert (definitionIdToText defId) (k v) (definitionsToMap' k s)
