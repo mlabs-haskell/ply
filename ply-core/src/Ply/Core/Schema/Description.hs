@@ -4,9 +4,6 @@
 
 module Ply.Core.Schema.Description (
   SchemaDescription (..),
-  HasSchemaDescription (..),
-  HasDataSchemaDescription (..),
-  schemaDescrOf',
   descriptionFromPlutus,
 ) where
 
@@ -14,7 +11,6 @@ import Control.Applicative ((<|>))
 import Control.Monad (unless)
 import qualified Data.ByteString.Lazy as LBS
 import Data.Foldable (Foldable (toList))
-import Data.Kind (Constraint)
 import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import qualified Data.List.NonEmpty as NE
@@ -29,14 +25,7 @@ import qualified Data.Aeson.Encode.Pretty as Aeson
 import Data.Aeson.Key (toString)
 import Data.Aeson.KeyMap ((!?))
 import Data.Aeson.Types (Parser)
-import Data.SOP (All2, K (K), POP, Proxy (Proxy))
-import Data.SOP.NP (collapse_POP, cpure_POP)
 import PlutusTx.Blueprint (ConstructorSchema (MkConstructorSchema), DefinitionId (definitionIdToText), ListSchema (MkListSchema), MapSchema (MkMapSchema), PairSchema (MkPairSchema), Schema (SchemaAnyOf, SchemaBuiltInBoolean, SchemaBuiltInBytes, SchemaBuiltInInteger, SchemaBuiltInList, SchemaBuiltInPair, SchemaBuiltInString, SchemaBuiltInUnit, SchemaBytes, SchemaConstructor, SchemaDefinitionRef, SchemaInteger, SchemaList, SchemaMap, SchemaOneOf), fieldSchemas, index, itemSchema, keySchema, left, right, valueSchema)
-
-import Ply.Core.Schema.Types (
-  PlyDataSchema (PlyDB, PlyDI, PlyDL, PlyDM, PlyDS),
-  PlySchema (PlyBool, PlyByteStr, PlyD, PlyInt, PlyListOf, PlyPairOf, PlyStr, PlyUnit),
- )
 
 refPrefix :: Text
 refPrefix = "#/definitions/"
@@ -168,50 +157,3 @@ instance FromJSON SchemaDescription where
       assertAnyKey :: Aeson.Object -> Aeson.Key -> Aeson.Key -> Parser Aeson.Value
       assertAnyKey obj key1 key2 = do
         maybe (fail $ "Neither of the keys: '" ++ toString key1 ++ " or " ++ toString key2 ++ "' were found") pure $ (obj !? key1) <|> (obj !? key2)
-
-type HasSchemaDescription :: PlySchema -> Constraint
-class HasSchemaDescription a where
-  schemaDescrOf :: Proxy a -> SchemaDescription
-
-schemaDescrOf' :: forall a. HasSchemaDescription a => SchemaDescription
-schemaDescrOf' = schemaDescrOf $ Proxy @a
-
-instance HasSchemaDescription PlyInt where
-  schemaDescrOf _ = SimpleType "#integer"
-instance HasSchemaDescription PlyByteStr where
-  schemaDescrOf _ = SimpleType "#bytes"
-instance HasSchemaDescription PlyStr where
-  schemaDescrOf _ = SimpleType "#string"
-instance HasSchemaDescription PlyUnit where
-  schemaDescrOf _ = SimpleType "#unit"
-instance HasSchemaDescription PlyBool where
-  schemaDescrOf _ = SimpleType "#boolean"
-instance HasSchemaDescription a => HasSchemaDescription (PlyListOf a) where
-  schemaDescrOf _ = ListType $ schemaDescrOf' @a
-instance (HasSchemaDescription a, HasSchemaDescription b) => HasSchemaDescription (PlyPairOf a b) where
-  schemaDescrOf _ = PairType (schemaDescrOf' @a) (schemaDescrOf' @b)
-instance HasDataSchemaDescription d => HasSchemaDescription (PlyD d) where
-  schemaDescrOf _ = dataSchemaDescrOf' @d
-
-type HasDataSchemaDescription :: PlyDataSchema -> Constraint
-class HasDataSchemaDescription d where
-  dataSchemaDescrOf :: Proxy d -> SchemaDescription
-
-instance HasDataSchemaDescription PlyDI where
-  dataSchemaDescrOf _ = SimpleType "integer"
-instance HasDataSchemaDescription PlyDB where
-  dataSchemaDescrOf _ = SimpleType "bytes"
-instance HasDataSchemaDescription a => HasDataSchemaDescription (PlyDL a) where
-  dataSchemaDescrOf _ = DataListType $ dataSchemaDescrOf' @a
-instance (HasDataSchemaDescription a, HasDataSchemaDescription b) => HasDataSchemaDescription (PlyDM a b) where
-  dataSchemaDescrOf _ = MapType (dataSchemaDescrOf' @a) (dataSchemaDescrOf' @b)
-instance (All2 HasDataSchemaDescription xss) => HasDataSchemaDescription (PlyDS xss) where
-  dataSchemaDescrOf _ = ConstrType . NE.fromList $ collapse_POP pop
-    where
-      pop :: POP (K SchemaDescription) xss
-      pop = cpure_POP (Proxy @HasDataSchemaDescription) x
-      x :: forall a. HasDataSchemaDescription a => K SchemaDescription a
-      x = K (dataSchemaDescrOf' @a)
-
-dataSchemaDescrOf' :: forall a. HasDataSchemaDescription a => SchemaDescription
-dataSchemaDescrOf' = dataSchemaDescrOf $ Proxy @a
