@@ -12,7 +12,6 @@ module Ply.Core.Types (
   UPLCProgram,
   UPLCProgramJSON (..),
   PlutusVersionJSON (..),
-  AsData (..),
 ) where
 
 import Control.Exception (Exception)
@@ -37,9 +36,6 @@ import PlutusTx.Blueprint (PlutusVersion (PlutusV1, PlutusV2, PlutusV3), Schema)
 import UntypedPlutusCore (DeBruijn, DefaultFun, DefaultUni, Program)
 
 import Ply.Core.Schema (SchemaDescription)
-
--- | Wrapper for anytypes that is data encoded.
-newtype AsData a = AsData a
 
 type UPLCProgram = Program DeBruijn DefaultUni DefaultFun ()
 
