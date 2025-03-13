@@ -25,6 +25,7 @@ source-repository-package
     .
     plutarch-ledger-api
     plutarch-orphanage
+    plutarch-testlib
 
 write-ghc-environment-files: never
 

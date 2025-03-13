@@ -109,7 +109,10 @@ test-suite ply-plutarch-test
   main-is:        Spec.hs
   build-depends:
     , data-default
+    , plutarch-orphanage
+    , plutarch-testlib
     , ply-plutarch
+    , QuickCheck
     , tasty
     , tasty-hunit
 

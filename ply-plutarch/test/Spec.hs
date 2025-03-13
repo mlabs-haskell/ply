@@ -2,49 +2,26 @@
 
 module Main (main) where
 
-import Plutarch.Internal.Term (PType)
+import Plutarch.Internal.Term (PType, punsafeConstantInternal)
+import Plutarch.LedgerApi.V3 (PTokenName)
 import Plutarch.Prelude
+import Plutarch.Test.QuickCheck (propEvalEqual)
+import PlutusLedgerApi.V3.Orphans ()
+import Test.QuickCheck (Arbitrary)
 import Test.Tasty
+
+import Ply (PlyArg (toSomeBuiltinArg))
+import Ply.Plutarch.Class (PlyArgOf)
+
+prop :: forall (a :: PType). (Arbitrary (PlyArgOf a), Show (PlyArgOf a), PlyArg (PlyArgOf a), PLiftable a, AsHaskell a ~ PlyArgOf a) => TestName -> TestTree
+prop name = propEvalEqual @(PlyArgOf a) name (pconstant @a) (punsafeConstantInternal . toSomeBuiltinArg)
 
 tests :: TestTree
 tests =
   testGroup
-    "types - TODO"
-    []
-
--- testCase "@PValidator/@PMintingPolicy" baselineTest
--- , testCase "@(PBool :--> _)" $
---     testHelper @'[PBool]
--- , testCase "@(PInteger :--> PUnit :--> PByteString :--> _)" $
---     testHelper @'[PBool, PUnit, PByteString]
--- , testCase
---     ( "@(PBuiltinPair PValue PCredential "
---         ++ ":--> PCurrencySymbol :--> PPosixTime :--> PInterval PInteger :--> _)"
---     )
---     $ testHelper
---       @'[ PBuiltinPair (PValue Sorted NonZero) PCredential
---         , PCurrencySymbol
---         , PPosixTime
---         , PInterval PInteger
---         ]
--- , testCase
---     ( "@(PBuiltinList PTxInInfo "
---         ++ ":--> PTxOutRef :--> PExtended PInteger :--> PPubKeyHash "
---         ++ ":--> PMaybeData PByteString :--> PMap PDatumHash PDatum :--> _)"
---     )
---     $ testHelper
---       @'[ PBuiltinList PTxInInfo
---         , PTxOutRef
---         , PExtended PInteger
---         , PPubKeyHash
---         , PMaybeData PByteString
---         , PMap Sorted PDatumHash PDatum
---         ]
+    "types correspondence"
+    [ prop @(PAsData PTokenName) "tokenname"
+    ]
 
 main :: IO ()
 main = defaultMain tests
-
-type PTypeWith :: PType -> [PType] -> PType
-type family PTypeWith e xs = r where
-  PTypeWith e '[] = e
-  PTypeWith e (x : xs) = x :--> PTypeWith e xs

@@ -24,6 +24,7 @@ common common-deps
     , base
     , bytestring
     , containers
+    , plutus-core
     , plutus-ledger-api
     , plutus-tx
     , text
@@ -53,7 +54,6 @@ library
     , aeson-pretty
     , base16-bytestring
     , cardano-binary
-    , plutus-core
     , sop-core
     , transformers
 
@@ -90,7 +90,11 @@ test-suite ply-core-test
     , QuickCheck
     , tasty
     , tasty-hunit
+    , tasty-quickcheck
 
-  other-modules:  Unit.Schema
+  other-modules:
+    Property.PlyArg
+    Unit.Schema
+
   hs-source-dirs: test
   ghc-options:    -threaded -rtsopts -with-rtsopts=-N
