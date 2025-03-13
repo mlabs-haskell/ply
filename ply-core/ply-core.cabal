@@ -88,6 +88,8 @@ test-suite ply-core-test
     , plutarch-orphanage
     , ply-core
     , QuickCheck
+    , tasty
+    , tasty-hunit
 
   other-modules:  Unit.Schema
   hs-source-dirs: test
