@@ -5,11 +5,10 @@ module Ply (
   TypedBlueprintPreamble (..),
   TypedBlueprint (..),
   TypedScriptBlueprint (..),
-  PlyArg,
+  PlyArg (toSomeBuiltinArg),
   readBlueprint,
   getTypedScript,
   getPlutusVersion,
-  AsData (..),
   (#),
   (#$),
   (#!),
@@ -19,11 +18,10 @@ module Ply (
 import PlutusTx.Blueprint (PlutusVersion)
 
 import Ply.Core.Apply ((#), (#!), (#$), (#$!))
-import Ply.Core.Class (PlyArg)
+import Ply.Core.Class (PlyArg (toSomeBuiltinArg))
 import Ply.Core.Deserialize (readBlueprint)
 import Ply.Core.TypedReader (getTypedScript)
 import Ply.Core.Types (
-  AsData (AsData),
   ScriptReaderException (AesonDecodeError, ScriptTypeError, UndefinedReference, UnsupportedSchema, actualType, definitionsMap, expectedType, referenceName, targetSchema),
   ScriptRole (MintingPolicyRole, ValidatorRole),
   TypedBlueprint (TypedBlueprint, tbDefinitions, tbPreamble, tbValidators),
