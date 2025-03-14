@@ -8,7 +8,7 @@ import System.FilePath ((</>))
 import qualified Cardano.Binary as CBOR
 import Plutarch.Internal.Term (Config (Tracing), LogLevel (LogInfo), TracingMode (DoTracing), compile)
 import Plutarch.LedgerApi.V3 (PScriptContext, PTokenName, PTxOutRef, scriptHash)
-import Plutarch.Prelude (PData, POpaque, PUnit, (:-->))
+import Plutarch.Prelude (PAsData, PData, POpaque, (:-->))
 import Plutarch.Script (serialiseScript)
 import PlutusLedgerApi.V3 (ScriptHash (..))
 import PlutusTx.Blueprint
@@ -35,10 +35,11 @@ main =
             , preambleLicense = Nothing
             }
       , contractValidators = Set.singleton scriptBP
-      , contractDefinitions = derivePDefinitions @(PUnit : ParamsOf (PTxOutRef :--> PTokenName :--> PData :--> PScriptContext :--> POpaque))
+      , contractDefinitions = derivePDefinitions @(ParamsOf (PTxOutRef :--> PAsData PTokenName :--> PData :--> PScriptContext :--> POpaque))
       }
   where
     scriptBP =
+      -- Though this minting policy doesn't actually need a redeemer, we still need to declare one. So we choose 'PTxOutRef' as the redeemer type.
       MkValidatorBlueprint
         { validatorTitle = "NftMP"
         , validatorDescription = Nothing
@@ -52,13 +53,13 @@ main =
                     , parameterSchema = sch
                     }
               )
-              $ mkParamSchemas @(ReferencedTypesOf' PUnit (PTxOutRef :--> PTokenName :--> PData :--> PScriptContext :--> POpaque)) @(ParamsOf (PTxOutRef :--> PTokenName :--> PData :--> PScriptContext :--> POpaque))
+              $ mkParamSchemas @(ReferencedTypesOf' PTxOutRef (PTxOutRef :--> PAsData PTokenName :--> PData :--> PScriptContext :--> POpaque)) @(ParamsOf (PTxOutRef :--> PAsData PTokenName :--> PData :--> PScriptContext :--> POpaque))
         , validatorRedeemer =
             MkArgumentBlueprint
               { argumentTitle = Nothing
               , argumentDescription = Nothing
               , argumentPurpose = Set.fromList [Spend, Mint]
-              , argumentSchema = definitionRef @(PlyArgOf PUnit)
+              , argumentSchema = definitionRef @(PlyArgOf PTxOutRef)
               }
         , validatorDatum = Nothing
         , validatorCompiled =
@@ -69,5 +70,5 @@ main =
                 }
         }
     script = either (error . Txt.unpack) id $ compile (Tracing LogInfo DoTracing) nftMp
-    -- NOTE:
+    -- NOTE: Plutarch's scriptHash function is exported from V3 but hashes with V2 prefix. This is a bug.
     ScriptHash hash = scriptHash script

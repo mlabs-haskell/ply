@@ -4,7 +4,7 @@ import Plutarch.LedgerApi.V3
 import qualified Plutarch.LedgerApi.Value as PValue
 import Plutarch.Prelude
 
-nftMp :: ClosedTerm (PTxOutRef :--> PTokenName :--> PData :--> PScriptContext :--> POpaque)
+nftMp :: ClosedTerm (PTxOutRef :--> PAsData PTokenName :--> PData :--> PScriptContext :--> POpaque)
 nftMp = plam $ \ref tn _ ctx' -> popaque $
   unTermCont $ do
     ctx <- pmatchC ctx'
@@ -16,5 +16,5 @@ nftMp = plam $ \ref tn _ ctx' -> popaque $
         #$ pfromData
         $ ptxInfo'inputs txInfo
     pguardC "Wrong NFT mint amount" $
-      PValue.pvalueOf # pfromData (ptxInfo'mint txInfo) # pfromData ownSym # tn #== 1
+      PValue.pvalueOf # pfromData (ptxInfo'mint txInfo) # pfromData ownSym # pfromData tn #== 1
     pure . popaque $ pconstant @PUnit ()
