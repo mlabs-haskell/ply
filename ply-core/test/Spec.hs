@@ -1,6 +1,5 @@
 module Main (main) where
 
-import PlutusLedgerApi.V1.Orphans ()
 import Test.Tasty (defaultMain, testGroup)
 
 import qualified Property.PlyArg
