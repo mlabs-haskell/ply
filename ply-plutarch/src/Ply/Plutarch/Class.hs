@@ -29,17 +29,15 @@ type instance PlyArgOf (PAsData PByteString) = ByteString
 
 type instance PlyArgOf PData = BuiltinData
 
-type instance PlyArgOf (PBuiltinPair a b) = (PlyArgOf a, PlyArgOf b)
-
 type instance PlyArgOf (PAsData (PBuiltinList a)) = [PlyArgOf a]
 
 type instance PlyArgOf PRationalData = PlutusTx.Rational
 
 type instance PlyArgOf (PMaybeData a) = Maybe (PlyArgOf a)
 
-type instance PlyArgOf (PMap Unsorted a b) = PlutusMap.Map (PlyArgOf a) (PlyArgOf b)
+type instance PlyArgOf (PAsData (PMap Unsorted a b)) = PlutusMap.Map (PlyArgOf a) (PlyArgOf b)
 
-type instance PlyArgOf (PValue Unsorted NoGuarantees) = Value
+type instance PlyArgOf (PAsData (PValue Unsorted NoGuarantees)) = Value
 
 type instance PlyArgOf PLedger.V3.PCredential = Credential
 
@@ -65,7 +63,7 @@ type instance PlyArgOf (PLedger.V3.PLowerBound a) = LowerBound (PlyArgOf a)
 
 type instance PlyArgOf (PLedger.V3.PInterval a) = Interval (PlyArgOf a)
 
-type instance PlyArgOf PLedger.V3.PTxId = Ledger.V3.TxId
+type instance PlyArgOf (PAsData PLedger.V3.PTxId) = Ledger.V3.TxId
 
 type instance PlyArgOf PLedger.V3.PTxOutRef = Ledger.V3.TxOutRef
 

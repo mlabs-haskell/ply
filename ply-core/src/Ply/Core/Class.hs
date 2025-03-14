@@ -20,7 +20,7 @@ import Ply.Core.Schema (
   deriveSchemaDescriptions,
   normalizeSchemaDescription,
  )
-import Ply.Core.Schema.Description (SchemaDescription (SimpleType), descriptionFromPlutus)
+import Ply.Core.Schema.Description (SchemaDescription (DataListType, SimpleType), descriptionFromPlutus)
 
 -- | Class of haskell types that can be applied as arguments to a Plutus script.
 class (PlutusTx.ToData a, HasBlueprintDefinition a, DefinitionsFor (UnrollAll '[a])) => PlyArg a where
@@ -40,10 +40,11 @@ matchSchemaToValue (SimpleType "#bytes") (B b) = PLC.someValue b
 matchSchemaToValue (SimpleType "integer") (I i) = PLC.someValue $ I i
 matchSchemaToValue (SimpleType "bytes") (B b) = PLC.someValue $ B b
 matchSchemaToValue (ListType inner) (List items) = foldr (\x acc -> matchSchemaToValue inner x `seq` acc) (PLC.someValue [items]) items
+matchSchemaToValue (DataListType inner) (List items) = foldr (\x acc -> matchSchemaToValue inner x `seq` acc) (PLC.someValue $ List items) items
 matchSchemaToValue (MapType key val) (Map items) = foldr (\(keyDat, valDat) acc -> matchSchemaToValue key keyDat `seq` matchSchemaToValue val valDat `seq` acc) (PLC.someValue $ Map items) items
 matchSchemaToValue (ConstrType (toList -> constituents)) (Constr (fromInteger -> ix) els) =
   PLC.someValue $
-    if ix > 0 && ix < length constituents
+    if ix < 0 || ix >= length constituents
       then error "absurd: Constr index beyond expected range"
       else foldr (\(el, sch) acc -> matchSchemaToValue sch el `seq` acc) (Constr (toInteger ix) els) . zip els $ constituents !! ix
 matchSchemaToValue sch val = error $ "absurd: matchSchemaToValue invalid schema/value combination\nSchema: " ++ show sch ++ "\nValue: " ++ show val
