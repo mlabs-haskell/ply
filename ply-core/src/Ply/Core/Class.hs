@@ -16,14 +16,14 @@ import PlutusTx.Blueprint (DefinitionsFor, HasBlueprintDefinition, UnrollAll, de
 import qualified PlutusTx.IsData as PlutusTx
 
 import Ply.Core.Schema (
-  SchemaDescription (ConstrType, ListType, MapType),
+  SchemaDescription (ConstrType, ListType, MapType, PairType),
   deriveSchemaDescriptions,
   normalizeSchemaDescription,
  )
 import Ply.Core.Schema.Description (SchemaDescription (DataListType, SimpleType), descriptionFromPlutus)
 
 -- | Class of haskell types that can be applied as arguments to a Plutus script.
-class (PlutusTx.ToData a, HasBlueprintDefinition a, DefinitionsFor (UnrollAll '[a])) => PlyArg a where
+class (HasBlueprintDefinition a, DefinitionsFor (UnrollAll '[a])) => PlyArg a where
   toSomeBuiltinArg :: a -> Some (ValueOf DefaultUni)
 
 instance {-# OVERLAPPABLE #-} (PlutusTx.ToData a, HasBlueprintDefinition a, DefinitionsFor (UnrollAll '[a])) => PlyArg a where
@@ -40,13 +40,16 @@ matchSchemaToValue (SimpleType "#bytes") (B b) = PLC.someValue b
 matchSchemaToValue (SimpleType "integer") (I i) = PLC.someValue $ I i
 matchSchemaToValue (SimpleType "bytes") (B b) = PLC.someValue $ B b
 matchSchemaToValue (ListType inner) (List items) = foldr (\x acc -> matchSchemaToValue inner x `seq` acc) (PLC.someValue [items]) items
+matchSchemaToValue (PairType a b) (Constr ix els)
+  | ix /= 0 = error "absurd: Constr index non-zero for pair"
+  | otherwise = PLC.someValue $ case els of
+    [f, s] -> (matchSchemaToValue a f `seq` f, matchSchemaToValue b s `seq` s)
+    _ -> error "absurd: Constr number of elements not equal to 2 for pair"
 matchSchemaToValue (DataListType inner) (List items) = foldr (\x acc -> matchSchemaToValue inner x `seq` acc) (PLC.someValue $ List items) items
 matchSchemaToValue (MapType key val) (Map items) = foldr (\(keyDat, valDat) acc -> matchSchemaToValue key keyDat `seq` matchSchemaToValue val valDat `seq` acc) (PLC.someValue $ Map items) items
-matchSchemaToValue (ConstrType (toList -> constituents)) (Constr (fromInteger -> ix) els) =
-  PLC.someValue $
-    if ix < 0 || ix >= length constituents
-      then error "absurd: Constr index beyond expected range"
-      else foldr (\(el, sch) acc -> matchSchemaToValue sch el `seq` acc) (Constr (toInteger ix) els) . zip els $ constituents !! ix
+matchSchemaToValue (ConstrType (toList -> constituents)) (Constr (fromInteger -> ix) els)
+  | ix < 0 || ix >= length constituents = error "absurd: Constr index beyond expected range"
+  | otherwise = PLC.someValue . foldr (\(el, sch) acc -> matchSchemaToValue sch el `seq` acc) (Constr (toInteger ix) els) . zip els $ constituents !! ix
 matchSchemaToValue sch val = error $ "absurd: matchSchemaToValue invalid schema/value combination\nSchema: " ++ show sch ++ "\nValue: " ++ show val
 
 getSchemaOrErr :: forall a. (HasBlueprintDefinition a, DefinitionsFor (UnrollAll '[a])) => SchemaDescription
