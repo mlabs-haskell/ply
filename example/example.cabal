@@ -120,6 +120,7 @@ executable example-compile
     , directory
     , example
     , filepath
+    , ply-core
     , ply-plutarch
 
   hs-source-dirs: compiler-app

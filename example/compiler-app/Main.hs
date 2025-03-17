@@ -1,6 +1,7 @@
 module Main (main) where
 
 import qualified Data.ByteString.Short as SBS
+import Data.Proxy (Proxy (Proxy))
 import qualified Data.Set as Set
 import qualified Data.Text as Txt
 import System.FilePath ((</>))
@@ -12,6 +13,7 @@ import Plutarch.Prelude (PAsData, PData, POpaque, (:-->))
 import Plutarch.Script (serialiseScript)
 import PlutusLedgerApi.V3 (ScriptHash (..))
 import PlutusTx.Blueprint
+import Ply (reifyVersion)
 import Ply.Plutarch
 
 -- This is apparently the V2 script hash.
@@ -31,7 +33,7 @@ main =
             { preambleTitle = "Example Contract"
             , preambleDescription = Nothing
             , preambleVersion = "1.0.0"
-            , preamblePlutusVersion = PlutusV3
+            , preamblePlutusVersion = reifyVersion $ Proxy @(VersionOf (PTxOutRef :--> PAsData PTokenName :--> PData :--> PScriptContext :--> POpaque))
             , preambleLicense = Nothing
             }
       , contractValidators = Set.singleton scriptBP

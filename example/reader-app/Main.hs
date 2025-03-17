@@ -21,8 +21,8 @@ instance Show MintingPolicy where
       . serialiseUPLC
       . (\(MintingPolicy x) -> x)
 
-toMintingPolicy :: TypedScript 'MintingPolicyRole '[] -> MintingPolicy
-toMintingPolicy (TypedScript _ s) = MintingPolicy s
+toMintingPolicy :: TypedScript 'PlutusV3 '[()] -> MintingPolicy
+toMintingPolicy (TypedScript' s) = MintingPolicy s
 
 usePolicy :: MintingPolicy -> IO ()
 usePolicy _ = putStrLn "Pretending to build and submit a transaction"
