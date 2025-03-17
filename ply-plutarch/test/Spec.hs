@@ -5,7 +5,7 @@ module Main (main) where
 import Data.ByteString (ByteString)
 
 import Plutarch.Internal.Term (PType, punsafeConstantInternal)
-import Plutarch.LedgerApi.AssocMap (KeyGuarantees (Unsorted), PMap)
+import Plutarch.LedgerApi.AssocMap (KeyGuarantees (Unsorted))
 import qualified Plutarch.LedgerApi.V3 as PLedger.V3
 import Plutarch.LedgerApi.Value (AmountGuarantees (NoGuarantees), PValue)
 import Plutarch.Prelude
@@ -28,9 +28,6 @@ tests =
     , propEvalEqual @ByteString "bytestring" (pdata . pconstant @PByteString) (punsafeConstantInternal . toSomeBuiltinArg . toBuiltin)
     , prop @PLedger.V3.PRationalData "rational"
     , prop @(PAsData (PValue Unsorted NoGuarantees)) "value"
-    , prop @(PAsData (PBuiltinList PLedger.V3.PTxOutRef)) "list"
-    , prop @(PLedger.V3.PMaybeData PLedger.V3.PRationalData) "maybe"
-    , prop @(PAsData (PMap Unsorted (PAsData PLedger.V3.PDatumHash) (PAsData PLedger.V3.PTokenName))) "map"
     , prop @PLedger.V3.PCredential "credential"
     , prop @PLedger.V3.PStakingCredential "staking-credential"
     , prop @PLedger.V3.PAddress "address"

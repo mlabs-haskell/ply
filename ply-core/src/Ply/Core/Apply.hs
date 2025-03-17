@@ -10,11 +10,11 @@ _NOTE_: If you just want a _pure application_, no optimizations, to produce a pr
 you apply the parameter - you should use 'applyParam'' instead. Some protocols require deterministic parameterization.
 -}
 applyParam :: PlyArg x => TypedScript r (x : xs) -> x -> TypedScript r xs
-applyParam (TypedScriptConstr ver prog) x = TypedScriptConstr ver $ prog `applyConstant` toSomeBuiltinArg x
+applyParam (TypedScriptConstr prog) x = TypedScriptConstr $ prog `applyConstant` toSomeBuiltinArg x
 
 -- | Like 'applyParam' but does not perform any optimizations, making the final AST predictable.
 applyParam' :: PlyArg x => TypedScript r (x : xs) -> x -> TypedScript r xs
-applyParam' (TypedScriptConstr ver prog) x = TypedScriptConstr ver $ prog `applyConstant'` toSomeBuiltinArg x
+applyParam' (TypedScriptConstr prog) x = TypedScriptConstr $ prog `applyConstant'` toSomeBuiltinArg x
 
 {- | Operator version of 'applyParam', to be used as juxtaposition.
 

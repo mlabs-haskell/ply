@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Ply.Core.TypedReader (TypedReader, getTypedScript, mkTypedScript) where
+module Ply.Core.TypedReader (TypedReader, getTypedScript) where
 
 import Control.Exception (throwIO)
 import Control.Monad (unless)
@@ -12,16 +12,16 @@ import Data.Text (Text)
 
 import PlutusTx.Blueprint (
   DefinitionsFor,
-  PlutusVersion,
+  PlutusVersion (PlutusV1, PlutusV2, PlutusV3),
   UnrollAll,
  )
 
-import Ply.Core.Internal.Reify (ReifySchemas (reifySchemas))
+import Ply.Core.Internal.Reify (ReifySchemas (reifySchemas), ReifyVersion (reifyVersion))
 import Ply.Core.Schema (SchemaDescription, deriveSchemaDescriptions, normalizeSchemaDescription)
 import Ply.Core.Schema.Description (descriptionFromPlutus)
 import Ply.Core.Types (
   PlutusVersionJSON (PlutusVersionJSON),
-  ScriptReaderException (ScriptTypeError, UndefinedReference, UnsupportedSchema, definitionsMap, referenceName, targetSchema),
+  ScriptReaderException (ScriptTypeError, ScriptVersionError, UndefinedReference, UnsupportedSchema, definitionsMap, referenceName, targetSchema),
   TypedBlueprint (TypedBlueprint, tbDefinitions, tbPreamble, tbValidators),
   TypedBlueprintPreamble (TypedBlueprintPreamble, tbpPlutusVersion),
   TypedScript (TypedScriptConstr),
@@ -32,10 +32,11 @@ import Ply.Core.Types (
 
 {- | Class of 'TypedScript' parameters that are supported and can be read.
 
-See: 'mkTypedScript'.
+See: 'getTypedScript'.
 -}
-type TypedReader rl params =
-  ( ReifySchemas (UnrollAll params) params
+type TypedReader r params =
+  ( ReifyVersion r
+  , ReifySchemas (UnrollAll params) params
   , DefinitionsFor (UnrollAll params)
   )
 
@@ -48,6 +49,10 @@ mkTypedScript ::
   TypedScriptBlueprint ->
   Either ScriptReaderException (TypedScript r params)
 mkTypedScript refMap ver TypedScriptBlueprint {tsbParameters, tsbCompiledCode = UPLCProgramJSON script} = runExcept $ do
+  let expectedVersion = reifyVersion $ Proxy @r
+  unless (expectedVersion `eqVersion` ver)
+    . throwE
+    $ ScriptVersionError expectedVersion ver
   let expectedPlutusParams = reifySchemas (Proxy @(UnrollAll params)) $ Proxy @params
   expectedParams <- traverse descriptionFromPlutus' expectedPlutusParams
   expectedDefinitionsMap <- deriveSchemaDescriptions @params (throwE . UnsupportedSchema)
@@ -59,7 +64,7 @@ mkTypedScript refMap ver TypedScriptBlueprint {tsbParameters, tsbCompiledCode = 
       . throwE
       $ ScriptTypeError normalizedExpected normalizedActual
 
-  pure $ TypedScriptConstr ver script
+  pure $ TypedScriptConstr script
   where
     throwUndefRef m sch refName = throwE $ UndefinedReference {definitionsMap = m, referenceName = refName, targetSchema = sch}
     normalizeOrThrow m sch = either (throwUndefRef m sch) pure $ normalizeSchemaDescription m sch
@@ -67,6 +72,10 @@ mkTypedScript refMap ver TypedScriptBlueprint {tsbParameters, tsbCompiledCode = 
       case descriptionFromPlutus plutusSchema of
         Nothing -> throwE $ UnsupportedSchema plutusSchema
         Just x -> pure x
+    eqVersion PlutusV1 PlutusV1 = True
+    eqVersion PlutusV2 PlutusV2 = True
+    eqVersion PlutusV3 PlutusV3 = True
+    eqVersion _ _ = False
 
 {- | Verify and then obtain the 'TypedScript' with the corresponding title from given 'TypedBlueprint'.
 
@@ -75,6 +84,7 @@ with type applications. The reader will then use this information to parse the f
 the serialized script has the type.
 -}
 getTypedScript ::
+  forall r params.
   TypedReader r params =>
   TypedBlueprint ->
   Text ->

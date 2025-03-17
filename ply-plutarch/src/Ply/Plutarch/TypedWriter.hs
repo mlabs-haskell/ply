@@ -5,7 +5,6 @@ module Ply.Plutarch.TypedWriter (
   type TypedWriter,
   type TypedWriter',
   type ParamsOf,
-  type RoleOf,
   type VersionOf,
   type PlyParamsOf,
   type ReferencedTypesOf,
@@ -19,17 +18,14 @@ import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy (Proxy))
 import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 
+import Generics.SOP (All, K (K), NP)
+import Generics.SOP.NP (collapse_NP, cpure_NP)
 import Plutarch.Internal.Term (PType)
 import Plutarch.LedgerApi.V3 (PScriptContext)
 import Plutarch.Prelude
-import PlutusTx.Blueprint (Definitions, DefinitionsFor, HasBlueprintDefinition, PlutusVersion (PlutusV2), Schema, UnrollAll, definitionRef)
-
-import Generics.SOP (All, K (K), NP)
-import Generics.SOP.NP (collapse_NP, cpure_NP)
+import PlutusTx.Blueprint (Definitions, DefinitionsFor, HasBlueprintDefinition, PlutusVersion (PlutusV3), Schema, UnrollAll, definitionRef)
 import PlutusTx.Blueprint.Definition (deriveDefinitions)
-import Ply (
-  ScriptRole (MintingPolicyRole, ValidatorRole),
- )
+
 import Ply.Plutarch.Class (PlyArgOf)
 
 type ReferencedTypesOf datum redeemer ptype = UnrollAll (PlyArgOf datum : PlyArgOf redeemer : MapPlyArgOf (ParamsOf ptype))
@@ -42,6 +38,7 @@ type TypedWriter' redeemer ptype = (HasBlueprintDefinition (PlyArgOf redeemer), 
 
 type HasArgDefinition :: [Type] -> PType -> Constraint
 class HasArgDefinition referencedTypes ptype where
+  -- | Plutarch version of 'definitionRef'
   pdefinitionRef :: Schema referencedTypes
 
 -- We can't just use 'Compose HasBlueprintDefinition PlyArgOf' instead of this class
@@ -107,44 +104,12 @@ type family ParamsOf a where
 
 {- | Given a Plutarch function type ending in
   'PData :--> PData :--> PScriptContext :--> POpaque' or
-  'PData :--> PScriptContext :--> POpaque', determine its 'ScriptRole'.
-
->>> :k! RoleOf (PData :--> PData :--> PScriptContext :--> POpaque)
-ValidatorRole
-
->>> :k! RoleOf (PData :--> PScriptContext :--> POpaque)
-MintingPolicyRole
-
->>> :k! RoleOf (PByteString :--> PData :--> PScriptContext :--> POpaque)
-MintingPolicyRole
-
-=== Note
-Indeed, there is a possibility for ambiguity here. Is `PData :--> PData :--> PScriptContext :--> POpaque` a
-minting policy with an extra 'PData' parameter? Or is it a validator?
-
-Currently, the Validator choice is given precedence. If you wanted to use the alternative meaning, use:
-`PAsData PData :--> PData :--> PScriptContext :--> POPaque` instead.
--}
-type RoleOf :: PType -> ScriptRole
-type family RoleOf a where
-  RoleOf (PData :--> PData :--> PScriptContext :--> POpaque) = ValidatorRole
-  RoleOf (PData :--> PScriptContext :--> POpaque) = MintingPolicyRole
-  RoleOf (_ :--> rest) = RoleOf rest
-  RoleOf wrong =
-    TypeError
-      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType (PData :--> PData :--> PScriptContext :--> POpaque)
-          :$$: 'Text "Or with: " :<>: ShowType (PData :--> PScriptContext :--> POpaque)
-          :$$: 'Text "But reached: " :<>: ShowType wrong
-      )
-
-{- | Given a Plutarch function type ending in
-  'PData :--> PData :--> PScriptContext :--> POpaque' or
   'PData :--> PScriptContext :--> POpaque'
 -}
 type VersionOf :: PType -> PlutusVersion
 type family VersionOf a where
-  VersionOf (PData :--> PData :--> PScriptContext :--> POpaque) = PlutusV2
-  VersionOf (PData :--> PScriptContext :--> POpaque) = PlutusV2
+  VersionOf (PData :--> PData :--> PScriptContext :--> POpaque) = PlutusV3
+  VersionOf (PData :--> PScriptContext :--> POpaque) = PlutusV3
   VersionOf (_ :--> rest) = VersionOf rest
   VersionOf wrong =
     TypeError

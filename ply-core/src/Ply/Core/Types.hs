@@ -6,7 +6,6 @@ module Ply.Core.Types (
   TypedScriptBlueprint (..),
   TypedScriptBlueprintParameter (..),
   TypedScript (..),
-  ScriptRole (..),
   ScriptReaderException (..),
   SchemaDescription,
   UPLCProgram,
@@ -39,23 +38,19 @@ import Ply.Core.Schema (SchemaDescription)
 
 type UPLCProgram = Program DeBruijn DefaultUni DefaultFun ()
 
--- | Compiled scripts that preserve script role and parameter types.
+-- | Compiled scripts that preserve script version and parameter types.
 type role TypedScript nominal nominal
 
-type TypedScript :: ScriptRole -> [Type] -> Type
-data TypedScript r a = TypedScriptConstr !PlutusVersion !UPLCProgram
+type TypedScript :: PlutusVersion -> [Type] -> Type
+data TypedScript v a = TypedScriptConstr !UPLCProgram
   deriving stock (Show)
-
--- | Script role: either a validator or a minting policy.
-data ScriptRole = ValidatorRole | MintingPolicyRole
-  deriving stock (Bounded, Enum, Eq, Ord, Show, Generic)
-  deriving anyclass (FromJSON)
 
 -- | Errors/Exceptions that may arise during Typed Script reading/parsing.
 data ScriptReaderException where
   AesonDecodeError :: String -> ScriptReaderException
   UnsupportedSchema :: forall referencedTypes. Schema referencedTypes -> ScriptReaderException
   UndefinedReference :: {referenceName :: Text, targetSchema :: SchemaDescription, definitionsMap :: Map Text SchemaDescription} -> ScriptReaderException
+  ScriptVersionError :: {expectedVersion :: PlutusVersion, actualVersion :: PlutusVersion} -> ScriptReaderException
   ScriptTypeError :: {expectedType :: SchemaDescription, actualType :: SchemaDescription} -> ScriptReaderException
 
 deriving stock instance Show ScriptReaderException
