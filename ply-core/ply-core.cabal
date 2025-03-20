@@ -14,15 +14,14 @@ common common-ghc-opts
     -Wall -Wcompat -Wincomplete-uni-patterns -Wno-unused-do-bind
     -Wno-partial-type-signatures -Wmissing-export-lists -Werror
     -Wincomplete-record-updates -Wmissing-deriving-strategies
-    -Wno-name-shadowing -Wunused-foralls -Wmissing-import-lists
-    -Wno-unticked-promoted-constructors -fprint-explicit-foralls
-    -fprint-explicit-kinds
+    -Wno-name-shadowing -Wunused-foralls -Werror -Wunused-packages
+    -Wmissing-import-lists -Wno-unticked-promoted-constructors
+    -fprint-explicit-foralls -fprint-explicit-kinds
 
 common common-deps
   build-depends:
     , aeson
     , base
-    , bytestring
     , containers
     , plutus-core
     , plutus-ledger-api
@@ -53,8 +52,8 @@ library
   build-depends:
     , aeson-pretty
     , base16-bytestring
+    , bytestring
     , cardano-binary
-    , sop-core
     , transformers
 
   exposed-modules:
@@ -70,7 +69,6 @@ library
   other-modules:
     Ply.Core.Schema.Description
     Ply.Core.Schema.Normalize
-    Ply.Core.Schema.Types
     Ply.Core.Types
     Ply.Core.UPLC
 
@@ -87,7 +85,6 @@ test-suite ply-core-test
     , base
     , plutarch-orphanage
     , ply-core
-    , QuickCheck
     , tasty
     , tasty-hunit
     , tasty-quickcheck

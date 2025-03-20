@@ -1,10 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE UndecidableSuperClasses #-}
 
 module Ply.Core.Schema (
-  PlySchema (..),
-  PlyDataSchema (..),
   SchemaDescription (..),
   descriptionFromPlutus,
   deriveSchemaDescriptions,
@@ -31,7 +27,6 @@ import Ply.Core.Schema.Description (
   descriptionFromPlutus,
  )
 import Ply.Core.Schema.Normalize (normalizeSchemaDescription)
-import Ply.Core.Schema.Types (PlyDataSchema (PlyDB, PlyDI, PlyDL, PlyDM, PlyDS), PlySchema (PlyBool, PlyByteStr, PlyD, PlyInt, PlyListOf, PlyPairOf, PlyStr, PlyUnit))
 
 -- | Get a map with the definitions for the given types. Takes an erring function to handle description conversion errors.
 deriveSchemaDescriptions :: forall (params :: [Type]) m. (DefinitionsFor (UnrollAll params), Monad m) => (forall x ts. Schema ts -> m x) -> m (Map Text SchemaDescription)
