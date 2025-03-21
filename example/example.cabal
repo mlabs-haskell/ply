@@ -118,6 +118,7 @@ library example-types
   import:          common-deps
   import:          common-ghc-opts
   exposed-modules: Example.Type
+  build-depends:   ply-core
   hs-source-dirs:  common
 
 executable example-compile
@@ -150,6 +151,7 @@ executable example-reader
     , bytestring
     , directory
     , example
+    , example-types
     , filepath
     , ply-core
 

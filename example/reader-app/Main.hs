@@ -10,6 +10,8 @@ import PlutusLedgerApi.V3
 import Ply
 import UntypedPlutusCore
 
+import Example.Type (MyParameter (MyParameter, myParameter'ref, myParameter'tn))
+
 data MintingPolicy = MintingPolicy (Program DeBruijn DefaultUni DefaultFun ())
 
 instance Show MintingPolicy where
@@ -39,8 +41,10 @@ main = do
   let policy =
         toMintingPolicy $
           nftMp
-            #! TxOutRef {txOutRefId = "2be7c999fda3c9d4c3540bc9f4f28b78f8aacf9662b4489d8000bcdc18131268", txOutRefIdx = 0}
-            #! ("A" :: TokenName)
+            #! MyParameter
+              { myParameter'ref = TxOutRef {txOutRefId = "2be7c999fda3c9d4c3540bc9f4f28b78f8aacf9662b4489d8000bcdc18131268", txOutRefIdx = 0}
+              , myParameter'tn = "A"
+              }
 
   print policy
 
