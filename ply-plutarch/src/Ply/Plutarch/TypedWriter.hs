@@ -3,12 +3,10 @@
 
 module Ply.Plutarch.TypedWriter (
   type TypedWriter,
-  type TypedWriter',
   type ParamsOf,
   type VersionOf,
   type PlyParamsOf,
   type ReferencedTypesOf,
-  type ReferencedTypesOf',
   HasArgDefinition (pdefinitionRef),
   mkParamSchemas,
   derivePDefinitions,
@@ -26,18 +24,15 @@ import Plutarch.Prelude
 import PlutusTx.Blueprint (Definitions, DefinitionsFor, HasBlueprintDefinition, PlutusVersion (PlutusV3), Schema, UnrollAll, definitionRef)
 import PlutusTx.Blueprint.Definition (deriveDefinitions)
 
+import Ply (ReifyVersion)
 import Ply.Plutarch.Class (PlyArgOf)
 
-type ReferencedTypesOf datum redeemer ptype = UnrollAll (PlyArgOf datum : PlyArgOf redeemer : MapPlyArgOf (ParamsOf ptype))
+type ReferencedTypesOf ptype = UnrollAll (MapPlyArgOf (ParamsOf ptype))
 
-type ReferencedTypesOf' redeemer ptype = UnrollAll (PlyArgOf redeemer : MapPlyArgOf (ParamsOf ptype))
-
-type TypedWriter datum redeemer ptype = (DefinitionsFor (ReferencedTypesOf datum redeemer ptype), All (HasArgDefinition (ReferencedTypesOf datum redeemer ptype)) (ParamsOf ptype))
-
-type TypedWriter' redeemer ptype = (HasBlueprintDefinition (PlyArgOf redeemer), DefinitionsFor (ReferencedTypesOf' redeemer ptype), All (HasArgDefinition (ReferencedTypesOf' redeemer ptype)) (ParamsOf ptype))
+type TypedWriter ptype = (ReifyVersion (VersionOf ptype), DefinitionsFor (ReferencedTypesOf ptype), All (HasArgDefinition (ReferencedTypesOf ptype)) (ParamsOf ptype))
 
 type HasArgDefinition :: [Type] -> PType -> Constraint
-class HasArgDefinition referencedTypes ptype where
+class HasBlueprintDefinition (PlyArgOf ptype) => HasArgDefinition referencedTypes ptype where
   -- | Plutarch version of 'definitionRef'
   pdefinitionRef :: Schema referencedTypes
 
