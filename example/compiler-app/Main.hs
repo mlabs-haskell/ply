@@ -7,9 +7,8 @@ import qualified Data.Text as Txt
 import System.FilePath ((</>))
 
 import qualified Cardano.Binary as CBOR
-import Plutarch.Internal.Term (Config (Tracing), LogLevel (LogInfo), TracingMode (DoTracing), compile)
-import Plutarch.LedgerApi.V3 (PScriptContext, PTokenName, PTxOutRef, scriptHash)
-import Plutarch.Prelude (PAsData, PData, POpaque, (:-->))
+import Plutarch.Internal.Term (ClosedTerm, Config (Tracing), LogLevel (LogInfo), TracingMode (DoTracing), compile)
+import Plutarch.LedgerApi.V3 (PTxOutRef, scriptHash)
 import Plutarch.Script (serialiseScript)
 import PlutusLedgerApi.V3 (ScriptHash (..))
 import PlutusTx.Blueprint
@@ -33,11 +32,11 @@ main =
             { preambleTitle = "Example Contract"
             , preambleDescription = Nothing
             , preambleVersion = "1.0.0"
-            , preamblePlutusVersion = reifyVersion $ Proxy @(VersionOf (PTxOutRef :--> PAsData PTokenName :--> PData :--> PScriptContext :--> POpaque))
+            , preamblePlutusVersion = versionOf nftMp
             , preambleLicense = Nothing
             }
       , contractValidators = Set.singleton scriptBP
-      , contractDefinitions = derivePDefinitions @(ParamsOf (PTxOutRef :--> PAsData PTokenName :--> PData :--> PScriptContext :--> POpaque))
+      , contractDefinitions = scriptDefinitions nftMp
       }
   where
     scriptBP =
@@ -55,7 +54,7 @@ main =
                     , parameterSchema = sch
                     }
               )
-              $ mkParamSchemas @(ReferencedTypesOf' PTxOutRef (PTxOutRef :--> PAsData PTokenName :--> PData :--> PScriptContext :--> POpaque)) @(ParamsOf (PTxOutRef :--> PAsData PTokenName :--> PData :--> PScriptContext :--> POpaque))
+              $ scriptParamSchemas nftMp
         , validatorRedeemer =
             MkArgumentBlueprint
               { argumentTitle = Nothing
@@ -74,3 +73,12 @@ main =
     script = either (error . Txt.unpack) id $ compile (Tracing LogInfo DoTracing) nftMp
     -- NOTE: Plutarch's scriptHash function is exported from V3 but hashes with V2 prefix. This is a bug.
     ScriptHash hash = scriptHash script
+
+versionOf :: forall ptype. TypedWriter ptype => ClosedTerm ptype -> PlutusVersion
+versionOf _ = reifyVersion $ Proxy @(VersionOf ptype)
+
+scriptDefinitions :: forall ptype. TypedWriter ptype => ClosedTerm ptype -> Definitions (ReferencedTypesOf ptype)
+scriptDefinitions _ = derivePDefinitions @(ParamsOf ptype)
+
+scriptParamSchemas :: forall ptype. TypedWriter ptype => ClosedTerm ptype -> [Schema (ReferencedTypesOf ptype)]
+scriptParamSchemas _ = mkParamSchemas @(ReferencedTypesOf ptype) @(ParamsOf ptype)
