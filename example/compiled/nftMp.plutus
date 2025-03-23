@@ -24,7 +24,7 @@
           ]
         },
         "schema": {
-          "$ref": "#/definitions/TxOutRef"
+          "$ref": "#/definitions/BuiltinData"
         }
       },
       "parameters": [
@@ -48,6 +48,7 @@
     "BuiltinByteString": {
       "dataType": "bytes"
     },
+    "BuiltinData": {},
     "Integer": {
       "dataType": "integer"
     },

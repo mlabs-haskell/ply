@@ -1,3 +1,5 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
 module Main (main) where
 
 import qualified Data.ByteString.Short as SBS
@@ -8,11 +10,11 @@ import System.FilePath ((</>))
 
 import qualified Cardano.Binary as CBOR
 import Plutarch.Internal.Term (ClosedTerm, Config (Tracing), LogLevel (LogInfo), TracingMode (DoTracing), compile)
-import Plutarch.LedgerApi.V3 (PTxOutRef, scriptHash)
+import Plutarch.LedgerApi.V3 (scriptHash)
 import Plutarch.Script (serialiseScript)
-import PlutusLedgerApi.V3 (ScriptHash (..))
+import PlutusLedgerApi.V3 (ScriptHash (ScriptHash))
 import PlutusTx.Blueprint
-import Ply (reifyVersion)
+import Ply (ReifyVersion, reifyVersion)
 import Ply.Plutarch
 
 -- This is apparently the V2 script hash.
@@ -20,6 +22,7 @@ import Ply.Plutarch
 import qualified PlutusTx.Builtins as PlutusTx
 
 import Example.NftM (nftMp)
+import Plutarch.Prelude (PData)
 
 main :: IO ()
 main =
@@ -36,7 +39,7 @@ main =
             , preambleLicense = Nothing
             }
       , contractValidators = Set.singleton scriptBP
-      , contractDefinitions = scriptDefinitions nftMp
+      , contractDefinitions = scriptDefinitions @PData nftMp
       }
   where
     scriptBP =
@@ -54,13 +57,15 @@ main =
                     , parameterSchema = sch
                     }
               )
-              $ scriptParamSchemas nftMp
+              $ scriptParamSchemas @PData nftMp
         , validatorRedeemer =
             MkArgumentBlueprint
               { argumentTitle = Nothing
               , argumentDescription = Nothing
               , argumentPurpose = Set.fromList [Spend, Mint]
-              , argumentSchema = definitionRef @(PlyArgOf PTxOutRef)
+              , -- In this case, the redeemer type does not matter - so we're just going with "any".
+                -- But you may want to change this based on your script.
+                argumentSchema = definitionRef @(PlyArgOf PData)
               }
         , validatorDatum = Nothing
         , validatorCompiled =
@@ -74,11 +79,13 @@ main =
     -- NOTE: Plutarch's scriptHash function is exported from V3 but hashes with V2 prefix. This is a bug.
     ScriptHash hash = scriptHash script
 
-versionOf :: forall ptype. TypedWriter ptype => ClosedTerm ptype -> PlutusVersion
+versionOf :: forall ptype. ReifyVersion (VersionOf ptype) => ClosedTerm ptype -> PlutusVersion
 versionOf _ = reifyVersion $ Proxy @(VersionOf ptype)
 
-scriptDefinitions :: forall ptype. TypedWriter ptype => ClosedTerm ptype -> Definitions (ReferencedTypesOf ptype)
-scriptDefinitions _ = derivePDefinitions @(ParamsOf ptype)
+-- Note: We have to manually prepend datum/redeemer to the types because it does not exist on the Plutarch type.
+scriptDefinitions :: forall redeemer ptype. HasDefinitions (redeemer : ParamsOf ptype) => ClosedTerm ptype -> Definitions (ReferencedTypesOf (redeemer : ParamsOf ptype))
+scriptDefinitions _ = derivePDefinitions @(redeemer : ParamsOf ptype)
 
-scriptParamSchemas :: forall ptype. TypedWriter ptype => ClosedTerm ptype -> [Schema (ReferencedTypesOf ptype)]
-scriptParamSchemas _ = mkParamSchemas @(ReferencedTypesOf ptype) @(ParamsOf ptype)
+-- Note: When using 'mkParamSchemas', the second type argument should only contain the params (i.e from 'ParamsOf'), not the datum/redeemer.
+scriptParamSchemas :: forall redeemer ptype. HasDefinitions (redeemer : ParamsOf ptype) => ClosedTerm ptype -> [Schema (ReferencedTypesOf (redeemer : ParamsOf ptype))]
+scriptParamSchemas _ = mkParamSchemas @(ReferencedTypesOf (redeemer : ParamsOf ptype)) @(ParamsOf ptype)
