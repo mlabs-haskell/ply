@@ -9,7 +9,7 @@ import GHC.Generics (Generic)
 
 import Data.Aeson (FromJSON)
 import qualified Data.Aeson as Aeson
-import PlutusLedgerApi.Data.V3 (Address, BuiltinByteString, Credential, CurrencySymbol, DatumHash, Interval, POSIXTime, PubKeyHash, RedeemerHash, ScriptHash, StakingCredential, TokenName, TxId, TxOutRef, Value)
+import PlutusLedgerApi.Data.V3 (Address, BuiltinByteString, BuiltinData, Credential, CurrencySymbol, DatumHash, Interval, POSIXTime, PubKeyHash, RedeemerHash, ScriptHash, StakingCredential, TokenName, TxId, TxOutRef, Value)
 import PlutusLedgerApi.V1.Value (AssetClass)
 import PlutusTx.Blueprint (DefinitionsFor, HasBlueprintDefinition, UnrollAll, definitionRef, definitionsToMap, deriveDefinitions)
 import qualified PlutusTx.Ratio as PlutusTx
@@ -60,6 +60,7 @@ test =
     [ testCase "int" $ encodeDecodeTest @Int
     , testCase "integer" $ encodeDecodeTest @Integer
     , testCase "builtin-bytestring" $ encodeDecodeTest @BuiltinByteString
+    , testCase "builtin-data" $ encodeDecodeTest @BuiltinData
     , testCase "rational" $ encodeDecodeTest @PlutusTx.Rational
     , testCase "value" $ encodeDecodeTest @Value
     , testCase "credential" $ encodeDecodeTest @Credential

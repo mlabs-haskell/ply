@@ -10,7 +10,7 @@ import qualified Plutarch.LedgerApi.V3 as PLedger.V3
 import Plutarch.LedgerApi.Value (AmountGuarantees (NoGuarantees), PValue)
 import Plutarch.Prelude
 import Plutarch.Test.QuickCheck (propEvalEqual)
-import PlutusLedgerApi.Common (toBuiltin)
+import PlutusLedgerApi.Common (BuiltinData, fromBuiltin, toBuiltin)
 import PlutusLedgerApi.V3.Orphans ()
 import Ply (PlyArg (toSomeBuiltinArg))
 import Ply.Plutarch.Class (PlyArgOf)
@@ -26,6 +26,7 @@ tests =
     "types correspondence"
     [ prop @(PAsData PInteger) "integer"
     , propEvalEqual @ByteString "bytestring" (pdata . pconstant @PByteString) (punsafeConstantInternal . toSomeBuiltinArg . toBuiltin)
+    , propEvalEqual @BuiltinData "builtin-data" (pdata . pconstant @PData . fromBuiltin) (punsafeConstantInternal . toSomeBuiltinArg)
     , prop @PLedger.V3.PRationalData "rational"
     , prop @(PAsData (PValue Unsorted NoGuarantees)) "value"
     , prop @PLedger.V3.PCredential "credential"
