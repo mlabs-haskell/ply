@@ -14,21 +14,16 @@ common common-ghc-opts
     -Wall -Wcompat -Wincomplete-uni-patterns -Wno-unused-do-bind
     -Wno-partial-type-signatures -Wmissing-export-lists -Werror
     -Wincomplete-record-updates -Wmissing-deriving-strategies
-    -Wno-name-shadowing -Wunused-foralls
+    -Wno-name-shadowing -Wunused-foralls -Werror -Wunused-packages
     -Wno-unticked-promoted-constructors -fprint-explicit-foralls
     -fprint-explicit-kinds
 
 common common-deps
   build-depends:
     , base
-    , bytestring
     , plutarch
-    , plutarch-extra
     , plutarch-ledger-api
     , plutus-ledger-api
-    , plutus-tx
-    , ply-core
-    , text
 
 common common-lang
   default-extensions:
@@ -90,6 +85,11 @@ library
   import:          common-configs
   import:          common-deps
   import:          common-ghc-opts
+  build-depends:
+    , bytestring
+    , generics-sop
+    , plutus-tx
+
   exposed-modules:
     Ply.Plutarch
     Ply.Plutarch.Class
@@ -105,10 +105,13 @@ test-suite ply-plutarch-test
   type:           exitcode-stdio-1.0
   main-is:        Spec.hs
   build-depends:
-    , data-default
+    , bytestring
+    , plutarch-orphanage
+    , plutarch-testlib
+    , ply-core
     , ply-plutarch
+    , QuickCheck
     , tasty
-    , tasty-hunit
 
   hs-source-dirs: test
   ghc-options:    -threaded -rtsopts -with-rtsopts=-N

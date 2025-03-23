@@ -105,7 +105,21 @@ library
   import:          common-deps
   import:          common-ghc-opts
   exposed-modules: Example.NftM
+  build-depends:
+    , example-types
+    , generics-sop
+    , ply-plutarch
+
   hs-source-dirs:  src
+
+library example-types
+  import:          common-lang
+  import:          common-configs
+  import:          common-deps
+  import:          common-ghc-opts
+  exposed-modules: Example.Type
+  build-depends:   ply-core
+  hs-source-dirs:  common
 
 executable example-compile
   import:         common-lang
@@ -114,9 +128,13 @@ executable example-compile
   import:         common-ghc-opts
   main-is:        Main.hs
   build-depends:
+    , bytestring
+    , cardano-binary
+    , containers
     , directory
     , example
     , filepath
+    , ply-core
     , ply-plutarch
 
   hs-source-dirs: compiler-app
@@ -133,6 +151,7 @@ executable example-reader
     , bytestring
     , directory
     , example
+    , example-types
     , filepath
     , ply-core
 

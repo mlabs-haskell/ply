@@ -1,104 +1,110 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Ply.Plutarch.TypedWriter (
-  TypedWriter,
+  type HasDefinitions,
   type ParamsOf,
-  type RoleOf,
   type VersionOf,
   type PlyParamsOf,
-  writeTypedScript,
-  toTypedScript,
-  mkEnvelope,
+  type ReferencedTypesOf,
+  HasArgDefinition (pdefinitionRef),
+  mkParamSchemas,
+  derivePDefinitions,
 ) where
 
-import Control.Exception (throwIO)
+import Data.Kind (Constraint, Type)
 import Data.Proxy (Proxy (Proxy))
-import Data.Text (Text)
-import qualified Data.Text as Txt
 import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 
-import Plutarch (Config, compile)
-import Plutarch.LedgerApi.V2 (PScriptContext)
+import Generics.SOP (All, K (K), NP)
+import Generics.SOP.NP (collapse_NP, cpure_NP)
+import Plutarch.Internal.Term (PType)
+import Plutarch.LedgerApi.V3 (PScriptContext)
 import Plutarch.Prelude
-import Plutarch.Script (unScript)
+import PlutusTx.Blueprint (Definitions, DefinitionsFor, HasBlueprintDefinition, PlutusVersion (PlutusV3), Schema, UnrollAll, definitionRef)
+import PlutusTx.Blueprint.Definition (deriveDefinitions)
 
-import Ply (
-  ScriptRole (MintingPolicyRole, ValidatorRole),
-  ScriptVersion (ScriptV2),
-  TypedScript,
-  TypedScriptEnvelope (..),
- )
-import Ply.Core.Internal.Reify (
-  ReifyRole,
-  ReifyTypenames,
-  ReifyVersion,
-  reifyVersion,
- )
-import Ply.Core.Serialize (writeEnvelope)
-import Ply.Core.TypedReader (typedScriptToEnvelope)
-import Ply.Core.Unsafe (unsafeTypedScript)
 import Ply.Plutarch.Class (PlyArgOf)
 
-{- | Write a parameterized Plutarch validator or minting policy into the filesystem.
+{- | Get all the referenced types for a given list of Plutarch types.
 
-The result can be read by 'readTypedScript'.
+This can be used in conjuction with 'ParamsOf' to obtain the type parameter to be passed to 'Definitions'.
 
-Please also see: 'typedWriterInfo'.
+=== Example
+
+Given a Plutarch function type for a validator: (PTxOutRef :--> PData :--> PData :--> PScriptContext)
+
+We can get the referenced types for its parameter(s) - i.e just 'PTxOutRef' in this case:
+
+@
+ReferencedTypesOf (ParamsOf (PTxOutRef :--> PData :--> PData :--> PScriptContext))
+@
+
+However, you'll also need the datum and redeemer types for the blueprints definitions field.
+Assuming the datum is 'PTxId' and the redeemer is 'PAsData PTokenName', you can do:
+
+@
+ReferencedTypesOf (PTxId : PAsData PTokenName : ParamsOf (PTxOutRef :--> PData :--> PData :--> PScriptContext))
+@
+
+This can be used as the parameter to 'Definitions'. See: 'derivePDefinitions'
 -}
-writeTypedScript ::
-  TypedWriter pt =>
-  -- | Plutarch compiler configuration which will be used to compile the script.
-  Config ->
-  -- | Description to be associated with the compiled script file, semantically irrelevant.
-  Text ->
-  -- | File path to save the file to.
-  FilePath ->
-  -- | The parameterized Plutarch validator/minting policy.
-  ClosedTerm pt ->
-  IO ()
-writeTypedScript conf descr fp target =
-  either (throwIO . userError . Txt.unpack) (writeEnvelope fp) envelope
+type ReferencedTypesOf ptypes = UnrollAll (MapPlyArgOf ptypes)
+
+{- | Handy constraint for ensuring all given Plutarch types satisfy constraints for having Blueprint definitions and therefore can be used
+with 'pdefinitionRef' and 'derivePDefinitions'.
+-}
+type HasDefinitions ptypes = (DefinitionsFor (ReferencedTypesOf ptypes), All (HasArgDefinition (ReferencedTypesOf ptypes)) ptypes)
+
+type HasArgDefinition :: [Type] -> PType -> Constraint
+class HasBlueprintDefinition (PlyArgOf ptype) => HasArgDefinition referencedTypes ptype where
+  -- | Plutarch version of 'definitionRef'
+  pdefinitionRef :: Schema referencedTypes
+
+-- We can't just use 'Compose HasBlueprintDefinition PlyArgOf' instead of this class
+-- because PlyArgOf is a type family and cannot be passed unapplied!
+instance HasBlueprintDefinition (PlyArgOf ptype) => HasArgDefinition referencedTypes ptype where
+  pdefinitionRef = definitionRef @(PlyArgOf ptype)
+
+{- | Given a list of Plutarch types, create the associated (as determined by 'PlyArgOf') Plutus blueprint
+ schemas in order. These schemas can then be attached to blueprint creation functions from "PlutusTx.Blueprint".
+
+ This is meant to be used for only the _parameters_ to a script. Not the datum/redeemer. As such, the 'ptypes' argument should be obtained
+ via 'ParamsOf' on a Plutarch function type. Whereas the 'referencedTypes' argument should be obtained using the usual 'ReferencedTypesOf'.
+
+=== Example
+
+Assuming a Plutarch function type for a validator script: (PTxOutRef :--> PData :--> PData :--> PScriptContext)
+With datum: PTxId
+With redeemer: PAsData PTokenName
+
+use:
+
+@
+mkParamSchemas
+  @(ReferencedTypesOf (PTxId : PAsData PTokenName : ParamsOf (PTxOutRef :--> PData :--> PData :--> PScriptContext)))
+  @(ParamsOf (PTxOutRef :--> PData :--> PData :--> PScriptContext))
+@
+-}
+mkParamSchemas :: forall (referencedTypes :: [Type]) (ptypes :: [PType]). All (HasArgDefinition referencedTypes) ptypes => [Schema referencedTypes]
+mkParamSchemas = collapse_NP np
   where
-    envelope = mkEnvelope conf descr target
+    np :: NP (K (Schema referencedTypes)) ptypes
+    np = cpure_NP (Proxy @(HasArgDefinition referencedTypes)) f
+    -- The 'a' type parameter has to be applied explicitly, so we can't just inline this in place of 'f' and expect 'a' to be inferred based on expected type.
+    f :: forall (a :: PType). HasArgDefinition referencedTypes a => K (Schema referencedTypes) a
+    f = K $ pdefinitionRef @referencedTypes @a
 
-{- | Class of Plutarch function types that can be written to the filesystem as 'TypedScript's.
-
-See: 'typedWriterInfo'.
+{- | Derive the schema definitions for the parameters, datum and redeemer of a script.
+ Use it in conjuction with 'ReferencedTypesOf' to obtain the definitions needed for a script
 -}
-type TypedWriter ptype =
-  ( ReifyVersion (VersionOf ptype)
-  , ReifyRole (RoleOf ptype)
-  , ReifyTypenames (PlyParamsOf (ParamsOf ptype))
-  )
+derivePDefinitions :: forall (ptypes :: [PType]). HasDefinitions ptypes => Definitions (ReferencedTypesOf ptypes)
+derivePDefinitions = deriveDefinitions @(MapPlyArgOf ptypes)
 
--- | Wrapper around 'toTypedScript' that builds a 'TypedScriptEnvelope' to serialize into the file system.
-mkEnvelope ::
-  forall ptype.
-  TypedWriter ptype =>
-  Config ->
-  Text ->
-  ClosedTerm ptype ->
-  Either Text TypedScriptEnvelope
-mkEnvelope conf descr pterm = typedScriptToEnvelope descr <$> toTypedScript conf pterm
-
-{- | The core `ply-plutarch` function: obtain all the necessary information about a Plutarch script, and turn it into 'TypedScript'.
-
-For a description of extra parameters are determined, see: 'PlyParamsOf' and 'ParamsOf' type families.
-
-For a description of 'ScriptVersion' is determined, see: 'VersionOf' type family.
-
-For a description of 'ScriptRole' is determined, see: 'RoleOf' type family.
--}
-toTypedScript ::
-  forall ptype.
-  TypedWriter ptype =>
-  Config ->
-  ClosedTerm ptype ->
-  Either Text (TypedScript (RoleOf ptype) (PlyParamsOf (ParamsOf ptype)))
-toTypedScript conf pterm = unsafeTypedScript ver <$> scrptEith
-  where
-    scrptEith = unScript <$> compile conf pterm
-    ver = reifyVersion $ Proxy @(VersionOf ptype)
+type MapPlyArgOf :: [PType] -> [Type]
+type family MapPlyArgOf xs where
+  MapPlyArgOf '[] = '[]
+  MapPlyArgOf (x ': xs) = PlyArgOf x ': MapPlyArgOf xs
 
 {- | Given a Plutarch function type ending in
   'PData :--> PData :--> PScriptContext :--> POpaque' or
@@ -134,44 +140,12 @@ type family ParamsOf a where
 
 {- | Given a Plutarch function type ending in
   'PData :--> PData :--> PScriptContext :--> POpaque' or
-  'PData :--> PScriptContext :--> POpaque', determine its 'ScriptRole'.
-
->>> :k! RoleOf (PData :--> PData :--> PScriptContext :--> POpaque)
-ValidatorRole
-
->>> :k! RoleOf (PData :--> PScriptContext :--> POpaque)
-MintingPolicyRole
-
->>> :k! RoleOf (PByteString :--> PData :--> PScriptContext :--> POpaque)
-MintingPolicyRole
-
-=== Note
-Indeed, there is a possibility for ambiguity here. Is `PData :--> PData :--> PScriptContext :--> POpaque` a
-minting policy with an extra 'PData' parameter? Or is it a validator?
-
-Currently, the Validator choice is given precedence. If you wanted to use the alternative meaning, use:
-`PAsData PData :--> PData :--> PScriptContext :--> POPaque` instead.
--}
-type RoleOf :: PType -> ScriptRole
-type family RoleOf a where
-  RoleOf (PData :--> PData :--> PScriptContext :--> POpaque) = ValidatorRole
-  RoleOf (PData :--> PScriptContext :--> POpaque) = MintingPolicyRole
-  RoleOf (_ :--> rest) = RoleOf rest
-  RoleOf wrong =
-    TypeError
-      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType (PData :--> PData :--> PScriptContext :--> POpaque)
-          :$$: 'Text "Or with: " :<>: ShowType (PData :--> PScriptContext :--> POpaque)
-          :$$: 'Text "But reached: " :<>: ShowType wrong
-      )
-
-{- | Given a Plutarch function type ending in
-  'PData :--> PData :--> PScriptContext :--> POpaque' or
   'PData :--> PScriptContext :--> POpaque'
 -}
-type VersionOf :: PType -> ScriptVersion
+type VersionOf :: PType -> PlutusVersion
 type family VersionOf a where
-  VersionOf (PData :--> PData :--> PScriptContext :--> POpaque) = ScriptV2
-  VersionOf (PData :--> PScriptContext :--> POpaque) = ScriptV2
+  VersionOf (PData :--> PData :--> PScriptContext :--> POpaque) = PlutusV3
+  VersionOf (PData :--> PScriptContext :--> POpaque) = PlutusV3
   VersionOf (_ :--> rest) = VersionOf rest
   VersionOf wrong =
     TypeError
