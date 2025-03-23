@@ -1,3 +1,20 @@
+# 1.0.0 - CIP-57
+
+- This is a big overhaul release. Most things about previous iterations are not relevant.
+- Serialization is largely done using `PlutusTx.Blueprint` utilities. There are helpers for getting the right types with `ply-plutarch`.
+    See: [example-compile](./example/compiler-app/)
+- `PlyArg` should now be default derived via `anyclass`. Its only method now is `toSomeBuiltinArg` - previous methods have been removed.
+    Example of custom derivation: [example-common](./example/common/)
+- `PlyArgOf` remains largely the same. Refer to its haddock to understand what its instances should be like (for custom types).
+- `TypedReader` is largely the same.
+- `ScriptRole`s have been removed.
+- Removed `TypedWriter`. It can be substituted with `VersionOf` and `HasDefinitions`.
+
+Please see [example](./example) to get an idea of how Ply 1.0 works. It is best to approach this release as an entirely new tool.
+
+However, the usage of Ply should largely be improved and more reliable. Writing blueprints is a bit tedious but it's possible to have helpers
+to simplify this process.
+
 # 0.7.1 - BUG FIX
 
 - Fix function application producing absurd code when applying small constants (unit, bool, integer).
