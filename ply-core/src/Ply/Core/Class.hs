@@ -42,6 +42,17 @@ class (DefinitionsFor (UnrollAll '[a]), HasBlueprintDefinition a, HasBlueprintSc
       dat = PlutusTx.toData x
       sch = getSchemaOrErr $ Proxy @a
 
+{- | Match a given data to the given schema. This essentially performs certain conversions needed to conform to the schema.
+
+This is done so we don't blindly use 'toData' and just apply that to a script when the script may be expecting something else.
+At the end of the day, many types have a 'Data' conversion that can be easily converted to a non-data schema. So we do that, when necessary.
+
+This function also recursively _evaluates_ itself on nested constructors. But note that the results are not used. This is simply to run
+any validation checks corresponding to the schema. However, this must be limited to validation, not normalization.
+
+Validation is planned to be extended using CIP-57 schema information. When that happens, this function will need to take in not only the schema
+type but also the schema information regarding invariants.
+-}
 matchSchemaToValue :: SchemaDescription -> Data -> Some (ValueOf DefaultUni)
 matchSchemaToValue (SimpleType "#unit") (Constr 0 []) = PLC.someValue ()
 matchSchemaToValue (SimpleType "#boolean") (Constr ix []) = PLC.someValue $ ix /= 0
