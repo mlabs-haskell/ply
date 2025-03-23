@@ -25,7 +25,21 @@ import qualified Data.Aeson.Encode.Pretty as Aeson
 import Data.Aeson.Key (toString)
 import Data.Aeson.KeyMap ((!?))
 import Data.Aeson.Types (Parser)
-import PlutusTx.Blueprint (ConstructorSchema (MkConstructorSchema), DefinitionId (definitionIdToText), ListSchema (MkListSchema), MapSchema (MkMapSchema), PairSchema (MkPairSchema), Schema (SchemaAnyOf, SchemaBuiltInBoolean, SchemaBuiltInBytes, SchemaBuiltInInteger, SchemaBuiltInList, SchemaBuiltInPair, SchemaBuiltInString, SchemaBuiltInUnit, SchemaBytes, SchemaConstructor, SchemaDefinitionRef, SchemaInteger, SchemaList, SchemaMap, SchemaOneOf), fieldSchemas, index, itemSchema, keySchema, left, right, valueSchema)
+import PlutusTx.Blueprint (
+  ConstructorSchema (MkConstructorSchema),
+  DefinitionId (definitionIdToText),
+  ListSchema (MkListSchema),
+  MapSchema (MkMapSchema),
+  PairSchema (MkPairSchema),
+  Schema (SchemaAnyOf, SchemaBuiltInBoolean, SchemaBuiltInBytes, SchemaBuiltInData, SchemaBuiltInInteger, SchemaBuiltInList, SchemaBuiltInPair, SchemaBuiltInString, SchemaBuiltInUnit, SchemaBytes, SchemaConstructor, SchemaDefinitionRef, SchemaInteger, SchemaList, SchemaMap, SchemaOneOf),
+  fieldSchemas,
+  index,
+  itemSchema,
+  keySchema,
+  left,
+  right,
+  valueSchema,
+ )
 
 refPrefix :: Text
 refPrefix = "#/definitions/"
@@ -40,6 +54,8 @@ data SchemaDescription
   | DataListType SchemaDescription
   | MapType SchemaDescription SchemaDescription
   | ConstrType (NonEmpty [SchemaDescription])
+  | -- Opaque Data type
+    AnyDataType
   | -- Reference to a schema definition from the top-level `definitions` field.
     SchemaRef Text
   deriving stock (Eq)
@@ -60,6 +76,7 @@ descriptionFromPlutus (SchemaConstructor _ MkConstructorSchema {fieldSchemas, in
 descriptionFromPlutus (SchemaAnyOf variants) = ConstrType <$> variantFromPlutus variants
 descriptionFromPlutus (SchemaOneOf variants) = ConstrType <$> variantFromPlutus variants
 descriptionFromPlutus (SchemaDefinitionRef defId) = Just . SchemaRef $ definitionIdToText defId
+descriptionFromPlutus (SchemaBuiltInData _) = Just AnyDataType
 descriptionFromPlutus _ = Nothing
 
 variantFromPlutus :: NonEmpty (Schema referencedTypes) -> Maybe (NonEmpty [SchemaDescription])
@@ -89,6 +106,7 @@ instance ToJSON SchemaDescription where
       constrDescr :: Int -> [SchemaDescription] -> Value
       constrDescr ix descrs = Aeson.object ["dataType" .= Txt.pack "constructor", "index" .= ix, "fields" .= map toJSON descrs]
   toJSON (SchemaRef name) = Aeson.object ["$ref" .= (refPrefix <> name)]
+  toJSON AnyDataType = Aeson.object []
 
 {- | Note: This instance ignores any extra keys that aren't necessary to parse a schema. As such, 'dataType' is the most important key.
 
@@ -97,10 +115,11 @@ then even if there are other keys that _shouldn't_ be there (such as 'items' key
 -}
 instance FromJSON SchemaDescription where
   parseJSON = Aeson.withObject "SchemaDescription" $ \obj ->
-    refParser obj <|> multiConstrTypeParser obj <|> do
-      res <- maybe (fail "Key 'dataType' not found") pure $ obj !? "dataType"
-      Aeson.withText "Schema.dataType" (parseOtherSchema obj) res
+    refParser obj <|> multiConstrTypeParser obj <|> objWithDataTypeParser obj <|> pure AnyDataType
     where
+      objWithDataTypeParser obj = do
+        res <- maybe (fail "Key 'dataType' not found") pure $ obj !? "dataType"
+        Aeson.withText "Schema.dataType" (parseOtherSchema obj) res
       refParser :: Aeson.Object -> Parser SchemaDescription
       refParser obj = assertKey obj "$ref" >>= Aeson.withText "Schema.$ref" parseRefName
       parseRefName :: Text -> Parser SchemaDescription

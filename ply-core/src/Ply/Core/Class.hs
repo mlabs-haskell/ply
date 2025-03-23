@@ -25,7 +25,7 @@ import Ply.Core.Schema (
   deriveSchemaDescriptions,
   normalizeSchemaDescription,
  )
-import Ply.Core.Schema.Description (SchemaDescription (DataListType, SimpleType), descriptionFromPlutus)
+import Ply.Core.Schema.Description (SchemaDescription (AnyDataType, DataListType, SimpleType), descriptionFromPlutus)
 
 {- | Class of haskell types that can be applied as arguments to a Plutus script.
 
@@ -60,6 +60,7 @@ matchSchemaToValue (MapType key val) (Map items) = foldr (\(keyDat, valDat) acc 
 matchSchemaToValue (ConstrType (toList -> constituents)) (Constr (fromInteger -> ix) els)
   | ix < 0 || ix >= length constituents = error "absurd: Constr index beyond expected range"
   | otherwise = PLC.someValue . foldr (\(el, sch) acc -> matchSchemaToValue sch el `seq` acc) (Constr (toInteger ix) els) . zip els $ constituents !! ix
+matchSchemaToValue AnyDataType d = PLC.someValue d
 matchSchemaToValue sch val = error $ "absurd: matchSchemaToValue invalid schema/value combination\nSchema: " ++ show sch ++ "\nValue: " ++ show val
 
 getSchemaOrErr :: forall a. (HasBlueprintDefinition a, DefinitionsFor (UnrollAll '[a])) => Proxy a -> SchemaDescription
