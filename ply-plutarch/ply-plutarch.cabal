@@ -89,7 +89,6 @@ library
     , bytestring
     , generics-sop
     , plutus-tx
-    , ply-core
 
   exposed-modules:
     Ply.Plutarch

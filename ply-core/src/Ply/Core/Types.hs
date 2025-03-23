@@ -95,6 +95,7 @@ data TypedBlueprintPreamble = TypedBlueprintPreamble
   }
   deriving stock (Generic)
 
+-- | Use 'getTypedScript' to obtain one of the validators in a well-typed manner, given its title.
 data TypedBlueprint = TypedBlueprint
   { tbPreamble :: !TypedBlueprintPreamble
   , tbValidators :: ![TypedScriptBlueprint]

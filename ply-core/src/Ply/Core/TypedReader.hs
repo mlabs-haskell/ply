@@ -82,6 +82,8 @@ mkTypedScript refMap ver TypedScriptBlueprint {tsbParameters, tsbCompiledCode = 
 The user is responsible for choosing the "correct" script parameters, probably
 with type applications. The reader will then use this information to parse the file and verify
 the serialized script has the type.
+
+Throws 'ScriptReaderException' during script parsing. Throws a user error if a validator with given title is not found.
 -}
 getTypedScript ::
   forall r params.

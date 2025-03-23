@@ -2,7 +2,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Ply.Plutarch.TypedWriter (
-  type TypedWriter,
+  type HasDefinitions,
   type ParamsOf,
   type VersionOf,
   type PlyParamsOf,
@@ -24,12 +24,37 @@ import Plutarch.Prelude
 import PlutusTx.Blueprint (Definitions, DefinitionsFor, HasBlueprintDefinition, PlutusVersion (PlutusV3), Schema, UnrollAll, definitionRef)
 import PlutusTx.Blueprint.Definition (deriveDefinitions)
 
-import Ply (ReifyVersion)
 import Ply.Plutarch.Class (PlyArgOf)
 
-type ReferencedTypesOf ptype = UnrollAll (MapPlyArgOf (ParamsOf ptype))
+{- | Get all the referenced types for a given list of Plutarch types.
 
-type TypedWriter ptype = (ReifyVersion (VersionOf ptype), DefinitionsFor (ReferencedTypesOf ptype), All (HasArgDefinition (ReferencedTypesOf ptype)) (ParamsOf ptype))
+This can be used in conjuction with 'ParamsOf' to obtain the type parameter to be passed to 'Definitions'.
+
+=== Example
+
+Given a Plutarch function type for a validator: (PTxOutRef :--> PData :--> PData :--> PScriptContext)
+
+We can get the referenced types for its parameter(s) - i.e just 'PTxOutRef' in this case:
+
+@
+ReferencedTypesOf (ParamsOf (PTxOutRef :--> PData :--> PData :--> PScriptContext))
+@
+
+However, you'll also need the datum and redeemer types for the blueprints definitions field.
+Assuming the datum is 'PTxId' and the redeemer is 'PAsData PTokenName', you can do:
+
+@
+ReferencedTypesOf (PTxId : PAsData PTokenName : ParamsOf (PTxOutRef :--> PData :--> PData :--> PScriptContext))
+@
+
+This can be used as the parameter to 'Definitions'. See: 'derivePDefinitions'
+-}
+type ReferencedTypesOf ptypes = UnrollAll (MapPlyArgOf ptypes)
+
+{- | Handy constraint for ensuring all given Plutarch types satisfy constraints for having Blueprint definitions and therefore can be used
+with 'pdefinitionRef' and 'derivePDefinitions'.
+-}
+type HasDefinitions ptypes = (DefinitionsFor (ReferencedTypesOf ptypes), All (HasArgDefinition (ReferencedTypesOf ptypes)) ptypes)
 
 type HasArgDefinition :: [Type] -> PType -> Constraint
 class HasBlueprintDefinition (PlyArgOf ptype) => HasArgDefinition referencedTypes ptype where
@@ -43,6 +68,23 @@ instance HasBlueprintDefinition (PlyArgOf ptype) => HasArgDefinition referencedT
 
 {- | Given a list of Plutarch types, create the associated (as determined by 'PlyArgOf') Plutus blueprint
  schemas in order. These schemas can then be attached to blueprint creation functions from "PlutusTx.Blueprint".
+
+ This is meant to be used for only the _parameters_ to a script. Not the datum/redeemer. As such, the 'ptypes' argument should be obtained
+ via 'ParamsOf' on a Plutarch function type. Whereas the 'referencedTypes' argument should be obtained using the usual 'ReferencedTypesOf'.
+
+=== Example
+
+Assuming a Plutarch function type for a validator script: (PTxOutRef :--> PData :--> PData :--> PScriptContext)
+With datum: PTxId
+With redeemer: PAsData PTokenName
+
+use:
+
+@
+mkParamSchemas
+  @(ReferencedTypesOf (PTxId : PAsData PTokenName : ParamsOf (PTxOutRef :--> PData :--> PData :--> PScriptContext)))
+  @(ParamsOf (PTxOutRef :--> PData :--> PData :--> PScriptContext))
+@
 -}
 mkParamSchemas :: forall (referencedTypes :: [Type]) (ptypes :: [PType]). All (HasArgDefinition referencedTypes) ptypes => [Schema referencedTypes]
 mkParamSchemas = collapse_NP np
@@ -53,11 +95,10 @@ mkParamSchemas = collapse_NP np
     f :: forall (a :: PType). HasArgDefinition referencedTypes a => K (Schema referencedTypes) a
     f = K $ pdefinitionRef @referencedTypes @a
 
--- | Derive the schema definitions for the parameters, datum and redeemer of a script.
-derivePDefinitions ::
-  forall (ptypes :: [PType]).
-  (DefinitionsFor (UnrollAll (MapPlyArgOf ptypes))) =>
-  Definitions (UnrollAll (MapPlyArgOf ptypes))
+{- | Derive the schema definitions for the parameters, datum and redeemer of a script.
+ Use it in conjuction with 'ReferencedTypesOf' to obtain the definitions needed for a script
+-}
+derivePDefinitions :: forall (ptypes :: [PType]). HasDefinitions ptypes => Definitions (ReferencedTypesOf ptypes)
 derivePDefinitions = deriveDefinitions @(MapPlyArgOf ptypes)
 
 type MapPlyArgOf :: [PType] -> [Type]

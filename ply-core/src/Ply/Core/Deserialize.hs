@@ -10,7 +10,7 @@ import Ply.Core.Types (
   TypedBlueprint,
  )
 
--- | Read a 'TypedBlueprint'.
+-- | Read a 'TypedBlueprint'. Throws 'ScriptReaderException'.
 readBlueprint :: FilePath -> IO TypedBlueprint
 readBlueprint path = do
   content <- BS.readFile path
