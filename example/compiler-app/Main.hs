@@ -43,7 +43,6 @@ main =
       }
   where
     scriptBP =
-      -- Though this minting policy doesn't actually need a redeemer, we still need to declare one. So we choose 'PTxOutRef' as the redeemer type.
       MkValidatorBlueprint
         { validatorTitle = "NftMP"
         , validatorDescription = Nothing
