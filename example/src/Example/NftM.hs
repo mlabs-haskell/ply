@@ -31,8 +31,8 @@ deriving via
 type instance PlyArgOf PMyParameter = MyParameter
 
 -- | An example minting policy.
-nftMp :: ClosedTerm (PMyParameter :--> PData :--> PScriptContext :--> POpaque)
-nftMp = plam $ \param' _ ctx' -> popaque $
+nftMp :: ClosedTerm (PMyParameter :--> PScriptContext :--> POpaque)
+nftMp = plam $ \param' ctx' -> popaque $
   unTermCont $ do
     ctx <- pmatchC ctx'
     param <- pmatchC param'

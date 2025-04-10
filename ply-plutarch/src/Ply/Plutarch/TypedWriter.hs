@@ -128,13 +128,11 @@ Currently, the Validator choice is given precedence. If you wanted to use the al
 -}
 type ParamsOf :: PType -> [PType]
 type family ParamsOf a where
-  ParamsOf (PData :--> PData :--> PScriptContext :--> POpaque) = '[]
-  ParamsOf (PData :--> PScriptContext :--> POpaque) = '[]
+  ParamsOf (PScriptContext :--> POpaque) = '[]
   ParamsOf (a :--> rest) = a : ParamsOf rest
   ParamsOf wrong =
     TypeError
-      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType (PData :--> PData :--> PScriptContext :--> POpaque)
-          :$$: 'Text "Or with: " :<>: ShowType (PData :--> PScriptContext :--> POpaque)
+      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType (PScriptContext :--> POpaque)
           :$$: 'Text "But reached: " :<>: ShowType wrong
       )
 
@@ -144,13 +142,11 @@ type family ParamsOf a where
 -}
 type VersionOf :: PType -> PlutusVersion
 type family VersionOf a where
-  VersionOf (PData :--> PData :--> PScriptContext :--> POpaque) = PlutusV3
-  VersionOf (PData :--> PScriptContext :--> POpaque) = PlutusV3
+  VersionOf (PScriptContext :--> POpaque) = PlutusV3
   VersionOf (_ :--> rest) = VersionOf rest
   VersionOf wrong =
     TypeError
-      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType (PData :--> PData :--> PScriptContext :--> POpaque)
-          :$$: 'Text "Or with: " :<>: ShowType (PData :--> PScriptContext :--> POpaque)
+      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType (PScriptContext :--> POpaque)
           :$$: 'Text "But reached: " :<>: ShowType wrong
       )
 
