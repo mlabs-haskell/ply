@@ -2,7 +2,7 @@ Evidence of completion:
 
 1. Code implementing Plutus V3 types support: [ply-core](./ply-core/src/Ply/Core/Class.hs), [ply-plutarch](./ply-plutarch/src/Ply/Plutarch/Class.hs). Documentation is attached to haddock on aforementioned projects.
 
-2. Updated code for encoding into CIP-57: [ply-core](./ply-core/src/Ply/Core/Schema/Description.hs), [ply-plutarch](./ply-plutarch/src/Ply/Plutarch/TypedWriter.hs), [example](./example/compiler-app/Main.hs).
+2. Updated code for encoding into CIP-57: [ply-core](./ply-core/src/Ply/Core/Schema/Description.hs), [ply-plutarch](./ply-plutarch/src/Ply/Plutarch/TypedWriter.hs), [example](./example/compiler-app/Main.hs). Code for decoding CIP-57 blueprints: [Haskell](./ply-core/src/Ply/Core/Schema/Description.hs), [Purescript](https://github.com/mlabs-haskell/ply-ctl/blob/f900bd047f0d724bb3a107f0b1b02824ed8187d5/src/Ply/Schema.purs#L77) (available at [this PR](https://github.com/mlabs-haskell/ply-ctl/pull/4))
 
     Screenshots:
     - <img alt="Encoding in practice" src="./images/script-cip57.png" width="640">
