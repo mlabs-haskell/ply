@@ -107,46 +107,48 @@ type family MapPlyArgOf xs where
   MapPlyArgOf (x ': xs) = PlyArgOf x ': MapPlyArgOf xs
 
 {- | Given a Plutarch function type ending in
-  'PData :--> PData :--> PScriptContext :--> POpaque' or
-  'PData :--> PScriptContext :--> POpaque', determine its extra parameters.
+  'PData :--> PData :--> PScriptContext :--> PUnit' or
+  'PData :--> PScriptContext :--> PUnit', determine its extra parameters.
 
->>> :k! ParamsOf (PData :--> PData :--> PScriptContext :--> POpaque)
+>>> :k! ParamsOf (PData :--> PData :--> PScriptContext :--> PUnit)
 []
 
->>> :k! ParamsOf (PData :--> PScriptContext :--> POpaque)
+>>> :k! ParamsOf (PData :--> PScriptContext :--> PUnit)
 []
 
->>> :k! ParamsOf (PByteString :--> PData :--> PScriptContext :--> POpaque)
+>>> :k! ParamsOf (PByteString :--> PData :--> PScriptContext :--> PUnit)
 [PByteString]
 
 === Note
-Indeed, there is a possibility for ambiguity here. Is `PData :--> PData :--> PScriptContext :--> POpaque` a
+Indeed, there is a possibility for ambiguity here. Is `PData :--> PData :--> PScriptContext :--> PUnit` a
 minting policy with an extra 'PData' parameter? Or is it a validator?
 
 Currently, the Validator choice is given precedence. If you wanted to use the alternative meaning, use:
-`PAsData PData :--> PData :--> PScriptContext :--> POPaque` instead.
+`PAsData PData :--> PData :--> PScriptContext :--> PUnit` instead.
 -}
 type ParamsOf :: PType -> [PType]
 type family ParamsOf a where
   ParamsOf (PScriptContext :--> POpaque) = '[]
+  ParamsOf (PScriptContext :--> PUnit) = '[]
   ParamsOf (a :--> rest) = a : ParamsOf rest
   ParamsOf wrong =
     TypeError
-      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType (PScriptContext :--> POpaque)
+      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType (PScriptContext :--> PUnit)
           :$$: 'Text "But reached: " :<>: ShowType wrong
       )
 
 {- | Given a Plutarch function type ending in
-  'PData :--> PData :--> PScriptContext :--> POpaque' or
-  'PData :--> PScriptContext :--> POpaque'
+  'PData :--> PData :--> PScriptContext :--> PUnit' or
+  'PData :--> PScriptContext :--> PUnit'
 -}
 type VersionOf :: PType -> PlutusVersion
 type family VersionOf a where
   VersionOf (PScriptContext :--> POpaque) = PlutusV3
+  VersionOf (PScriptContext :--> PUnit) = PlutusV3
   VersionOf (_ :--> rest) = VersionOf rest
   VersionOf wrong =
     TypeError
-      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType (PScriptContext :--> POpaque)
+      ( 'Text "Expected given Plutarch function type to end with: " :<>: ShowType (PScriptContext :--> PUnit)
           :$$: 'Text "But reached: " :<>: ShowType wrong
       )
 
