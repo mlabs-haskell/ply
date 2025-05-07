@@ -1,3 +1,9 @@
+# ply-plutarch - 1.0.1
+
+- Support `PUnit` returning Plutarch scripts. This is the standard in Conway.
+
+  This is a backwards compatible change and `POpaque` returning Plutarch scripts are still supported. However, it may be removed in a later release.
+
 # 1.0.0 - CIP-57
 
 - This is a big overhaul release. Most things about previous iterations are not relevant.
