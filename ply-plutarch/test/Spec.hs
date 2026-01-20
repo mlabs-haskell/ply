@@ -4,10 +4,10 @@ module Main (main) where
 
 import Data.ByteString (ByteString)
 
-import Plutarch.Internal.Term (PType, punsafeConstantInternal)
-import Plutarch.LedgerApi.AssocMap (KeyGuarantees (Unsorted))
+import Data.Kind (Type)
+import Plutarch.Internal.Term (punsafeConstantInternal)
 import qualified Plutarch.LedgerApi.V3 as PLedger.V3
-import Plutarch.LedgerApi.Value (AmountGuarantees (NoGuarantees), PValue)
+import Plutarch.LedgerApi.Value (PRawValue)
 import Plutarch.Prelude
 import Plutarch.Test.QuickCheck (propEvalEqual)
 import PlutusLedgerApi.Common (BuiltinData, fromBuiltin, toBuiltin)
@@ -17,7 +17,7 @@ import Ply.Plutarch.Class (PlyArgOf)
 import Test.QuickCheck (Arbitrary)
 import Test.Tasty
 
-prop :: forall (a :: PType). (Arbitrary (PlyArgOf a), Show (PlyArgOf a), PlyArg (PlyArgOf a), PLiftable a, AsHaskell a ~ PlyArgOf a) => TestName -> TestTree
+prop :: forall (a :: S -> Type). (Arbitrary (PlyArgOf a), Show (PlyArgOf a), PlyArg (PlyArgOf a), PLiftable a, AsHaskell a ~ PlyArgOf a) => TestName -> TestTree
 prop name = propEvalEqual @(PlyArgOf a) name (pconstant @a) (punsafeConstantInternal . toSomeBuiltinArg)
 
 tests :: TestTree
@@ -28,7 +28,7 @@ tests =
     , propEvalEqual @ByteString "bytestring" (pdata . pconstant @PByteString) (punsafeConstantInternal . toSomeBuiltinArg . toBuiltin)
     , propEvalEqual @BuiltinData "builtin-data" (pdata . pconstant @PData . fromBuiltin) (punsafeConstantInternal . toSomeBuiltinArg)
     , prop @PLedger.V3.PRationalData "rational"
-    , prop @(PAsData (PValue Unsorted NoGuarantees)) "value"
+    , prop @(PAsData PRawValue) "value"
     , prop @PLedger.V3.PCredential "credential"
     , prop @PLedger.V3.PStakingCredential "staking-credential"
     , prop @PLedger.V3.PAddress "address"

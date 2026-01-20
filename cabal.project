@@ -14,18 +14,18 @@ repository cardano-haskell-packages
     c00aae8461a256275598500ea0e187588c35a5d5d7454fb57eac18d9edb86a56
     d4a35cd3121aa00d18544bb0ac01c3e1691d618f462c46129271bccf39f7e8ee
 
-index-state: 2024-10-09T22:38:57Z
-
 source-repository-package
   type: git
-  --sha256: sha256-lU2JF9KYvzEPfVLHdLkrM1hTTuc9NYi2hQPFnLDm2d8=
-  location: https://github.com/Plutonomicon/plutarch-plutus.git
-  tag: v1.10.1
+  location: https://github.com/Plutonomicon/plutarch-plutus
+  tag: 0850d1c353f907e45da155215dbdd3123fa6e614
+  --sha256: 17wxdfavjzbq0cgwr7bs45ma1lzxab417jqnbnkzas2zpp6i1ig5
   subdir:
     .
     plutarch-ledger-api
     plutarch-orphanage
     plutarch-testlib
+
+index-state: 2025-09-22T06:47:49Z
 
 write-ghc-environment-files: never
 
@@ -35,7 +35,7 @@ test-show-details: direct
 
 constraints:
   , dependent-sum >= 0.7.1.0
-  , plutus-core ^>= 1.36.0.0
+  , plutus-core == 1.54.0.0
 
 package nothunks
   flags: +vector

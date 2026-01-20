@@ -5,7 +5,8 @@ module Example.Type (MyParameter (..)) where
 
 import GHC.Generics (Generic)
 
-import PlutusLedgerApi.Data.V3 (TokenName, TxOutRef)
+-- FIXME: import PlutusLedgerApi.Data.V3 (TokenName, TxOutRef)
+import PlutusLedgerApi.V3 (TokenName, TxOutRef)
 import PlutusTx.Blueprint (HasBlueprintDefinition, definitionRef)
 import PlutusTx.Blueprint.TH (makeIsDataSchemaIndexed)
 import Ply (PlyArg)

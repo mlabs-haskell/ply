@@ -8,11 +8,14 @@ import Data.Text (Text)
 import GHC.Generics (Generic)
 
 import Data.Aeson (FromJSON)
-import qualified Data.Aeson as Aeson
-import PlutusLedgerApi.Data.V3 (Address, BuiltinByteString, BuiltinData, Credential, CurrencySymbol, DatumHash, Interval, POSIXTime, PubKeyHash, RedeemerHash, ScriptHash, StakingCredential, TokenName, TxId, TxOutRef, Value)
+import Data.Aeson qualified as Aeson
+
+-- FIXME: import PlutusLedgerApi.Data.V3 (Address, BuiltinByteString, BuiltinData, Credential, CurrencySymbol, DatumHash, Interval, POSIXTime, PubKeyHash, RedeemerHash, ScriptHash, StakingCredential, TokenName, TxId, TxOutRef, Value)
+
 import PlutusLedgerApi.V1.Value (AssetClass)
+import PlutusLedgerApi.V3 (Address, BuiltinByteString, BuiltinData, Credential, CurrencySymbol, DatumHash, Interval, POSIXTime, PubKeyHash, RedeemerHash, ScriptHash, StakingCredential, TokenName, TxId, TxOutRef, Value)
 import PlutusTx.Blueprint (DefinitionsFor, HasBlueprintDefinition, UnrollAll, definitionRef, definitionsToMap, deriveDefinitions)
-import qualified PlutusTx.Ratio as PlutusTx
+import PlutusTx.Ratio qualified as PlutusTx
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (Assertion, assertBool, assertFailure, testCase)
 
