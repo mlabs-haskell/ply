@@ -18,7 +18,6 @@ import GHC.TypeLits (ErrorMessage (ShowType, Text, (:$$:), (:<>:)), TypeError)
 
 import Generics.SOP (All, K (K), NP)
 import Generics.SOP.NP (collapse_NP, cpure_NP)
-import Plutarch.Internal.Term (PType)
 import Plutarch.LedgerApi.V3 (PScriptContext)
 import Plutarch.Prelude
 import PlutusTx.Blueprint (Definitions, DefinitionsFor, HasBlueprintDefinition, PlutusVersion (PlutusV3), Schema, UnrollAll, definitionRef)
@@ -56,14 +55,14 @@ with 'pdefinitionRef' and 'derivePDefinitions'.
 -}
 type HasDefinitions ptypes = (DefinitionsFor (ReferencedTypesOf ptypes), All (HasArgDefinition (ReferencedTypesOf ptypes)) ptypes)
 
-type HasArgDefinition :: [Type] -> PType -> Constraint
-class HasBlueprintDefinition (PlyArgOf ptype) => HasArgDefinition referencedTypes ptype where
+type HasArgDefinition :: [Type] -> (S -> Type) -> Constraint
+class (HasBlueprintDefinition (PlyArgOf ptype)) => HasArgDefinition referencedTypes ptype where
   -- | Plutarch version of 'definitionRef'
   pdefinitionRef :: Schema referencedTypes
 
 -- We can't just use 'Compose HasBlueprintDefinition PlyArgOf' instead of this class
 -- because PlyArgOf is a type family and cannot be passed unapplied!
-instance HasBlueprintDefinition (PlyArgOf ptype) => HasArgDefinition referencedTypes ptype where
+instance (HasBlueprintDefinition (PlyArgOf ptype)) => HasArgDefinition referencedTypes ptype where
   pdefinitionRef = definitionRef @(PlyArgOf ptype)
 
 {- | Given a list of Plutarch types, create the associated (as determined by 'PlyArgOf') Plutus blueprint
@@ -86,22 +85,22 @@ mkParamSchemas
   @(ParamsOf (PTxOutRef :--> PData :--> PData :--> PScriptContext))
 @
 -}
-mkParamSchemas :: forall (referencedTypes :: [Type]) (ptypes :: [PType]). All (HasArgDefinition referencedTypes) ptypes => [Schema referencedTypes]
+mkParamSchemas :: forall (referencedTypes :: [Type]) (ptypes :: [S -> Type]). (All (HasArgDefinition referencedTypes) ptypes) => [Schema referencedTypes]
 mkParamSchemas = collapse_NP np
   where
     np :: NP (K (Schema referencedTypes)) ptypes
     np = cpure_NP (Proxy @(HasArgDefinition referencedTypes)) f
     -- The 'a' type parameter has to be applied explicitly, so we can't just inline this in place of 'f' and expect 'a' to be inferred based on expected type.
-    f :: forall (a :: PType). HasArgDefinition referencedTypes a => K (Schema referencedTypes) a
+    f :: forall (a :: S -> Type). (HasArgDefinition referencedTypes a) => K (Schema referencedTypes) a
     f = K $ pdefinitionRef @referencedTypes @a
 
 {- | Derive the schema definitions for the parameters, datum and redeemer of a script.
  Use it in conjuction with 'ReferencedTypesOf' to obtain the definitions needed for a script
 -}
-derivePDefinitions :: forall (ptypes :: [PType]). HasDefinitions ptypes => Definitions (ReferencedTypesOf ptypes)
+derivePDefinitions :: forall (ptypes :: [S -> Type]). (HasDefinitions ptypes) => Definitions (ReferencedTypesOf ptypes)
 derivePDefinitions = deriveDefinitions @(MapPlyArgOf ptypes)
 
-type MapPlyArgOf :: [PType] -> [Type]
+type MapPlyArgOf :: [S -> Type] -> [Type]
 type family MapPlyArgOf xs where
   MapPlyArgOf '[] = '[]
   MapPlyArgOf (x ': xs) = PlyArgOf x ': MapPlyArgOf xs
@@ -126,7 +125,7 @@ minting policy with an extra 'PData' parameter? Or is it a validator?
 Currently, the Validator choice is given precedence. If you wanted to use the alternative meaning, use:
 `PAsData PData :--> PData :--> PScriptContext :--> PUnit` instead.
 -}
-type ParamsOf :: PType -> [PType]
+type ParamsOf :: (S -> Type) -> [S -> Type]
 type family ParamsOf a where
   ParamsOf (PScriptContext :--> POpaque) = '[]
   ParamsOf (PScriptContext :--> PUnit) = '[]
@@ -141,7 +140,7 @@ type family ParamsOf a where
   'PData :--> PData :--> PScriptContext :--> PUnit' or
   'PData :--> PScriptContext :--> PUnit'
 -}
-type VersionOf :: PType -> PlutusVersion
+type VersionOf :: (S -> Type) -> PlutusVersion
 type family VersionOf a where
   VersionOf (PScriptContext :--> POpaque) = PlutusV3
   VersionOf (PScriptContext :--> PUnit) = PlutusV3
@@ -152,8 +151,8 @@ type family VersionOf a where
           :$$: 'Text "But reached: " :<>: ShowType wrong
       )
 
--- | Map 'PlyArgOf' over a list of 'PType's.
-type PlyParamsOf :: [PType] -> [Type]
+-- | Map 'PlyArgOf' over a list of Plutarch types.
+type PlyParamsOf :: [S -> Type] -> [Type]
 type family PlyParamsOf pts = r | r -> pts where
   PlyParamsOf '[] = '[]
   PlyParamsOf (x : xs) = PlyArgOf x : PlyParamsOf xs

@@ -5,11 +5,10 @@ module Ply.Plutarch.Class (PlyArgOf) where
 import Data.ByteString (ByteString)
 import Data.Kind (Type)
 
-import Plutarch.Internal.Term (PType)
-import Plutarch.LedgerApi.AssocMap (KeyGuarantees (Unsorted), PMap)
+import Plutarch.LedgerApi.AssocMap (PAssocMap)
 import Plutarch.LedgerApi.Utils
 import qualified Plutarch.LedgerApi.V3 as PLedger.V3
-import Plutarch.LedgerApi.Value (AmountGuarantees (NoGuarantees), PValue)
+import Plutarch.LedgerApi.Value (PRawValue)
 import Plutarch.Prelude
 import PlutusLedgerApi.V3 as Ledger.V3
 import qualified PlutusTx.AssocMap as PlutusMap
@@ -20,7 +19,7 @@ import qualified PlutusTx.Ratio as PlutusTx
  See the Haskell types HasBlueprintSchema instance and figure out which Plutarch type it corresponds to!
  For example, Integer's blueprint schema actually corresponds to PAsData PInteger.
 -}
-type PlyArgOf :: PType -> Type
+type PlyArgOf :: (S -> Type) -> Type
 type family PlyArgOf a = r | r -> a
 
 type instance PlyArgOf (PAsData PInteger) = Integer
@@ -35,9 +34,17 @@ type instance PlyArgOf PRationalData = PlutusTx.Rational
 
 type instance PlyArgOf (PMaybeData a) = Maybe (PlyArgOf a)
 
-type instance PlyArgOf (PAsData (PMap Unsorted a b)) = PlutusMap.Map (PlyArgOf a) (PlyArgOf b)
+type instance PlyArgOf (PAsData (PAssocMap a b)) = PlutusMap.Map (PlyArgOf a) (PlyArgOf b)
 
-type instance PlyArgOf (PAsData (PValue Unsorted NoGuarantees)) = Value
+-- type instance PlyArgOf (PAsData (PUnsortedMap a b)) = PlutusMap.Map (PlyArgOf a) (PlyArgOf b)
+
+-- type instance PlyArgOf (PAsData (PSortedMap a b)) = PlutusMap.Map (PlyArgOf a) (PlyArgOf b)
+
+type instance PlyArgOf (PAsData PRawValue) = Value
+
+-- type instance PlyArgOf (PAsData PSortedValue) = Value
+
+-- type instance PlyArgOf (PAsData PLedgerValue) = Value
 
 type instance PlyArgOf PLedger.V3.PCredential = Credential
 

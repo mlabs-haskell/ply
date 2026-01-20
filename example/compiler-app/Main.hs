@@ -9,7 +9,7 @@ import qualified Data.Text as Txt
 import System.FilePath ((</>))
 
 import qualified Cardano.Binary as CBOR
-import Plutarch.Internal.Term (ClosedTerm, Config (Tracing), LogLevel (LogInfo), TracingMode (DoTracing), compile)
+import Plutarch.Internal.Term (Config (Tracing), LogLevel (LogInfo), S, Term, TracingMode (DoTracing), compile)
 import Plutarch.LedgerApi.V3 (scriptHash)
 import Plutarch.Script (serialiseScript)
 import PlutusLedgerApi.V3 (ScriptHash (ScriptHash))
@@ -78,13 +78,13 @@ main =
     -- NOTE: Plutarch's scriptHash function is exported from V3 but hashes with V2 prefix. This is a bug.
     ScriptHash hash = scriptHash script
 
-versionOf :: forall ptype. ReifyVersion (VersionOf ptype) => ClosedTerm ptype -> PlutusVersion
+versionOf :: forall ptype. (ReifyVersion (VersionOf ptype)) => (forall (s :: S). Term s ptype) -> PlutusVersion
 versionOf _ = reifyVersion $ Proxy @(VersionOf ptype)
 
 -- Note: We have to manually prepend datum/redeemer to the types because it does not exist on the Plutarch type.
-scriptDefinitions :: forall redeemer ptype. HasDefinitions (redeemer : ParamsOf ptype) => ClosedTerm ptype -> Definitions (ReferencedTypesOf (redeemer : ParamsOf ptype))
+scriptDefinitions :: forall redeemer ptype. (HasDefinitions (redeemer : ParamsOf ptype)) => (forall (s :: S). Term s ptype) -> Definitions (ReferencedTypesOf (redeemer : ParamsOf ptype))
 scriptDefinitions _ = derivePDefinitions @(redeemer : ParamsOf ptype)
 
 -- Note: When using 'mkParamSchemas', the second type argument should only contain the params (i.e from 'ParamsOf'), not the datum/redeemer.
-scriptParamSchemas :: forall redeemer ptype. HasDefinitions (redeemer : ParamsOf ptype) => ClosedTerm ptype -> [Schema (ReferencedTypesOf (redeemer : ParamsOf ptype))]
+scriptParamSchemas :: forall redeemer ptype. (HasDefinitions (redeemer : ParamsOf ptype)) => (forall (s :: S). Term s ptype) -> [Schema (ReferencedTypesOf (redeemer : ParamsOf ptype))]
 scriptParamSchemas _ = mkParamSchemas @(ReferencedTypesOf (redeemer : ParamsOf ptype)) @(ParamsOf ptype)

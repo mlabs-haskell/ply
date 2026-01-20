@@ -8,7 +8,6 @@ import qualified Generics.SOP as SOP
 import Plutarch.LedgerApi.V3
 import qualified Plutarch.LedgerApi.Value as PValue
 import Plutarch.Prelude
-import Plutarch.Repr.Data (DeriveAsDataStruct (DeriveAsDataStruct))
 import Ply.Plutarch (PlyArgOf)
 
 import Example.Type (MyParameter)
@@ -31,18 +30,22 @@ deriving via
 type instance PlyArgOf PMyParameter = MyParameter
 
 -- | An example minting policy.
-nftMp :: ClosedTerm (PMyParameter :--> PScriptContext :--> POpaque)
+nftMp :: forall (s :: S). Term s (PMyParameter :--> PScriptContext :--> POpaque)
 nftMp = plam $ \param' ctx' -> popaque $
   unTermCont $ do
     ctx <- pmatchC ctx'
     param <- pmatchC param'
     PMintingScript ownSym <- tcont $ pmatch $ pscriptContext'scriptInfo ctx
     txInfo <- pmatchC $ pscriptContext'txInfo ctx
-    pguardC "UTxO not consumed" $
-      pany
+    pguardC "UTxO not consumed"
+      $ pany
         # plam (\x -> pmatch (pfromData x) $ \case x' -> ptxInInfo'outRef x' #== pmyParameter'ref param)
         #$ pfromData
-        $ ptxInfo'inputs txInfo
+      $ ptxInfo'inputs txInfo
     pguardC "Wrong NFT mint amount" $
-      PValue.pvalueOf # pfromData (ptxInfo'mint txInfo) # pfromData ownSym # pfromData (pmyParameter'tn param) #== 1
+      PValue.pvalueOf
+        # pto (pfromData (ptxInfo'mint txInfo))
+        # pfromData ownSym
+        # pfromData (pmyParameter'tn param)
+        #== 1
     pure . popaque $ pconstant @PUnit ()
