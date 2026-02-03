@@ -1,3 +1,11 @@
+# 1.1.0 - Datum, Redeemers, and Script serialisation
+
+- Fix script serialisation to follow standard Plutus serialiseUPLC rather than the double CBOR cardano-cli uses.
+
+- Ply can now track datums and redeemers!
+
+- Ply now allows you to name the extra script parameters as well.
+
 # ply-plutarch - 1.0.1
 
 - Support `PUnit` returning Plutarch scripts. This is the standard in Conway.
