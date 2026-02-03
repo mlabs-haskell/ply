@@ -18,7 +18,7 @@ index-state: 2024-10-09T22:38:57Z
 
 source-repository-package
   type: git
-  --sha256: sha256-lU2JF9KYvzEPfVLHdLkrM1hTTuc9NYi2hQPFnLDm2d8=
+  --sha256: sha256-WSESLdKZttm2EBNv5SY6sZXT+ks87rY3y0gatf1m3Lo=
   location: https://github.com/Plutonomicon/plutarch-plutus.git
   tag: v1.10.1
   subdir:
