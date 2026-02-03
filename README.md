@@ -1,6 +1,8 @@
 # Ply
 
-Ply allows you to serialize your Plutarch validators/minting policies (with optionally extra parameters) into the file system using **[CIP-57](https://cips.cardano.org/cip/CIP-57s)**. On the other end, Ply allows reading any such CIP-57 blueprints back into well-typed scripts.
+Ply allows you to read Plutus blueprints produced by Aiken or Plutarch code into well-typed scripts in Haskell.
+
+Ply also provides functions to serialize Plutarch validators/minting policies (with optionally extra parameters) into Plutus blueprints according to **[CIP-57](https://cips.cardano.org/cip/CIP-57s)**.
 
 This facilitates the onchain/offchain split that is often utilized, without forcing the user to manage the intricacies of the types and their UPLC representation when it comes to parameterized scripts. i.e scripts that take extra parameters before being submitted to the chain.
 
@@ -26,7 +28,7 @@ Ply uses [CHaP](https://github.com/input-output-hk/cardano-haskell-packages). Ad
 
 Ply has 2 components: `ply-core`, and `ply-plutarch`.
 
-`ply-core` is the package you'll be using in your offchain project, where you cannot depend on Plutarch (potentially due to dependency conflicts). This comes with support for reading CIP-57 blueprints into typed scripts.
+`ply-core` is the package you'll be using in your offchain project to read Plutus blueprints produced by Aiken/Plutarch/Plinth etc. This way, your offchain will be able to keep track of the script types!
 
 `ply-plutarch` is the package you'll be using in your onchain Plutarch project. Usually, you'll want to create an executable target in this project to compile your plutus scripts into the file system. These files can then be read back in your offchain project using `ply-core`.
 
