@@ -122,8 +122,10 @@ instance FromJSON SchemaDescription where
         Aeson.withText "Schema.dataType" (parseOtherSchema obj) res
       refParser :: Aeson.Object -> Parser SchemaDescription
       refParser obj = assertKey obj "$ref" >>= Aeson.withText "Schema.$ref" parseRefName
+      -- The ref name uses JSON pointer. Haskell doesn't have any decent JSON pointer parsing libraries.
+      -- So we do some hacky parsing with the assumption that the JSON pointer usage will be simple (only ~1 uses)
       parseRefName :: Text -> Parser SchemaDescription
-      parseRefName t = maybe (fail "Invalid Schema ref format") (pure . SchemaRef) $ Txt.stripPrefix refPrefix t
+      parseRefName t = maybe (fail "Invalid Schema ref format") (pure . SchemaRef . Txt.replace "~1" "/") $ Txt.stripPrefix refPrefix t
       multiConstrTypeParser :: Aeson.Object -> Parser SchemaDescription
       multiConstrTypeParser obj = assertAnyKey obj "oneOf" "anyOf" >>= Aeson.withArray "Schema.oneOf/anyOf" parseConstrVariants
       parseConstrVariants :: Aeson.Array -> Parser SchemaDescription
