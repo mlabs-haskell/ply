@@ -1,7 +1,7 @@
 module Ply.Core.Apply (applyParam, (#), (#$), (#!), (#$!)) where
 
 import Ply.Core.Class (PlyArg (toSomeBuiltinArg))
-import Ply.Core.Types (TypedScript (TypedScriptConstr))
+import Ply.Core.Types (ScriptParameter ((:=)), TypedScript (TypedScriptConstr))
 import Ply.Core.UPLC (applyConstant, applyConstant')
 
 {- | Apply a parameter with a known type to given 'TypedScript'.
@@ -9,11 +9,11 @@ import Ply.Core.UPLC (applyConstant, applyConstant')
 _NOTE_: If you just want a _pure application_, no optimizations, to produce a predictable UPLC AST each time
 you apply the parameter - you should use 'applyParam'' instead. Some protocols require deterministic parameterization.
 -}
-applyParam :: PlyArg x => TypedScript r (x : xs) -> x -> TypedScript r xs
+applyParam :: PlyArg x => TypedScript r (any := x : xs) -> x -> TypedScript r xs
 applyParam (TypedScriptConstr prog) x = TypedScriptConstr $ prog `applyConstant` toSomeBuiltinArg x
 
 -- | Like 'applyParam' but does not perform any optimizations, making the final AST predictable.
-applyParam' :: PlyArg x => TypedScript r (x : xs) -> x -> TypedScript r xs
+applyParam' :: PlyArg x => TypedScript r (any := x : xs) -> x -> TypedScript r xs
 applyParam' (TypedScriptConstr prog) x = TypedScriptConstr $ prog `applyConstant'` toSomeBuiltinArg x
 
 {- | Operator version of 'applyParam', to be used as juxtaposition.
@@ -23,7 +23,7 @@ applyParam' (TypedScriptConstr prog) x = TypedScriptConstr $ prog `applyConstant
 _NOTE_: If you just want a _pure application_, no optimizations, to produce a predictable UPLC AST each time
 you apply the parameter - you should use '(#!)' instead. Some protocols require deterministic parameterization.
 -}
-(#) :: PlyArg x => TypedScript r (x : xs) -> x -> TypedScript r xs
+(#) :: PlyArg x => TypedScript r (any := x : xs) -> x -> TypedScript r xs
 (#) = applyParam
 
 infixl 8 #
@@ -32,7 +32,7 @@ infixl 8 #
 
 > scrpt #! 42
 -}
-(#!) :: PlyArg x => TypedScript r (x : xs) -> x -> TypedScript r xs
+(#!) :: PlyArg x => TypedScript r (any := x : xs) -> x -> TypedScript r xs
 (#!) = applyParam'
 
 infixl 8 #!
@@ -44,7 +44,7 @@ infixl 8 #!
 _NOTE_: If you just want a _pure application_, no optimizations, to produce a predictable UPLC AST each time
 you apply the parameter - you should use '(#$!)' instead. Some protocols require deterministic parameterization.
 -}
-(#$) :: PlyArg x => TypedScript r (x : xs) -> x -> TypedScript r xs
+(#$) :: PlyArg x => TypedScript r (any := x : xs) -> x -> TypedScript r xs
 (#$) = applyParam
 
 infixr 0 #$
@@ -53,7 +53,7 @@ infixr 0 #$
 
 > scrpt #$! 42
 -}
-(#$!) :: PlyArg x => TypedScript r (x : xs) -> x -> TypedScript r xs
+(#$!) :: PlyArg x => TypedScript r (any := x : xs) -> x -> TypedScript r xs
 (#$!) = applyParam'
 
 infixr 0 #$!

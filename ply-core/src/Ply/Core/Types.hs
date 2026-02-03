@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Ply.Core.Types (
+  ScriptParameter (..),
   TypedBlueprint (..),
   TypedBlueprintPreamble (..),
   TypedScriptBlueprint (..),
@@ -21,6 +22,7 @@ import Data.Map.Strict (Map)
 import Data.Text (Text)
 import qualified Data.Text.Encoding as Text
 import GHC.Generics (Generic)
+import GHC.TypeLits (Symbol)
 
 import Data.Aeson (Options (fieldLabelModifier), withObject, (.!=), (.:), (.:?))
 import qualified Data.Aeson as Aeson
@@ -36,20 +38,31 @@ import Ply.Core.Schema (SchemaDescription)
 
 type UPLCProgram = Program DeBruijn DefaultUni DefaultFun ()
 
+{- | Sum type of script parameters. Extra parameters (not datum/redeemer)
+ should use ':=' (i.e Labeled type) with a parameter name.
+-}
+data ScriptParameter = Symbol := Type | AsDatum Type | AsRedeemer Type
+
+infix 6 :=
+
 -- | Compiled scripts that preserve script version and parameter types.
 type role TypedScript nominal nominal
 
-type TypedScript :: PlutusVersion -> [Type] -> Type
+type TypedScript :: PlutusVersion -> [ScriptParameter] -> Type
 data TypedScript v a = TypedScriptConstr !UPLCProgram
   deriving stock (Show)
 
--- | Errors/Exceptions that may arise during Typed Script reading/parsing.
+{- | Errors/Exceptions that may arise during Typed Script reading/parsing.
+ Note: Expected refers to the type level. Actual refers to what was read from the blueprint.
+-}
 data ScriptReaderException where
   AesonDecodeError :: String -> ScriptReaderException
   UnsupportedSchema :: forall referencedTypes. Schema referencedTypes -> ScriptReaderException
   UndefinedReference :: {referenceName :: Text, targetSchema :: SchemaDescription, definitionsMap :: Map Text SchemaDescription} -> ScriptReaderException
   ScriptVersionError :: {expectedVersion :: PlutusVersion, actualVersion :: PlutusVersion} -> ScriptReaderException
   ScriptTypeError :: {expectedType :: SchemaDescription, actualType :: SchemaDescription} -> ScriptReaderException
+  ScriptUnexpectedDatum :: {actualDatum :: SchemaDescription} -> ScriptReaderException
+  ScriptMissingDatum :: {expectedDatum :: SchemaDescription} -> ScriptReaderException
 
 deriving stock instance Show ScriptReaderException
 deriving anyclass instance Exception ScriptReaderException
@@ -80,6 +93,8 @@ data TypedScriptBlueprintParameter = TypedScriptBlueprintParameter
 
 data TypedScriptBlueprint = TypedScriptBlueprint
   { tsbTitle :: !Text
+  , tsbDatum :: !(Maybe TypedScriptBlueprintParameter)
+  , tsbRedeemer :: !TypedScriptBlueprintParameter
   , tsbParameters :: ![TypedScriptBlueprintParameter]
   , tsbCompiledCode :: !UPLCProgramJSON
   }
@@ -104,6 +119,8 @@ instance FromJSON TypedScriptBlueprint where
   parseJSON = withObject "TypedScriptBlueprint" $ \v ->
     TypedScriptBlueprint
       <$> v .: "title"
+      <*> v .:? "datum"
+      <*> v .: "redeemer"
       <*> v .:? "parameters" .!= []
       <*> v .: "compiledCode"
 

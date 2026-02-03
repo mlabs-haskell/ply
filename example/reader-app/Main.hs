@@ -23,7 +23,7 @@ instance Show MintingPolicy where
       . serialiseUPLC
       . (\(MintingPolicy x) -> x)
 
-toMintingPolicy :: TypedScript 'PlutusV3 '[()] -> MintingPolicy
+toMintingPolicy :: TypedScript 'PlutusV3 '[AsRedeemer BuiltinData] -> MintingPolicy
 toMintingPolicy (TypedScript' s) = MintingPolicy s
 
 usePolicy :: MintingPolicy -> IO ()
