@@ -129,7 +129,6 @@ executable example-compile
   main-is:        Main.hs
   build-depends:
     , bytestring
-    , cardano-binary
     , containers
     , directory
     , example

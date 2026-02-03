@@ -8,7 +8,6 @@ import qualified Data.Set as Set
 import qualified Data.Text as Txt
 import System.FilePath ((</>))
 
-import qualified Cardano.Binary as CBOR
 import Plutarch.Internal.Term (ClosedTerm, Config (Tracing), LogLevel (LogInfo), TracingMode (DoTracing), compile)
 import Plutarch.LedgerApi.V3 (scriptHash)
 import Plutarch.Script (serialiseScript)
@@ -71,7 +70,7 @@ main =
             Just
               MkCompiledValidator
                 { compiledValidatorHash = PlutusTx.fromBuiltin hash
-                , compiledValidatorCode = CBOR.serialize' . SBS.fromShort $ serialiseScript script
+                , compiledValidatorCode = SBS.fromShort $ serialiseScript script
                 }
         }
     script = either (error . Txt.unpack) id $ compile (Tracing LogInfo DoTracing) nftMp
