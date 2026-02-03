@@ -23,7 +23,7 @@ import Ply.Core.Schema.Description (descriptionFromPlutus)
 import Ply.Core.Types (
   PlutusVersionJSON (PlutusVersionJSON),
   ScriptParameter (AsDatum, AsRedeemer, (:=)),
-  ScriptReaderException (ScriptMissingDatum, ScriptTypeError, ScriptUnexpectedDatum, ScriptVersionError, UndefinedReference, UnsupportedSchema, definitionsMap, referenceName, targetSchema),
+  ScriptReaderException (MissingDatum, ParameterLengthMismatch, ScriptTypeError, ScriptVersionError, UndefinedReference, UnexpectedDatum, UnsupportedSchema, definitionsMap, referenceName, targetSchema),
   TypedBlueprint (TypedBlueprint, tbDefinitions, tbPreamble, tbValidators),
   TypedBlueprintPreamble (TypedBlueprintPreamble, tbpPlutusVersion),
   TypedScript (TypedScriptConstr),
@@ -73,13 +73,18 @@ mkTypedScript refMap ver TypedScriptBlueprint {tsbDatum, tsbRedeemer, tsbParamet
   expectedDefinitionsMap <- deriveSchemaDescriptions @(UnwrapParameters params) (throwE . UnsupportedSchema)
 
   -- Ensure that the extra parameters are as expected.
+  let expectedLength = length expectedParams
+      actualLength = length tsbParameters
+  unless (expectedLength == actualLength)
+    . throwE
+    $ ParameterLengthMismatch expectedLength actualLength
   for_ (zip expectedParams tsbParameters) . uncurry $ assertExpectedType expectedDefinitionsMap
   -- Ensure that the datum (if any) is as expected.
   case (expectedPlutusDatum, tsbDatum) of
     (Nothing, Nothing) -> pure ()
     (Just expected, Just actual) -> assertExpectedType expectedDefinitionsMap expected actual
-    (Just expected, Nothing) -> throwE $ ScriptMissingDatum expected
-    (Nothing, Just (TypedScriptBlueprintParameter actual)) -> throwE $ ScriptUnexpectedDatum actual
+    (Just expected, Nothing) -> throwE $ MissingDatum expected
+    (Nothing, Just (TypedScriptBlueprintParameter actual)) -> throwE $ UnexpectedDatum actual
   -- Ensure that the redeemer is as expected.
   assertExpectedType expectedDefinitionsMap expectedPlutusRedeemer tsbRedeemer
 

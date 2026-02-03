@@ -61,8 +61,9 @@ data ScriptReaderException where
   UndefinedReference :: {referenceName :: Text, targetSchema :: SchemaDescription, definitionsMap :: Map Text SchemaDescription} -> ScriptReaderException
   ScriptVersionError :: {expectedVersion :: PlutusVersion, actualVersion :: PlutusVersion} -> ScriptReaderException
   ScriptTypeError :: {expectedType :: SchemaDescription, actualType :: SchemaDescription} -> ScriptReaderException
-  ScriptUnexpectedDatum :: {actualDatum :: SchemaDescription} -> ScriptReaderException
-  ScriptMissingDatum :: {expectedDatum :: SchemaDescription} -> ScriptReaderException
+  ParameterLengthMismatch :: {expectedLength :: !Int, actualLength :: !Int} -> ScriptReaderException
+  UnexpectedDatum :: {actualDatum :: SchemaDescription} -> ScriptReaderException
+  MissingDatum :: {expectedDatum :: SchemaDescription} -> ScriptReaderException
 
 deriving stock instance Show ScriptReaderException
 deriving anyclass instance Exception ScriptReaderException

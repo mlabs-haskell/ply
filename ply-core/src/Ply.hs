@@ -39,13 +39,13 @@ import Ply.Core.Types (
  )
 
 -- | Extract the inner script (for scripts with datum)
-pattern TypedScript :: UPLCProgram -> TypedScript r '[datum, redeemer]
+pattern TypedScript :: UPLCProgram -> TypedScript r '[AsDatum datum, AsRedeemer redeemer]
 pattern TypedScript s <- TypedScriptConstr s
 
 {-# COMPLETE TypedScript #-}
 
 -- | Extract the inner script (for scripts with no datum)
-pattern TypedScript' :: UPLCProgram -> TypedScript r '[redeemer]
+pattern TypedScript' :: UPLCProgram -> TypedScript r '[AsRedeemer redeemer]
 pattern TypedScript' s <- TypedScriptConstr s
 
 {-# COMPLETE TypedScript' #-}
