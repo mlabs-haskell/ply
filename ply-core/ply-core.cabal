@@ -11,12 +11,10 @@ common common-configs
 
 common common-ghc-opts
   ghc-options:
-    -Wall -Wcompat -Wincomplete-uni-patterns -Wno-unused-do-bind
-    -Wno-partial-type-signatures -Wmissing-export-lists -Werror
-    -Wincomplete-record-updates -Wmissing-deriving-strategies
-    -Wno-name-shadowing -Wunused-foralls
-    -Wno-unticked-promoted-constructors -fprint-explicit-foralls
-    -fprint-explicit-kinds
+    -Wall -Wcompat -Wincomplete-uni-patterns -Wno-unused-do-bind -Wno-partial-type-signatures -Wmissing-export-lists
+    -Wincomplete-record-updates -Wmissing-deriving-strategies -Wno-name-shadowing -Wunused-foralls -Wno-unticked-promoted-constructors
+    -fprint-explicit-foralls -fprint-explicit-kinds
+    -- -Werror
 
 common common-deps
   build-depends:
