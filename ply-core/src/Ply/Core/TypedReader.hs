@@ -18,7 +18,12 @@ import PlutusTx.Blueprint (
   UnrollAll,
  )
 
-import Ply.Core.Internal.Reify (ReifyDatumSchema (reifyDatumSchema), ReifyParamSchemas (reifyParamSchemas), ReifyRedeemerSchema (reifyRedeemerSchema), ReifyVersion (reifyVersion))
+import Ply.Core.Internal.Reify (
+  ReifyDatumSchema (reifyDatumSchema),
+  ReifyParamSchemas (reifyParamSchemas),
+  ReifyRedeemerSchema (reifyRedeemerSchema),
+  ReifyVersion (reifyVersion),
+ )
 import Ply.Core.Schema (SchemaDescription, deriveSchemaDescriptions, normalizeSchemaDescription)
 import Ply.Core.Schema.Description (descriptionFromPlutus)
 import Ply.Core.Types (
@@ -37,6 +42,7 @@ import Ply.Core.Types (
     referenceName,
     targetSchema
   ),
+  ScriptTypeKind (ScriptDatum, ScriptParameter, ScriptRedeemer),
   TypedBlueprint (TypedBlueprint, tbDefinitions, tbPreamble, tbValidators),
   TypedBlueprintPreamble (TypedBlueprintPreamble, tbpPlutusVersion),
   TypedScript (TypedScriptConstr),
@@ -100,24 +106,24 @@ mkTypedScript
     unless (expectedLength == actualLength)
       . throwE'
       $ ParameterLengthMismatch expectedLength actualLength
-    for_ (zip expectedParams tsbParameters) . uncurry $ assertExpectedType expectedDefinitionsMap
+    for_ (zip expectedParams tsbParameters) . uncurry $ assertExpectedType ScriptParameter expectedDefinitionsMap
     -- Ensure that the datum (if any) is as expected.
     case (expectedPlutusDatum, tsbDatum) of
       (Nothing, Nothing) -> pure ()
-      (Just expected, Just actual) -> assertExpectedType expectedDefinitionsMap expected actual
+      (Just expected, Just actual) -> assertExpectedType ScriptDatum expectedDefinitionsMap expected actual
       (Just expected, Nothing) -> throwE' $ MissingDatum expected
       (Nothing, Just (TypedScriptBlueprintParameter actual)) -> throwE' $ UnexpectedDatum actual
     -- Ensure that the redeemer is as expected.
-    assertExpectedType expectedDefinitionsMap expectedPlutusRedeemer tsbRedeemer
+    assertExpectedType ScriptRedeemer expectedDefinitionsMap expectedPlutusRedeemer tsbRedeemer
 
     pure $ TypedScriptConstr script
     where
-      assertExpectedType expectedDefinitionsMap expectedParam (TypedScriptBlueprintParameter param) = do
+      assertExpectedType typeKind expectedDefinitionsMap expectedParam (TypedScriptBlueprintParameter param) = do
         normalizedExpected <- normalizeOrThrow expectedDefinitionsMap expectedParam
         normalizedActual <- normalizeOrThrow refMap param
         unless (normalizedExpected == normalizedActual)
           . throwE'
-          $ ScriptTypeError normalizedExpected normalizedActual
+          $ ScriptTypeError typeKind normalizedExpected normalizedActual
       throwUndefRef m sch refName = throwE' $ UndefinedReference {definitionsMap = m, referenceName = refName, targetSchema = sch}
       normalizeOrThrow :: Map Text SchemaDescription -> SchemaDescription -> Except ScriptReaderException SchemaDescription
       normalizeOrThrow m sch = either (throwUndefRef m sch) pure $ normalizeSchemaDescription m sch

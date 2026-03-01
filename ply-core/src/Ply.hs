@@ -4,6 +4,7 @@ module Ply (
   TypedScript (TypedScript, TypedScript'),
   ReifyVersion (reifyVersion),
   PlutusVersion (..),
+  ScriptTypeKind (..),
   ScriptSchemaError (..),
   ScriptReaderException (..),
   ScriptParameter (..),
@@ -42,6 +43,7 @@ import Ply.Core.Types (
     referenceName,
     targetSchema
   ),
+  ScriptTypeKind (ScriptDatum, ScriptParameter, ScriptRedeemer),
   TypedBlueprint (TypedBlueprint, tbDefinitions, tbPreamble, tbValidators),
   TypedBlueprintPreamble (TypedBlueprintPreamble, tbpPlutusVersion),
   TypedScript (TypedScriptConstr),

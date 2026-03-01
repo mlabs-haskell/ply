@@ -2,6 +2,7 @@
 
 module Ply.Core.Types (
   ScriptParameter (..),
+  ScriptTypeKind (..),
   TypedBlueprint (..),
   TypedBlueprintPreamble (..),
   TypedScriptBlueprint (..),
@@ -53,6 +54,10 @@ type TypedScript :: PlutusVersion -> [ScriptParameter] -> Type
 data TypedScript v a = TypedScriptConstr !UPLCProgram
   deriving stock (Show)
 
+-- | Indicator as to where a script type error was encountered.
+data ScriptTypeKind = ScriptParameter | ScriptDatum | ScriptRedeemer
+  deriving stock (Eq, Show)
+
 {- | Exception encountered when checking the schema for a specific script title.
  Note: Expected refers to the type level. Actual refers to what was read from the blueprint.
 -}
@@ -70,7 +75,8 @@ data ScriptSchemaError where
     } ->
     ScriptSchemaError
   ScriptTypeError ::
-    { expectedType :: SchemaDescription
+    { typeKind :: ScriptTypeKind
+    , expectedType :: SchemaDescription
     , actualType :: SchemaDescription
     } ->
     ScriptSchemaError
