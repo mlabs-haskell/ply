@@ -8,6 +8,7 @@ module Ply.Core.Types (
   TypedScriptBlueprintParameter (..),
   TypedScript (..),
   ScriptReaderException (..),
+  ScriptSchemaError (..),
   SchemaDescription,
   UPLCProgram,
   UPLCProgramJSON (..),
@@ -52,18 +53,41 @@ type TypedScript :: PlutusVersion -> [ScriptParameter] -> Type
 data TypedScript v a = TypedScriptConstr !UPLCProgram
   deriving stock (Show)
 
-{- | Errors/Exceptions that may arise during Typed Script reading/parsing.
+{- | Exception encountered when checking the schema for a specific script title.
  Note: Expected refers to the type level. Actual refers to what was read from the blueprint.
 -}
-data ScriptReaderException where
-  AesonDecodeError :: String -> ScriptReaderException
-  UnsupportedSchema :: forall referencedTypes. Schema referencedTypes -> ScriptReaderException
-  UndefinedReference :: {referenceName :: Text, targetSchema :: SchemaDescription, definitionsMap :: Map Text SchemaDescription} -> ScriptReaderException
-  ScriptVersionError :: {expectedVersion :: PlutusVersion, actualVersion :: PlutusVersion} -> ScriptReaderException
-  ScriptTypeError :: {expectedType :: SchemaDescription, actualType :: SchemaDescription} -> ScriptReaderException
-  ParameterLengthMismatch :: {expectedLength :: !Int, actualLength :: !Int} -> ScriptReaderException
-  UnexpectedDatum :: {actualDatum :: SchemaDescription} -> ScriptReaderException
-  MissingDatum :: {expectedDatum :: SchemaDescription} -> ScriptReaderException
+data ScriptSchemaError where
+  UnsupportedSchema :: forall referencedTypes. Schema referencedTypes -> ScriptSchemaError
+  UndefinedReference ::
+    { referenceName :: Text
+    , targetSchema :: SchemaDescription
+    , definitionsMap :: Map Text SchemaDescription
+    } ->
+    ScriptSchemaError
+  ScriptVersionError ::
+    { expectedVersion :: PlutusVersion
+    , actualVersion :: PlutusVersion
+    } ->
+    ScriptSchemaError
+  ScriptTypeError ::
+    { expectedType :: SchemaDescription
+    , actualType :: SchemaDescription
+    } ->
+    ScriptSchemaError
+  ParameterLengthMismatch :: {expectedLength :: !Int, actualLength :: !Int} -> ScriptSchemaError
+  UnexpectedDatum :: {actualDatum :: SchemaDescription} -> ScriptSchemaError
+  MissingDatum :: {expectedDatum :: SchemaDescription} -> ScriptSchemaError
+
+deriving stock instance Show ScriptSchemaError
+
+-- | Errors/Exceptions that may arise during Typed Script parsing or schema verification.
+data ScriptReaderException
+  = -- | Error during Aeson decoding.
+    ScriptParseException String
+  | ScriptVerificationException
+      { scriptTitle :: String
+      , exceptionDetail :: ScriptSchemaError
+      }
 
 deriving stock instance Show ScriptReaderException
 deriving anyclass instance Exception ScriptReaderException

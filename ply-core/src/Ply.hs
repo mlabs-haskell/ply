@@ -4,6 +4,7 @@ module Ply (
   TypedScript (TypedScript, TypedScript'),
   ReifyVersion (reifyVersion),
   PlutusVersion (..),
+  ScriptSchemaError (..),
   ScriptReaderException (..),
   ScriptParameter (..),
   TypedBlueprintPreamble (..),
@@ -30,7 +31,17 @@ import Ply.Core.Internal.Reify (ReifyVersion, reifyVersion)
 import Ply.Core.TypedReader (getTypedScript)
 import Ply.Core.Types (
   ScriptParameter (AsDatum, AsRedeemer, (:=)),
-  ScriptReaderException (AesonDecodeError, ScriptTypeError, UndefinedReference, UnsupportedSchema, actualType, definitionsMap, expectedType, referenceName, targetSchema),
+  ScriptReaderException (ScriptParseException, ScriptVerificationException, exceptionDetail, scriptTitle),
+  ScriptSchemaError (
+    ScriptTypeError,
+    UndefinedReference,
+    UnsupportedSchema,
+    actualType,
+    definitionsMap,
+    expectedType,
+    referenceName,
+    targetSchema
+  ),
   TypedBlueprint (TypedBlueprint, tbDefinitions, tbPreamble, tbValidators),
   TypedBlueprintPreamble (TypedBlueprintPreamble, tbpPlutusVersion),
   TypedScript (TypedScriptConstr),

@@ -10,6 +10,7 @@ import Data.Kind (Type)
 import Data.Map.Strict (Map)
 import Data.Proxy (Proxy (Proxy))
 import Data.Text (Text)
+import qualified Data.Text as Txt
 
 import PlutusTx.Blueprint (
   DefinitionsFor,
@@ -23,7 +24,19 @@ import Ply.Core.Schema.Description (descriptionFromPlutus)
 import Ply.Core.Types (
   PlutusVersionJSON (PlutusVersionJSON),
   ScriptParameter (AsDatum, AsRedeemer, (:=)),
-  ScriptReaderException (MissingDatum, ParameterLengthMismatch, ScriptTypeError, ScriptVersionError, UndefinedReference, UnexpectedDatum, UnsupportedSchema, definitionsMap, referenceName, targetSchema),
+  ScriptReaderException (ScriptVerificationException, exceptionDetail, scriptTitle),
+  ScriptSchemaError (
+    MissingDatum,
+    ParameterLengthMismatch,
+    ScriptTypeError,
+    ScriptVersionError,
+    UndefinedReference,
+    UnexpectedDatum,
+    UnsupportedSchema,
+    definitionsMap,
+    referenceName,
+    targetSchema
+  ),
   TypedBlueprint (TypedBlueprint, tbDefinitions, tbPreamble, tbValidators),
   TypedBlueprintPreamble (TypedBlueprintPreamble, tbpPlutusVersion),
   TypedScript (TypedScriptConstr),
@@ -59,54 +72,71 @@ mkTypedScript ::
   PlutusVersion ->
   TypedScriptBlueprint ->
   Either ScriptReaderException (TypedScript r params)
-mkTypedScript refMap ver TypedScriptBlueprint {tsbDatum, tsbRedeemer, tsbParameters, tsbCompiledCode = UPLCProgramJSON script} = runExcept $ do
-  let expectedVersion = reifyVersion $ Proxy @r
-  unless (expectedVersion `eqVersion` ver)
-    . throwE
-    $ ScriptVersionError expectedVersion ver
-  let expectedPlutusParams = reifyParamSchemas (Proxy @(UnrollAll (UnwrapParameters params))) $ Proxy @params
-      expectedPlutusDatum = reifyDatumSchema (Proxy @(UnrollAll (UnwrapParameters params))) $ Proxy @params
-      expectedPlutusRedeemer = reifyRedeemerSchema (Proxy @(UnrollAll (UnwrapParameters params))) $ Proxy @params
-  expectedParams <- traverse descriptionFromPlutus' expectedPlutusParams
-  expectedPlutusDatum <- traverse descriptionFromPlutus' expectedPlutusDatum
-  expectedPlutusRedeemer <- descriptionFromPlutus' expectedPlutusRedeemer
-  expectedDefinitionsMap <- deriveSchemaDescriptions @(UnwrapParameters params) (throwE . UnsupportedSchema)
+mkTypedScript
+  refMap
+  ver
+  TypedScriptBlueprint
+    { tsbTitle
+    , tsbDatum
+    , tsbRedeemer
+    , tsbParameters
+    , tsbCompiledCode = UPLCProgramJSON script
+    } = runExcept $ do
+    let expectedVersion = reifyVersion $ Proxy @r
+    unless (expectedVersion `eqVersion` ver)
+      . throwE'
+      $ ScriptVersionError expectedVersion ver
+    let expectedPlutusParams = reifyParamSchemas (Proxy @(UnrollAll (UnwrapParameters params))) $ Proxy @params
+        expectedPlutusDatum = reifyDatumSchema (Proxy @(UnrollAll (UnwrapParameters params))) $ Proxy @params
+        expectedPlutusRedeemer = reifyRedeemerSchema (Proxy @(UnrollAll (UnwrapParameters params))) $ Proxy @params
+    expectedParams <- traverse descriptionFromPlutus' expectedPlutusParams
+    expectedPlutusDatum <- traverse descriptionFromPlutus' expectedPlutusDatum
+    expectedPlutusRedeemer <- descriptionFromPlutus' expectedPlutusRedeemer
+    expectedDefinitionsMap <- deriveSchemaDescriptions @(UnwrapParameters params) (throwE' . UnsupportedSchema)
 
-  -- Ensure that the extra parameters are as expected.
-  let expectedLength = length expectedParams
-      actualLength = length tsbParameters
-  unless (expectedLength == actualLength)
-    . throwE
-    $ ParameterLengthMismatch expectedLength actualLength
-  for_ (zip expectedParams tsbParameters) . uncurry $ assertExpectedType expectedDefinitionsMap
-  -- Ensure that the datum (if any) is as expected.
-  case (expectedPlutusDatum, tsbDatum) of
-    (Nothing, Nothing) -> pure ()
-    (Just expected, Just actual) -> assertExpectedType expectedDefinitionsMap expected actual
-    (Just expected, Nothing) -> throwE $ MissingDatum expected
-    (Nothing, Just (TypedScriptBlueprintParameter actual)) -> throwE $ UnexpectedDatum actual
-  -- Ensure that the redeemer is as expected.
-  assertExpectedType expectedDefinitionsMap expectedPlutusRedeemer tsbRedeemer
+    -- Ensure that the extra parameters are as expected.
+    let expectedLength = length expectedParams
+        actualLength = length tsbParameters
+    unless (expectedLength == actualLength)
+      . throwE'
+      $ ParameterLengthMismatch expectedLength actualLength
+    for_ (zip expectedParams tsbParameters) . uncurry $ assertExpectedType expectedDefinitionsMap
+    -- Ensure that the datum (if any) is as expected.
+    case (expectedPlutusDatum, tsbDatum) of
+      (Nothing, Nothing) -> pure ()
+      (Just expected, Just actual) -> assertExpectedType expectedDefinitionsMap expected actual
+      (Just expected, Nothing) -> throwE' $ MissingDatum expected
+      (Nothing, Just (TypedScriptBlueprintParameter actual)) -> throwE' $ UnexpectedDatum actual
+    -- Ensure that the redeemer is as expected.
+    assertExpectedType expectedDefinitionsMap expectedPlutusRedeemer tsbRedeemer
 
-  pure $ TypedScriptConstr script
-  where
-    assertExpectedType expectedDefinitionsMap expectedParam (TypedScriptBlueprintParameter param) = do
-      normalizedExpected <- normalizeOrThrow expectedDefinitionsMap expectedParam
-      normalizedActual <- normalizeOrThrow refMap param
-      unless (normalizedExpected == normalizedActual)
-        . throwE
-        $ ScriptTypeError normalizedExpected normalizedActual
-    throwUndefRef m sch refName = throwE $ UndefinedReference {definitionsMap = m, referenceName = refName, targetSchema = sch}
-    normalizeOrThrow :: Map Text SchemaDescription -> SchemaDescription -> Except ScriptReaderException SchemaDescription
-    normalizeOrThrow m sch = either (throwUndefRef m sch) pure $ normalizeSchemaDescription m sch
-    descriptionFromPlutus' plutusSchema = do
-      case descriptionFromPlutus plutusSchema of
-        Nothing -> throwE $ UnsupportedSchema plutusSchema
-        Just x -> pure x
-    eqVersion PlutusV1 PlutusV1 = True
-    eqVersion PlutusV2 PlutusV2 = True
-    eqVersion PlutusV3 PlutusV3 = True
-    eqVersion _ _ = False
+    pure $ TypedScriptConstr script
+    where
+      assertExpectedType expectedDefinitionsMap expectedParam (TypedScriptBlueprintParameter param) = do
+        normalizedExpected <- normalizeOrThrow expectedDefinitionsMap expectedParam
+        normalizedActual <- normalizeOrThrow refMap param
+        unless (normalizedExpected == normalizedActual)
+          . throwE'
+          $ ScriptTypeError normalizedExpected normalizedActual
+      throwUndefRef m sch refName = throwE' $ UndefinedReference {definitionsMap = m, referenceName = refName, targetSchema = sch}
+      normalizeOrThrow :: Map Text SchemaDescription -> SchemaDescription -> Except ScriptReaderException SchemaDescription
+      normalizeOrThrow m sch = either (throwUndefRef m sch) pure $ normalizeSchemaDescription m sch
+      descriptionFromPlutus' plutusSchema = do
+        case descriptionFromPlutus plutusSchema of
+          Nothing -> throwE' $ UnsupportedSchema plutusSchema
+          Just x -> pure x
+      eqVersion PlutusV1 PlutusV1 = True
+      eqVersion PlutusV2 PlutusV2 = True
+      eqVersion PlutusV3 PlutusV3 = True
+      eqVersion _ _ = False
+      -- Helper to throw 'ScriptSchemaError's for this specific script.
+      throwE' :: ScriptSchemaError -> Except ScriptReaderException a
+      throwE' err =
+        throwE
+          ScriptVerificationException
+            { scriptTitle = Txt.unpack tsbTitle
+            , exceptionDetail = err
+            }
 
 {- | Verify and then obtain the 'TypedScript' with the corresponding title from given 'TypedBlueprint'.
 
