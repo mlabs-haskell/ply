@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name:          ply-core
-version:       1.0.0
+version:       1.1.0
 author:        Chase <chase@mlabs.city>
 license:       MIT
 
@@ -53,7 +53,6 @@ library
     , aeson-pretty
     , base16-bytestring
     , bytestring
-    , cardano-binary
     , transformers
 
   exposed-modules:

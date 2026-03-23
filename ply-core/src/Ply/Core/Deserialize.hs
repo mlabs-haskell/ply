@@ -6,7 +6,7 @@ import qualified Data.ByteString as BS
 import qualified Data.Aeson as Aeson
 
 import Ply.Core.Types (
-  ScriptReaderException (AesonDecodeError),
+  ScriptReaderException (ScriptParseException),
   TypedBlueprint,
  )
 
@@ -14,5 +14,5 @@ import Ply.Core.Types (
 readBlueprint :: FilePath -> IO TypedBlueprint
 readBlueprint path = do
   content <- BS.readFile path
-  either (throwIO . AesonDecodeError) pure $
+  either (throwIO . ScriptParseException) pure $
     Aeson.eitherDecodeStrict' content

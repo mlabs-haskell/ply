@@ -4,7 +4,10 @@ module Ply (
   TypedScript (TypedScript, TypedScript'),
   ReifyVersion (reifyVersion),
   PlutusVersion (..),
+  ScriptTypeKind (..),
+  ScriptSchemaError (..),
   ScriptReaderException (..),
+  ScriptParameter (..),
   TypedBlueprintPreamble (..),
   TypedBlueprint (..),
   TypedScriptBlueprint (..),
@@ -28,7 +31,19 @@ import Ply.Core.Deserialize (readBlueprint)
 import Ply.Core.Internal.Reify (ReifyVersion, reifyVersion)
 import Ply.Core.TypedReader (getTypedScript)
 import Ply.Core.Types (
-  ScriptReaderException (AesonDecodeError, ScriptTypeError, UndefinedReference, UnsupportedSchema, actualType, definitionsMap, expectedType, referenceName, targetSchema),
+  ScriptParameter (AsDatum, AsRedeemer, (:=)),
+  ScriptReaderException (ScriptParseException, ScriptVerificationException, exceptionDetail, scriptTitle),
+  ScriptSchemaError (
+    ScriptTypeError,
+    UndefinedReference,
+    UnsupportedSchema,
+    actualType,
+    definitionsMap,
+    expectedType,
+    referenceName,
+    targetSchema
+  ),
+  ScriptTypeKind (ScriptDatum, ScriptParameter, ScriptRedeemer),
   TypedBlueprint (TypedBlueprint, tbDefinitions, tbPreamble, tbValidators),
   TypedBlueprintPreamble (TypedBlueprintPreamble, tbpPlutusVersion),
   TypedScript (TypedScriptConstr),
@@ -37,13 +52,13 @@ import Ply.Core.Types (
  )
 
 -- | Extract the inner script (for scripts with datum)
-pattern TypedScript :: UPLCProgram -> TypedScript r '[datum, redeemer]
+pattern TypedScript :: UPLCProgram -> TypedScript r '[AsDatum datum, AsRedeemer redeemer]
 pattern TypedScript s <- TypedScriptConstr s
 
 {-# COMPLETE TypedScript #-}
 
 -- | Extract the inner script (for scripts with no datum)
-pattern TypedScript' :: UPLCProgram -> TypedScript r '[redeemer]
+pattern TypedScript' :: UPLCProgram -> TypedScript r '[AsRedeemer redeemer]
 pattern TypedScript' s <- TypedScriptConstr s
 
 {-# COMPLETE TypedScript' #-}

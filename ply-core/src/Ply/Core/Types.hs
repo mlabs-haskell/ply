@@ -1,12 +1,15 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Ply.Core.Types (
+  ScriptParameter (..),
+  ScriptTypeKind (..),
   TypedBlueprint (..),
   TypedBlueprintPreamble (..),
   TypedScriptBlueprint (..),
   TypedScriptBlueprintParameter (..),
   TypedScript (..),
   ScriptReaderException (..),
+  ScriptSchemaError (..),
   SchemaDescription,
   UPLCProgram,
   UPLCProgramJSON (..),
@@ -14,22 +17,21 @@ module Ply.Core.Types (
 ) where
 
 import Control.Exception (Exception)
-import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base16 as Base16
+import qualified Data.ByteString.Short as SBS
 import Data.Kind (Type)
 import Data.Map.Strict (Map)
 import Data.Text (Text)
 import qualified Data.Text.Encoding as Text
 import GHC.Generics (Generic)
+import GHC.TypeLits (Symbol)
 
-import Data.Aeson (Options (fieldLabelModifier))
+import Data.Aeson (Options (fieldLabelModifier), withObject, (.!=), (.:), (.:?))
 import qualified Data.Aeson as Aeson
 import Data.Aeson.Extra (stripPrefix)
 import Data.Aeson.TH (defaultOptions, deriveFromJSON)
 import Data.Aeson.Types (FromJSON (parseJSON))
 
-import Cardano.Binary as CBOR (DecoderError)
-import qualified Cardano.Binary as CBOR
 import PlutusLedgerApi.Common (uncheckedDeserialiseUPLC)
 import PlutusTx.Blueprint (PlutusVersion (PlutusV1, PlutusV2, PlutusV3), Schema)
 import UntypedPlutusCore (DeBruijn, DefaultFun, DefaultUni, Program)
@@ -38,20 +40,60 @@ import Ply.Core.Schema (SchemaDescription)
 
 type UPLCProgram = Program DeBruijn DefaultUni DefaultFun ()
 
+{- | Sum type of script parameters. Extra parameters (not datum/redeemer)
+ should use ':=' (i.e Labeled type) with a parameter name.
+-}
+data ScriptParameter = Symbol := Type | AsDatum Type | AsRedeemer Type
+
+infix 6 :=
+
 -- | Compiled scripts that preserve script version and parameter types.
 type role TypedScript nominal nominal
 
-type TypedScript :: PlutusVersion -> [Type] -> Type
+type TypedScript :: PlutusVersion -> [ScriptParameter] -> Type
 data TypedScript v a = TypedScriptConstr !UPLCProgram
   deriving stock (Show)
 
--- | Errors/Exceptions that may arise during Typed Script reading/parsing.
-data ScriptReaderException where
-  AesonDecodeError :: String -> ScriptReaderException
-  UnsupportedSchema :: forall referencedTypes. Schema referencedTypes -> ScriptReaderException
-  UndefinedReference :: {referenceName :: Text, targetSchema :: SchemaDescription, definitionsMap :: Map Text SchemaDescription} -> ScriptReaderException
-  ScriptVersionError :: {expectedVersion :: PlutusVersion, actualVersion :: PlutusVersion} -> ScriptReaderException
-  ScriptTypeError :: {expectedType :: SchemaDescription, actualType :: SchemaDescription} -> ScriptReaderException
+-- | Indicator as to where a script type error was encountered.
+data ScriptTypeKind = ScriptParameter | ScriptDatum | ScriptRedeemer
+  deriving stock (Eq, Show)
+
+{- | Exception encountered when checking the schema for a specific script title.
+ Note: Expected refers to the type level. Actual refers to what was read from the blueprint.
+-}
+data ScriptSchemaError where
+  UnsupportedSchema :: forall referencedTypes. Schema referencedTypes -> ScriptSchemaError
+  UndefinedReference ::
+    { referenceName :: Text
+    , targetSchema :: SchemaDescription
+    , definitionsMap :: Map Text SchemaDescription
+    } ->
+    ScriptSchemaError
+  ScriptVersionError ::
+    { expectedVersion :: PlutusVersion
+    , actualVersion :: PlutusVersion
+    } ->
+    ScriptSchemaError
+  ScriptTypeError ::
+    { typeKind :: ScriptTypeKind
+    , expectedType :: SchemaDescription
+    , actualType :: SchemaDescription
+    } ->
+    ScriptSchemaError
+  ParameterLengthMismatch :: {expectedLength :: !Int, actualLength :: !Int} -> ScriptSchemaError
+  UnexpectedDatum :: {actualDatum :: SchemaDescription} -> ScriptSchemaError
+  MissingDatum :: {expectedDatum :: SchemaDescription} -> ScriptSchemaError
+
+deriving stock instance Show ScriptSchemaError
+
+-- | Errors/Exceptions that may arise during Typed Script parsing or schema verification.
+data ScriptReaderException
+  = -- | Error during Aeson decoding.
+    ScriptParseException String
+  | ScriptVerificationException
+      { scriptTitle :: String
+      , exceptionDetail :: ScriptSchemaError
+      }
 
 deriving stock instance Show ScriptReaderException
 deriving anyclass instance Exception ScriptReaderException
@@ -71,12 +113,9 @@ instance FromJSON UPLCProgramJSON where
   parseJSON v =
     fmap UPLCProgramJSON $
       parseJSON v
-        >>= either fail (either (fail . show) pure . cborToScript)
+        >>= either fail (pure . uncheckedDeserialiseUPLC . SBS.toShort)
           . Base16.decode
           . Text.encodeUtf8
-
-cborToScript :: ByteString -> Either DecoderError UPLCProgram
-cborToScript x = uncheckedDeserialiseUPLC <$> CBOR.decodeFull' x
 
 data TypedScriptBlueprintParameter = TypedScriptBlueprintParameter
   { tsbpSchema :: !SchemaDescription
@@ -85,6 +124,8 @@ data TypedScriptBlueprintParameter = TypedScriptBlueprintParameter
 
 data TypedScriptBlueprint = TypedScriptBlueprint
   { tsbTitle :: !Text
+  , tsbDatum :: !(Maybe TypedScriptBlueprintParameter)
+  , tsbRedeemer :: !TypedScriptBlueprintParameter
   , tsbParameters :: ![TypedScriptBlueprintParameter]
   , tsbCompiledCode :: !UPLCProgramJSON
   }
@@ -103,6 +144,15 @@ data TypedBlueprint = TypedBlueprint
   }
 
 $(deriveFromJSON defaultOptions {fieldLabelModifier = stripPrefix "tsbp"} ''TypedScriptBlueprintParameter)
-$(deriveFromJSON defaultOptions {fieldLabelModifier = stripPrefix "tsb"} ''TypedScriptBlueprint)
 $(deriveFromJSON defaultOptions {fieldLabelModifier = stripPrefix "tbp"} ''TypedBlueprintPreamble)
+
+instance FromJSON TypedScriptBlueprint where
+  parseJSON = withObject "TypedScriptBlueprint" $ \v ->
+    TypedScriptBlueprint
+      <$> v .: "title"
+      <*> v .:? "datum"
+      <*> v .: "redeemer"
+      <*> v .:? "parameters" .!= []
+      <*> v .: "compiledCode"
+
 $(deriveFromJSON defaultOptions {fieldLabelModifier = stripPrefix "tb"} ''TypedBlueprint)

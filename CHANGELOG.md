@@ -1,3 +1,23 @@
+# 1.1.0 - Datum, Redeemers, and Script serialisation
+
+- Ply can now track datums and redeemers!
+
+  This means that your `TypedScript` type list must end with datums/redeemers now.
+
+  E.g, A validator with one extra bytestring parameter (named "foo"), a unit datum and redeemer: `TypedScript PlutusV3 '["foo" := BuiltinByteString, AsDatum (), AsRedeemer ()]`
+
+- Ply now allows you to name the extra script parameters as well.
+
+  Note: All script parameters must be named from now on. See example above.
+
+- Fix script serialisation to follow standard Plutus serialiseUPLC rather than the double CBOR cardano-cli uses.
+
+- Fix script parameters not being length checked. Previously, if the expected parameters were shorter than the actual parameters, the extra actual parameters would simply be ignored (treated as datum/redeemer).
+
+- Fix schema refs not being resolved when using JSON pointer syntax.
+
+  The Haskell ecosystem unforunately does not really have anything for JSON pointer usage/parsing. So the support for JSON pointer implemented here is pretty minimal. At the moment, it only supports `~1` interpretation.
+
 # ply-plutarch - 1.0.1
 
 - Support `PUnit` returning Plutarch scripts. This is the standard in Conway.
